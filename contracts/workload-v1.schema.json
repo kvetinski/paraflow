@@ -13,7 +13,10 @@
   ],
   "properties": {
     "$schema": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "schema_version": {
       "const": "paraflow.workload/v1"
@@ -21,7 +24,8 @@
     "name": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 120
+      "maxLength": 120,
+      "pattern": "\\S"
     },
     "dataset": {
       "$ref": "#/$defs/dataset"
@@ -47,11 +51,13 @@
       "properties": {
         "record_count": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 18446744073709551615
         },
         "seed": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 18446744073709551615
         },
         "generator": {
           "const": "splitmix64-v1"
@@ -84,7 +90,8 @@
                 },
                 "category": {
                   "type": "integer",
-                  "minimum": 0
+                  "minimum": 0,
+                  "maximum": 4294967295
                 },
                 "probability_bps": {
                   "type": "integer",
@@ -153,22 +160,19 @@
       ],
       "properties": {
         "offset_a": {
-          "type": "number"
+          "$ref": "#/$defs/f32"
         },
         "scale_a": {
-          "type": "number",
-          "exclusiveMinimum": 0
+          "$ref": "#/$defs/positiveF32"
         },
         "offset_b": {
-          "type": "number"
+          "$ref": "#/$defs/f32"
         },
         "scale_b": {
-          "type": "number",
-          "exclusiveMinimum": 0
+          "$ref": "#/$defs/positiveF32"
         },
         "clip": {
-          "type": "number",
-          "exclusiveMinimum": 0
+          "$ref": "#/$defs/positiveF32"
         }
       }
     },
@@ -184,13 +188,13 @@
       ],
       "properties": {
         "weight_a": {
-          "type": "number"
+          "$ref": "#/$defs/f32"
         },
         "weight_b": {
-          "type": "number"
+          "$ref": "#/$defs/f32"
         },
         "bias": {
-          "type": "number"
+          "$ref": "#/$defs/f32"
         },
         "flag_mask": {
           "type": "integer",
@@ -198,7 +202,7 @@
           "maximum": 4294967295
         },
         "flag_bonus": {
-          "type": "number"
+          "$ref": "#/$defs/f32"
         }
       }
     },
@@ -210,7 +214,7 @@
       ],
       "properties": {
         "min_score": {
-          "type": "number"
+          "$ref": "#/$defs/f32"
         }
       }
     },
@@ -225,6 +229,16 @@
           "const": "category"
         }
       }
+    },
+    "f32": {
+      "type": "number",
+      "minimum": -3.4028234663852886e+38,
+      "maximum": 3.4028234663852886e+38
+    },
+    "positiveF32": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 3.4028234663852886e+38
     }
   }
 }

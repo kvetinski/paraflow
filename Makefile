@@ -4,7 +4,8 @@ SHELL := /bin/bash
 GO_DIR := labctl-go
 GO_FILES := $(shell find $(GO_DIR) -type f -name '*.go' | sort)
 VERSION := 0.1.0-alpha.1
-GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || printf 'unknown')
+GIT_COMMIT := $(shell git rev-parse HEAD 2>/dev/null || printf 'unknown')
+GIT_STATE := $(shell if [[ -z "$$(git status --porcelain 2>/dev/null)" ]]; then printf 'clean'; else printf 'dirty'; fi)
 
 .DEFAULT_GOAL := help
 
@@ -60,27 +61,46 @@ go-build:
 	mkdir -p bin
 	cd $(GO_DIR) && go build \
 		-trimpath \
-		-ldflags "-X main.version=$(VERSION) -X main.commit=$(GIT_COMMIT)" \
+		-ldflags "-X main.version=$(VERSION) -X main.commit=$(GIT_COMMIT) -X main.sourceState=$(GIT_STATE)" \
 		-o ../bin/labctl \
 		./cmd/labctl
 
+.PHONY: go-build-smoke
+go-build-smoke: go-build
+	@output="$$(./bin/labctl version)"; \
+	[[ "$$output" == *"$(GIT_COMMIT)"* ]] || { \
+		printf 'labctl version omitted commit identity: %s\n' "$$output" >&2; \
+		exit 1; \
+	}; \
+	[[ "$$output" == *"$(GIT_STATE)"* ]] || { \
+		printf 'labctl version omitted source state: %s\n' "$$output" >&2; \
+		exit 1; \
+	}
+
 .PHONY: go-check
-go-check: go-fmt-check go-lint go-test go-build ## Run all Go quality gates.
+go-check: go-fmt-check go-lint go-test go-build-smoke ## Run all Go quality gates.
 
 .PHONY: contract-check
 contract-check: ## Check machine-readable contracts and fixtures.
 	./tools/check-contracts.sh
 
-.PHONY: validate-workload
-validate-workload: ## Validate the checked-in smoke workload with Rust.
-	cargo run --locked -p paraflow-engine -- validate workloads/smoke-uniform-v1.json
+.PHONY: workload-check
+workload-check: ## Semantically validate every checked-in workload with Rust.
+	@mapfile -t workload_files < <(find workloads -type f -name '*.json' -print | sort); \
+	[[ "$${#workload_files[@]}" -gt 0 ]] || { \
+		printf 'no workload fixtures found\n' >&2; \
+		exit 1; \
+	}; \
+	for workload_path in "$${workload_files[@]}"; do \
+		cargo run --locked --quiet -p paraflow-engine -- validate "$$workload_path"; \
+	done
 
 .PHONY: benchmark-preflight
-benchmark-preflight: contract-check validate-workload ## Verify readiness without timing fake work.
-	cd $(GO_DIR) && go run ./cmd/labctl doctor
+benchmark-preflight: contract-check workload-check go-build-smoke ## Verify readiness without timing fake work.
+	./bin/labctl doctor
 
 .PHONY: check
-check: contract-check rust-check go-check ## Run every Day 1 quality gate.
+check: contract-check rust-check workload-check go-check ## Run every Day 1 quality gate.
 
 .PHONY: clean
 clean: ## Remove generated build outputs.

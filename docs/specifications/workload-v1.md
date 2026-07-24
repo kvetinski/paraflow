@@ -66,15 +66,32 @@ vectors for this frozen algorithm.
 For each record:
 
 - `id` equals the zero-based record index;
-- each feature is
-  `feature_min + sample % (feature_max - feature_min)` and therefore lies in
+- each feature uses the field identifier listed above and widened arithmetic:
+
+  ```text
+  span = u64(i64(feature_max) - i64(feature_min))
+  offset = sample(seed, id, field) % span
+  feature = i32(i64(feature_min) + i64(offset))
+  ```
+
+  Validation guarantees that `span` is nonzero. The intermediate subtraction
+  and addition are signed 64-bit operations, so every schema-valid `i32` range
+  is defined without signed overflow. The result lies in
   `[feature_min, feature_max)`;
 - uniform category is `sample(field=0) % category_count`;
 - hotspot category selection succeeds when
   `sample(field=0) % 10000 < probability_bps`;
-- a failed hotspot selection uses `sample(field=4)` to select uniformly from
-  all non-hot categories; when only one category exists, that category is
-  always selected;
+- when `category_count == 1`, hotspot generation always selects category zero;
+- otherwise, a failed hotspot selection excludes the hot category with this
+  exact mapping:
+
+  ```text
+  hot = configured hotspot category
+  slot = sample(seed, id, field=4) % (category_count - 1)
+  category = slot + u32(slot >= hot)
+  ```
+
+  where `u32(false) = 0` and `u32(true) = 1`;
 - flag bit zero is set when
   `sample(field=3) % 10000 < flag_probability_bps`; all other flag bits are
   zero in workload v1.
@@ -127,18 +144,30 @@ the report is specifically studying floating-point differences.
 
 ## 5. Aggregate
 
-The canonical result contains:
+The canonical `ResultV1` contains:
 
-- accepted record count;
-- accepted score sum accumulated as `f64`;
-- exact count per category;
-- order-independent accepted-ID checksums;
-- optional compacted output for detailed correctness tests.
+| Field | Type | Definition |
+| --- | --- | --- |
+| `accepted_count` | `u64` | Number of accepted records |
+| `score_sum` | `f64` | Accepted `f32` scores converted to `f64` and added in stable input order |
+| `category_histogram` | `Vec<u64>` | Exactly `category_count` bins; each accepted record increments its category with wrapping `u64` addition |
+| `accepted_id_sum` | `u64` | Wrapping sum of accepted record IDs |
+| `accepted_id_xor` | `u64` | Bitwise XOR of `mix(id)` for every accepted record |
 
-The scalar oracle sums accepted scores in stable input order. Parallel
-reductions may use a different tree. Structural results and accepted IDs are
-exact; score sums use the verification tolerance documented with the benchmark
-result.
+All integer addition wraps modulo `2^64`. The empty-input identity is
+`accepted_count = 0`, `score_sum = 0.0`, an all-zero histogram,
+`accepted_id_sum = 0`, and `accepted_id_xor = 0`.
+
+Stable compacted IDs are a diagnostic output, requested separately from
+`ResultV1`; when requested they contain every accepted ID in ascending input
+order. They are used for detailed correctness tests and are not required in
+stored performance results.
+
+The scalar oracle performs each `score_sum = score_sum + f64(score)` operation
+in stable input order. Parallel reductions may use a different tree.
+`accepted_count`, histogram bins, both ID checksums, and requested compacted IDs
+are exact. Score sums use the verification tolerance documented with the
+benchmark result.
 
 ## Validation
 

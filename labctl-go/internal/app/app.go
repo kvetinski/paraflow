@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/kvetinski/paraflow/labctl-go/internal/buildinfo"
 	"github.com/kvetinski/paraflow/labctl-go/internal/doctor"
 )
 
@@ -20,10 +21,7 @@ Usage:
 Experiment execution begins after the scalar Rust engine exists.`
 
 // BuildInfo identifies the controller binary.
-type BuildInfo struct {
-	Version string
-	Commit  string
-}
+type BuildInfo = buildinfo.Info
 
 // Dependencies contains side effects injected into command dispatch.
 type Dependencies struct {
@@ -55,14 +53,17 @@ func Run(
 		}
 		return write(
 			stdout,
-			fmt.Sprintf(
-				"labctl %s (commit %s)",
-				dependencies.Build.Version,
-				dependencies.Build.Commit,
-			),
+			fmt.Sprintf("labctl %s", dependencies.Build),
 		)
 	case "doctor":
-		return runDoctor(ctx, args[1:], stdout, stderr, dependencies.Probe)
+		return runDoctor(
+			ctx,
+			args[1:],
+			stdout,
+			stderr,
+			dependencies.Probe,
+			dependencies.Build,
+		)
 	default:
 		return usageError(stderr, fmt.Sprintf("unknown command %q", args[0]))
 	}
@@ -74,6 +75,7 @@ func runDoctor(
 	stdout io.Writer,
 	stderr io.Writer,
 	probe doctor.Probe,
+	build BuildInfo,
 ) int {
 	jsonOutput := false
 	switch {
@@ -87,7 +89,7 @@ func runDoctor(
 	if probe == nil {
 		probe = doctor.CommandProbe
 	}
-	report := doctor.Check(ctx, probe)
+	report := doctor.Check(ctx, probe, build)
 
 	if jsonOutput {
 		encoder := json.NewEncoder(stdout)

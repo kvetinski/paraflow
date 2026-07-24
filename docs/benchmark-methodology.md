@@ -7,7 +7,9 @@ Status: **policy defined; executable benchmark harness scheduled for Day 5**
 There is no meaningful compute path to benchmark yet. Timing schema parsing,
 CLI startup, or the environment doctor would manufacture an irrelevant result.
 Day 1 therefore provides validation, metadata preflight, directory policy, and
-claim requirements only.
+claim requirements only. The preflight captures source identity, capture time,
+kernel, CPU model when available, logical CPU count, `GOMAXPROCS`, and compiler
+readiness. Day 5 extends this into the complete experiment identity below.
 
 ## Timing boundaries
 

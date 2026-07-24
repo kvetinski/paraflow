@@ -24,9 +24,9 @@ Day 1 establishes the semantic and measurement foundation:
 - architecture decisions, benchmark rules, tests, and CI quality gates;
 - explicit extension boundaries for future C++/ISPC/CUDA kernels.
 
-No runtime benchmark is published yet because no compute path exists. The first
-performance baseline belongs to Day 5, after deterministic generation and the
-scalar oracle are implemented.
+No runtime benchmark is published yet because no compute path exists. Baseline
+capture begins with the Day 5 harness; the first analyzed performance report is
+published on Day 6.
 
 ## Stable workload
 
@@ -90,6 +90,7 @@ See [architecture/overview.md](docs/architecture/overview.md) and the accepted
 ├── kernels-cpp/            # C++/ISPC/CUDA begins in Week 2
 ├── labctl-go/              # Go experiment controller
 ├── results/                # Curated, attributable performance evidence
+├── tools/schema-check/     # Pinned Draft 2020-12 validation tooling
 └── workloads/              # Versioned semantic workloads
 ```
 
@@ -100,7 +101,9 @@ Required for Day 1:
 - Git;
 - Go 1.24 or newer;
 - Rust 1.88 with `rustfmt` and `clippy`;
-- GNU Make.
+- a C compiler (`cc`) for race-enabled Go tests;
+- Node.js 20 or newer with npm, used only for Draft 2020-12 contract checks;
+- Bash and GNU Make.
 
 Inspect the contract:
 
@@ -128,16 +131,24 @@ Run all quality gates:
 make check
 ```
 
+Run the non-timing benchmark readiness check:
+
+```bash
+make benchmark-preflight
+```
+
 The same targets run in GitHub Actions.
 
 ## Testing strategy
 
 - Rust contract tests enforce schema parsing, accumulated semantic errors,
   stage order, round-trip behavior, and empty-workload semantics.
-- Rust CLI tests enforce command and manifest-validation boundaries.
-- Go tests inject tool probes so readiness behavior does not depend on the test
-  host.
-- JSON files are syntax-checked independently.
+- Rust CLI tests exercise valid, malformed, and missing files plus exact command
+  exit behavior.
+- Go tests inject tool probes and verify failed, timed-out, and outdated
+  toolchains cannot report false readiness.
+- Every workload is checked against the Draft 2020-12 JSON Schema and the Rust
+  semantic validator.
 - CI tests correctness only; performance thresholds do not belong on shared
   runners.
 

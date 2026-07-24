@@ -4,6 +4,11 @@
 # Go and repository-local binaries
 /bin/
 
+# Contract validation tooling
+/tools/schema-check/node_modules/
+/tools/schema-check/.npm-cache/
+/tools/schema-check/.npm-logs/
+
 # Profiling and benchmark artifacts
 *.pprof
 *.prof

@@ -5,7 +5,7 @@
 
 #![forbid(unsafe_code)]
 
-use std::{error::Error, fmt, fs, io::Write, path::Path};
+use std::{error::Error, ffi::OsStr, fmt, fs, io::Write, path::Path};
 
 use paraflow_contracts::{
     PIPELINE_STAGES, Validate, ValidationErrors, WORKLOAD_SCHEMA, WorkloadSpec,
@@ -46,20 +46,27 @@ pub fn parse_manifest(source: &str) -> Result<WorkloadSpec, ManifestError> {
 }
 
 /// Run the engine command and return a process-compatible exit code.
-pub fn run(args: &[String], stdout: &mut impl Write, stderr: &mut impl Write) -> i32 {
-    match args.first().map(String::as_str) {
-        None | Some("help") | Some("--help") | Some("-h") => write_help(stdout),
-        Some("version") | Some("--version") | Some("-V") => write_output(
+pub fn run<S: AsRef<OsStr>>(args: &[S], stdout: &mut impl Write, stderr: &mut impl Write) -> i32 {
+    let Some(command) = args.first() else {
+        return write_help(stdout);
+    };
+    let Some(command) = command.as_ref().to_str() else {
+        return write_usage_error(stderr, "command must be valid UTF-8");
+    };
+
+    match command {
+        "help" | "--help" | "-h" if args.len() == 1 => write_help(stdout),
+        "help" | "--help" | "-h" => write_usage_error(stderr, "help accepts no arguments"),
+        "version" | "--version" | "-V" if args.len() == 1 => write_output(
             stdout,
             &format!("paraflow-engine {}", env!("CARGO_PKG_VERSION")),
         ),
-        Some("contract") if args.len() == 1 => write_contract(stdout),
-        Some("contract") => write_usage_error(stderr, "contract accepts no arguments"),
-        Some("validate") if args.len() == 2 => validate_file(&args[1], stdout, stderr),
-        Some("validate") => {
-            write_usage_error(stderr, "validate requires exactly one manifest path")
-        }
-        Some(command) => write_usage_error(stderr, &format!("unknown command: {command}")),
+        "version" | "--version" | "-V" => write_usage_error(stderr, "version accepts no arguments"),
+        "contract" if args.len() == 1 => write_contract(stdout),
+        "contract" => write_usage_error(stderr, "contract accepts no arguments"),
+        "validate" if args.len() == 2 => validate_file(Path::new(args[1].as_ref()), stdout, stderr),
+        "validate" => write_usage_error(stderr, "validate requires exactly one manifest path"),
+        command => write_usage_error(stderr, &format!("unknown command: {command}")),
     }
 }
 
@@ -102,14 +109,17 @@ fn write_output(output: &mut impl Write, message: &str) -> i32 {
     0
 }
 
-fn validate_file(path: &str, output: &mut impl Write, error: &mut impl Write) -> i32 {
-    let source = match fs::read_to_string(Path::new(path)) {
+fn validate_file(path: &Path, output: &mut impl Write, error: &mut impl Write) -> i32 {
+    let source = match fs::read_to_string(path) {
         Ok(source) => source,
         Err(read_error) => {
             return write_error(
                 error,
                 3,
-                &format!("cannot read workload manifest {path:?}: {read_error}"),
+                &format!(
+                    "cannot read workload manifest {:?}: {read_error}",
+                    path.as_os_str()
+                ),
             );
         }
     };
@@ -122,7 +132,10 @@ fn validate_file(path: &str, output: &mut impl Write, error: &mut impl Write) ->
         Err(manifest_error) => write_error(
             error,
             4,
-            &format!("invalid workload manifest {path:?}: {manifest_error}"),
+            &format!(
+                "invalid workload manifest {:?}: {manifest_error}",
+                path.as_os_str()
+            ),
         ),
     }
 }

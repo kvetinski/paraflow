@@ -24,7 +24,7 @@ impl fmt::Display for ManifestError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Json(error) => write!(formatter, "JSON error: {error}"),
-            Self::Validation(errors) => errors.fmt(formatter),
+            Self::Validation(errors) => write!(formatter, "{errors}"),
         }
     }
 }

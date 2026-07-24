@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/kvetinski/paraflow/labctl-go/internal/app"
+	"github.com/kvetinski/paraflow/labctl-go/internal/doctor"
 )
 
 var (
@@ -18,7 +19,10 @@ func main() {
 		os.Args[1:],
 		os.Stdout,
 		os.Stderr,
-		app.BuildInfo{Version: version, Commit: commit},
+		app.Dependencies{
+			Build: app.BuildInfo{Version: version, Commit: commit},
+			Probe: doctor.CommandProbe,
+		},
 	)
 	os.Exit(exitCode)
 }

@@ -26,15 +26,15 @@ rust-fmt-check:
 
 .PHONY: rust-lint
 rust-lint:
-	cargo clippy --workspace --all-targets -- -D warnings
+	cargo clippy --locked --workspace --all-targets -- -D warnings
 
 .PHONY: rust-test
 rust-test:
-	cargo test --workspace --all-targets
+	cargo test --locked --workspace --all-targets
 
 .PHONY: rust-build
 rust-build:
-	cargo build --workspace --all-targets
+	cargo build --locked --workspace --all-targets
 
 .PHONY: rust-check
 rust-check: rust-fmt-check rust-lint rust-test rust-build ## Run all Rust quality gates.
@@ -73,11 +73,11 @@ contract-check: ## Check machine-readable contracts and fixtures.
 
 .PHONY: validate-workload
 validate-workload: ## Validate the checked-in smoke workload with Rust.
-	cargo run -p paraflow-engine -- validate workloads/smoke-uniform-v1.json
+	cargo run --locked -p paraflow-engine -- validate workloads/smoke-uniform-v1.json
 
 .PHONY: benchmark-preflight
 benchmark-preflight: contract-check validate-workload ## Verify readiness without timing fake work.
-	cd $(GO_DIR) && go run ./cmd/labctl doctor --json
+	cd $(GO_DIR) && go run ./cmd/labctl doctor
 
 .PHONY: check
 check: contract-check rust-check go-check ## Run every Day 1 quality gate.

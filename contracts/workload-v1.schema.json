@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvetinski/paraflow/blob/main/contracts/workload-v1.schema.json",
+  "title": "ParaFlow workload v1",
+  "description": "Logical workload semantics independent of execution backend and physical layout.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "name",
+    "dataset",
+    "pipeline"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "paraflow.workload/v1"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "dataset": {
+      "$ref": "#/$defs/dataset"
+    },
+    "pipeline": {
+      "$ref": "#/$defs/pipeline"
+    }
+  },
+  "$defs": {
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record_count",
+        "seed",
+        "generator",
+        "distribution",
+        "feature_min",
+        "feature_max",
+        "category_count",
+        "flag_probability_bps"
+      ],
+      "properties": {
+        "record_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "generator": {
+          "const": "splitmix64-v1"
+        },
+        "distribution": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "uniform"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "category",
+                "probability_bps"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "hotspot"
+                },
+                "category": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "probability_bps": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 10000
+                }
+              }
+            }
+          ]
+        },
+        "feature_min": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "feature_max": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "category_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "flag_probability_bps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        }
+      }
+    },
+    "pipeline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "normalize",
+        "score",
+        "filter",
+        "aggregate"
+      ],
+      "properties": {
+        "normalize": {
+          "$ref": "#/$defs/normalize"
+        },
+        "score": {
+          "$ref": "#/$defs/score"
+        },
+        "filter": {
+          "$ref": "#/$defs/filter"
+        },
+        "aggregate": {
+          "$ref": "#/$defs/aggregate"
+        }
+      }
+    },
+    "normalize": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "offset_a",
+        "scale_a",
+        "offset_b",
+        "scale_b",
+        "clip"
+      ],
+      "properties": {
+        "offset_a": {
+          "type": "number"
+        },
+        "scale_a": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "offset_b": {
+          "type": "number"
+        },
+        "scale_b": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "clip": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "score": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "weight_a",
+        "weight_b",
+        "bias",
+        "flag_mask",
+        "flag_bonus"
+      ],
+      "properties": {
+        "weight_a": {
+          "type": "number"
+        },
+        "weight_b": {
+          "type": "number"
+        },
+        "bias": {
+          "type": "number"
+        },
+        "flag_mask": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "flag_bonus": {
+          "type": "number"
+        }
+      }
+    },
+    "filter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min_score"
+      ],
+      "properties": {
+        "min_score": {
+          "type": "number"
+        }
+      }
+    },
+    "aggregate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "histogram"
+      ],
+      "properties": {
+        "histogram": {
+          "const": "category"
+        }
+      }
+    }
+  }
+}

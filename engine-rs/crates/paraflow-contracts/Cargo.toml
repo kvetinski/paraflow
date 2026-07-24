@@ -1,0 +1,19 @@
+[package]
+name = "paraflow-contracts"
+description = "Language-neutral workload contracts for ParaFlow"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+serde_json = "1.0"
+
+[lints]
+workspace = true

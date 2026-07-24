@@ -1,0 +1,18 @@
+# Rust
+/target/
+
+# Go and repository-local binaries
+/bin/
+
+# Profiling and benchmark artifacts
+*.pprof
+*.prof
+*.trace
+/results/raw/*
+!/results/raw/.gitkeep
+
+# IDE and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

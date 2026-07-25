@@ -20,6 +20,14 @@ func availableProbe(_ context.Context, tool doctor.Tool) doctor.ToolResult {
 		version = "rustc 1.88.0 (test)"
 	case "cargo":
 		version = "cargo 1.88.0 (test)"
+	case "node":
+		version = "v20.0.0"
+	case "rustfmt":
+		version = "rustfmt 1.8.0-stable (test)"
+	case "bash":
+		version = "GNU bash, version 5.0.0 (test)"
+	case "make":
+		version = "GNU Make 4.4"
 	}
 	return doctor.ToolResult{
 		Name:     tool.Name,
@@ -93,11 +101,28 @@ func TestDoctorJSON(t *testing.T) {
 	if !report.Ready {
 		t.Fatal("expected doctor report to be ready")
 	}
+	if report.SchemaVersion != "paraflow.environment/v2" {
+		t.Fatalf("unexpected report schema: %q", report.SchemaVersion)
+	}
+	if report.Milestone != "day-02" {
+		t.Fatalf("unexpected report milestone: %q", report.Milestone)
+	}
 	if report.Source != testDependencies().Build {
 		t.Fatalf("unexpected source identity: %#v", report.Source)
 	}
 	if report.CapturedAt.IsZero() {
 		t.Fatal("doctor report must include its capture time")
+	}
+
+	var envelope map[string]json.RawMessage
+	if err := json.Unmarshal(stdout.Bytes(), &envelope); err != nil {
+		t.Fatalf("decode doctor envelope: %v", err)
+	}
+	if _, exists := envelope["ready_for_day_1"]; exists {
+		t.Fatal("legacy ready_for_day_1 key must not appear in environment/v2")
+	}
+	if _, exists := envelope["ready"]; !exists {
+		t.Fatal("environment/v2 must contain the ready key")
 	}
 }
 

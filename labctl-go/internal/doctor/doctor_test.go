@@ -35,6 +35,14 @@ func compatibleVersion(tool Tool) string {
 		return "rustc 1.88.0 (test)"
 	case "cargo":
 		return "cargo 1.88.0 (test)"
+	case "node":
+		return "v20.0.0"
+	case "rustfmt":
+		return "rustfmt 1.8.0-stable (test)"
+	case "bash":
+		return "GNU bash, version 5.0.0 (test)"
+	case "make":
+		return "GNU Make 4.4"
 	default:
 		return tool.Name + " version 1.0.0"
 	}
@@ -47,6 +55,12 @@ func TestCheckIsReadyWhenRequiredToolsAreUsable(t *testing.T) {
 
 	if !report.Ready {
 		t.Fatal("expected report to be ready")
+	}
+	if report.SchemaVersion != "paraflow.environment/v2" {
+		t.Fatalf("unexpected report schema: %q", report.SchemaVersion)
+	}
+	if report.Milestone != "day-02" {
+		t.Fatalf("unexpected milestone: %q", report.Milestone)
 	}
 	if report.CapturedAt.IsZero() {
 		t.Fatal("captured timestamp must be present")
@@ -184,6 +198,21 @@ func TestCommandProbeAcceptsMinimumRequiredVersion(t *testing.T) {
 	}
 }
 
+func TestCommandProbeRejectsUnexpectedToolFamily(t *testing.T) {
+	t.Parallel()
+
+	tool := helperTool("make", "", "version", "BSD make 1.0")
+	tool.VersionContains = "GNU Make"
+	result := commandProbe(context.Background(), tool, 5*time.Second)
+
+	if result.Usable {
+		t.Fatal("unexpected make implementation must not be usable")
+	}
+	if !strings.Contains(result.Problem, `must contain "GNU Make"`) {
+		t.Fatalf("unexpected problem: %q", result.Problem)
+	}
+}
+
 func TestReportStringLabelsRequirementsAndSource(t *testing.T) {
 	t.Parallel()
 
@@ -192,11 +221,11 @@ func TestReportStringLabelsRequirementsAndSource(t *testing.T) {
 
 	for _, expected := range []string{
 		"ParaFlow environment",
-		"go    required",
-		"cc    required",
-		"nvcc  planned",
+		"go      required",
+		"cc      required",
+		"nvcc    planned",
 		"Source: test (commit 0123456789abcdef0123456789abcdef01234567, source clean)",
-		"Ready for Day 1: true",
+		"Ready for current milestone (day-02): true",
 	} {
 		if !strings.Contains(output, expected) {
 			t.Fatalf("expected output to contain %q:\n%s", expected, output)
@@ -210,6 +239,15 @@ func TestFirstLineNormalizesVersionOutput(t *testing.T) {
 	got := firstLine("compiler 1.2.3\nCopyright example\n")
 	if got != "compiler 1.2.3" {
 		t.Fatalf("unexpected first line: %q", got)
+	}
+}
+
+func TestVersionLineSkipsWarningsBeforeVersion(t *testing.T) {
+	t.Parallel()
+
+	got := versionLine("npm warn unknown configuration\n11.9.0\n")
+	if got != "11.9.0" {
+		t.Fatalf("unexpected version line: %q", got)
 	}
 }
 

@@ -46,7 +46,7 @@ jobs:
           --component rustfmt
 
       - name: Run Rust quality gates
-        run: make rust-check
+        run: make rust-check workload-check
 
   go:
     name: Go

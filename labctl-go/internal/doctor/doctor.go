@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	reportSchema        = "paraflow.environment/v1"
+	reportSchema        = "paraflow.environment/v2"
+	currentMilestone    = "day-02"
 	defaultProbeTimeout = 2 * time.Second
 )
 
@@ -27,13 +28,14 @@ var numericVersionPattern = regexp.MustCompile(
 
 // Tool describes one executable used during the twelve-week project.
 type Tool struct {
-	Name        string
-	Command     string
-	VersionArgs []string
-	Required    bool
-	Minimum     string
-	Introduced  string
-	Purpose     string
+	Name            string
+	Command         string
+	VersionArgs     []string
+	Required        bool
+	Minimum         string
+	VersionContains string
+	Introduced      string
+	Purpose         string
 }
 
 // ToolResult records one tool probe.
@@ -53,6 +55,7 @@ type ToolResult struct {
 // Report is stable environment metadata for the current milestone.
 type Report struct {
 	SchemaVersion string         `json:"schema_version"`
+	Milestone     string         `json:"milestone"`
 	CapturedAt    time.Time      `json:"captured_at"`
 	OS            string         `json:"os"`
 	KernelVersion string         `json:"kernel_version"`
@@ -62,7 +65,7 @@ type Report struct {
 	GoMaxProcs    int            `json:"gomaxprocs"`
 	GoVersion     string         `json:"go_version"`
 	Source        buildinfo.Info `json:"source"`
-	Ready         bool           `json:"ready_for_day_1"`
+	Ready         bool           `json:"ready"`
 	Tools         []ToolResult   `json:"tools"`
 }
 
@@ -114,6 +117,57 @@ var tools = []Tool{
 		Purpose:     "C toolchain required by Go race-detector tests",
 	},
 	{
+		Name:        "node",
+		Command:     "node",
+		VersionArgs: []string{"--version"},
+		Required:    true,
+		Minimum:     "20.0.0",
+		Introduced:  "day-01",
+		Purpose:     "Draft 2020-12 contract validation",
+	},
+	{
+		Name:        "npm",
+		Command:     "npm",
+		VersionArgs: []string{"--version"},
+		Required:    true,
+		Introduced:  "day-01",
+		Purpose:     "reproducible schema-validator installation",
+	},
+	{
+		Name:        "rustfmt",
+		Command:     "rustfmt",
+		VersionArgs: []string{"--version"},
+		Required:    true,
+		Introduced:  "day-01",
+		Purpose:     "Rust formatting gate",
+	},
+	{
+		Name:        "clippy",
+		Command:     "cargo",
+		VersionArgs: []string{"clippy", "--version"},
+		Required:    true,
+		Introduced:  "day-01",
+		Purpose:     "Rust lint gate",
+	},
+	{
+		Name:        "bash",
+		Command:     "bash",
+		VersionArgs: []string{"--version"},
+		Required:    true,
+		Minimum:     "4.0.0",
+		Introduced:  "day-01",
+		Purpose:     "repository scripts and workload discovery",
+	},
+	{
+		Name:            "make",
+		Command:         "make",
+		VersionArgs:     []string{"--version"},
+		Required:        true,
+		VersionContains: "GNU Make",
+		Introduced:      "day-01",
+		Purpose:         "repository quality-gate orchestration",
+	},
+	{
 		Name:        "c++",
 		Command:     "c++",
 		VersionArgs: []string{"--version"},
@@ -139,7 +193,7 @@ var tools = []Tool{
 	},
 }
 
-// Check probes the host and determines whether Day 1 development can proceed.
+// Check probes the host and determines whether the current milestone can proceed.
 func Check(ctx context.Context, probe Probe, source buildinfo.Info) Report {
 	results := make([]ToolResult, 0, len(tools))
 	ready := true
@@ -154,6 +208,7 @@ func Check(ctx context.Context, probe Probe, source buildinfo.Info) Report {
 
 	return Report{
 		SchemaVersion: reportSchema,
+		Milestone:     currentMilestone,
 		CapturedAt:    time.Now().UTC(),
 		OS:            runtime.GOOS,
 		KernelVersion: captureKernelVersion(ctx),
@@ -198,7 +253,7 @@ func commandProbe(ctx context.Context, tool Tool, timeout time.Duration) ToolRes
 		path,
 		tool.VersionArgs...,
 	).CombinedOutput()
-	outputLine := firstLine(string(output))
+	outputLine := versionLine(string(output))
 	if err != nil {
 		switch {
 		case errors.Is(probeContext.Err(), context.DeadlineExceeded):
@@ -256,7 +311,7 @@ func (report Report) String() string {
 		}
 		_, _ = fmt.Fprintf(
 			&builder,
-			"[%s] %-5s %-8s %-7s %s\n",
+			"[%s] %-7s %-8s %-7s %s\n",
 			status,
 			tool.Name,
 			requirement,
@@ -265,7 +320,12 @@ func (report Report) String() string {
 		)
 	}
 
-	_, _ = fmt.Fprintf(&builder, "\nReady for Day 1: %t", report.Ready)
+	_, _ = fmt.Fprintf(
+		&builder,
+		"\nReady for current milestone (%s): %t",
+		report.Milestone,
+		report.Ready,
+	)
 	return builder.String()
 }
 
@@ -275,6 +335,16 @@ func firstLine(value string) string {
 		return strings.TrimSpace(value[:newline])
 	}
 	return value
+}
+
+func versionLine(value string) string {
+	for _, line := range strings.Split(value, "\n") {
+		line = strings.TrimSpace(line)
+		if numericVersionPattern.MatchString(line) {
+			return line
+		}
+	}
+	return firstLine(value)
 }
 
 func assess(tool Tool, result ToolResult) ToolResult {
@@ -290,6 +360,14 @@ func assess(tool Tool, result ToolResult) ToolResult {
 	}
 	if strings.TrimSpace(result.Version) == "" {
 		result.Problem = "version command returned no output"
+		return result
+	}
+	if tool.VersionContains != "" && !strings.Contains(result.Version, tool.VersionContains) {
+		result.Problem = fmt.Sprintf(
+			"version output must contain %q; found %q",
+			tool.VersionContains,
+			result.Version,
+		)
 		return result
 	}
 	if tool.Minimum != "" {

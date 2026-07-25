@@ -13,5 +13,8 @@ publish.workspace = true
 paraflow-contracts = { path = "../paraflow-contracts" }
 serde_json = "1.0"
 
+[dev-dependencies]
+serde = { version = "1.0", features = ["derive"] }
+
 [lints]
 workspace = true

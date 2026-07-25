@@ -37,6 +37,10 @@ rust-test:
 rust-build:
 	cargo build --locked --workspace --all-targets
 
+.PHONY: rust-release-build
+rust-release-build:
+	cargo build --locked --release -p paraflow-engine
+
 .PHONY: rust-check
 rust-check: rust-fmt-check rust-lint rust-test rust-build ## Run all Rust quality gates.
 
@@ -95,12 +99,16 @@ workload-check: ## Semantically validate every checked-in workload with Rust.
 		cargo run --locked --quiet -p paraflow-engine -- validate "$$workload_path"; \
 	done
 
+.PHONY: generation-check
+generation-check: contract-check workload-check rust-release-build ## Verify Day 2 generation and portable conformance vectors.
+	cargo test --locked --release -p paraflow-engine --test generation_v1
+
 .PHONY: benchmark-preflight
-benchmark-preflight: contract-check workload-check go-build-smoke ## Verify readiness without timing fake work.
+benchmark-preflight: generation-check go-build-smoke ## Verify release-build readiness without collecting timing samples.
 	./bin/labctl doctor
 
 .PHONY: check
-check: contract-check rust-check workload-check go-check ## Run every Day 1 quality gate.
+check: contract-check rust-check workload-check go-check ## Run every current quality gate.
 
 .PHONY: clean
 clean: ## Remove generated build outputs.

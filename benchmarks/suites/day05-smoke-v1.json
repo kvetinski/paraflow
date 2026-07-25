@@ -1,0 +1,19 @@
+{
+  "$schema": "../../contracts/benchmark-suite-v1.schema.json",
+  "schema_version": "paraflow.benchmark-suite/v1",
+  "name": "day05-smoke-v1",
+  "description": "Fast cross-language harness smoke check. Timings are retained as evidence but never used as a CI threshold.",
+  "scenarios": [
+    {
+      "name": "scalar-uniform-1k-smoke",
+      "workload": "workloads/bench-uniform-1k-v1.json",
+      "execution": {
+        "backend": "scalar"
+      },
+      "sampling": {
+        "warmup_iterations": 1,
+        "sample_iterations": 3
+      }
+    }
+  ]
+}

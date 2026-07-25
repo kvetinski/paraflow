@@ -5,7 +5,8 @@
 
 #![forbid(unsafe_code)]
 
-pub mod hex;
+pub mod benchmark;
+mod hex;
 
 use std::{error::Error, fmt};
 
@@ -14,9 +15,9 @@ use paraflow_contracts::ResultV1;
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 
-/// Version accepted for Day 4 job requests.
+/// Version accepted for Day 4 execution requests.
 pub const JOB_SCHEMA_V1: &str = "paraflow.job/v1";
-/// Version emitted for Day 4 job responses.
+/// Version emitted for Day 4 execution responses.
 pub const JOB_RESULT_SCHEMA_V1: &str = "paraflow.job-result/v1";
 /// Version used by the logical result wire representation.
 pub const RESULT_SCHEMA_V1: &str = "paraflow.result/v1";

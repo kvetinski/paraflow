@@ -11,6 +11,13 @@ const EXPECTED_JOB_SCHEMA = "paraflow.job/v1";
 const EXPECTED_JOB_RESULT_SCHEMA = "paraflow.job-result/v1";
 const EXPECTED_RESULT_SCHEMA = "paraflow.result/v1";
 const EXPECTED_EXECUTION_VECTOR_SCHEMA = "paraflow.execution-vectors/v1";
+const EXPECTED_BENCHMARK_SUITE_SCHEMA = "paraflow.benchmark-suite/v1";
+const EXPECTED_BENCHMARK_REQUEST_SCHEMA = "paraflow.benchmark-request/v1";
+const EXPECTED_BENCHMARK_ENGINE_RESULT_SCHEMA =
+  "paraflow.benchmark-engine-result/v1";
+const EXPECTED_BENCHMARK_CAPTURE_SCHEMA = "paraflow.benchmark-capture/v1";
+const EXPECTED_BENCHMARK_VECTOR_SCHEMA = "paraflow.benchmark-vectors/v1";
+const EXPECTED_ENVIRONMENT_SCHEMA = "paraflow.environment/v3";
 const toolDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(toolDirectory, "../..");
 const workloadSchemaPath = path.join(
@@ -56,6 +63,49 @@ const executionVectorFixturePath = path.join(
   "conformance",
   "execution-v1.json",
 );
+const benchmarkSuiteSchemaPath = path.join(
+  repositoryRoot,
+  "contracts",
+  "benchmark-suite-v1.schema.json",
+);
+const benchmarkRequestSchemaPath = path.join(
+  repositoryRoot,
+  "contracts",
+  "benchmark-request-v1.schema.json",
+);
+const benchmarkEngineResultSchemaPath = path.join(
+  repositoryRoot,
+  "contracts",
+  "benchmark-engine-result-v1.schema.json",
+);
+const benchmarkCaptureSchemaPath = path.join(
+  repositoryRoot,
+  "contracts",
+  "benchmark-capture-v1.schema.json",
+);
+const benchmarkVectorSchemaPath = path.join(
+  repositoryRoot,
+  "contracts",
+  "benchmark-vectors-v1.schema.json",
+);
+const environmentSchemaPath = path.join(
+  repositoryRoot,
+  "contracts",
+  "environment-v3.schema.json",
+);
+const benchmarkVectorFixturePath = path.join(
+  repositoryRoot,
+  "contracts",
+  "conformance",
+  "benchmark-v1.json",
+);
+const benchmarkCaptureFixturePath = path.join(
+  repositoryRoot,
+  "contracts",
+  "conformance",
+  "benchmark-capture-v1.json",
+);
+const benchmarkSuitesDirectory = path.join(repositoryRoot, "benchmarks", "suites");
 const workloadsDirectory = path.join(repositoryRoot, "workloads");
 
 function readJSON(filePath) {
@@ -131,15 +181,89 @@ if (
   );
 }
 
+const benchmarkSuiteSchema = readJSON(benchmarkSuiteSchemaPath);
+const benchmarkRequestSchema = readJSON(benchmarkRequestSchemaPath);
+const benchmarkEngineResultSchema = readJSON(benchmarkEngineResultSchemaPath);
+const benchmarkCaptureSchema = readJSON(benchmarkCaptureSchemaPath);
+const benchmarkVectorSchema = readJSON(benchmarkVectorSchemaPath);
+const environmentSchema = readJSON(environmentSchemaPath);
+
+for (const [label, actual, expected] of [
+  [
+    "benchmark suite",
+    benchmarkSuiteSchema.properties?.schema_version?.const,
+    EXPECTED_BENCHMARK_SUITE_SCHEMA,
+  ],
+  [
+    "benchmark request",
+    benchmarkRequestSchema.properties?.schema_version?.const,
+    EXPECTED_BENCHMARK_REQUEST_SCHEMA,
+  ],
+  [
+    "benchmark engine result",
+    benchmarkEngineResultSchema.properties?.schema_version?.const,
+    EXPECTED_BENCHMARK_ENGINE_RESULT_SCHEMA,
+  ],
+  [
+    "benchmark capture",
+    benchmarkCaptureSchema.properties?.schema_version?.const,
+    EXPECTED_BENCHMARK_CAPTURE_SCHEMA,
+  ],
+  [
+    "benchmark vectors",
+    benchmarkVectorSchema.properties?.schema_version?.const,
+    EXPECTED_BENCHMARK_VECTOR_SCHEMA,
+  ],
+  [
+    "environment",
+    environmentSchema.properties?.schema_version?.const,
+    EXPECTED_ENVIRONMENT_SCHEMA,
+  ],
+]) {
+  if (actual !== expected) {
+    throw new Error(
+      `${label} schema_version const must be ${JSON.stringify(expected)}`,
+    );
+  }
+}
+
 const ajv = new Ajv2020({
   allErrors: true,
   strict: true,
+  validateFormats: false,
 });
-const validateWorkload = ajv.compile(workloadSchema);
-const validateVectors = ajv.compile(vectorSchema);
-const validateScalarVectors = ajv.compile(scalarVectorSchema);
-const validateExecutionProtocol = ajv.compile(executionProtocolSchema);
-const validateExecutionVectors = ajv.compile(executionVectorSchema);
+for (const schema of [
+  workloadSchema,
+  vectorSchema,
+  scalarVectorSchema,
+  executionProtocolSchema,
+  executionVectorSchema,
+  benchmarkSuiteSchema,
+  benchmarkRequestSchema,
+  benchmarkEngineResultSchema,
+  benchmarkCaptureSchema,
+  benchmarkVectorSchema,
+  environmentSchema,
+]) {
+  ajv.addSchema(schema);
+}
+const validator = (schema) => {
+  const compiled = ajv.getSchema(schema.$id);
+  if (!compiled) {
+    throw new Error(`failed to compile schema ${schema.$id}`);
+  }
+  return compiled;
+};
+const validateWorkload = validator(workloadSchema);
+const validateVectors = validator(vectorSchema);
+const validateScalarVectors = validator(scalarVectorSchema);
+const validateExecutionProtocol = validator(executionProtocolSchema);
+const validateExecutionVectors = validator(executionVectorSchema);
+const validateBenchmarkSuite = validator(benchmarkSuiteSchema);
+const validateBenchmarkRequest = validator(benchmarkRequestSchema);
+const validateBenchmarkEngineResult = validator(benchmarkEngineResultSchema);
+const validateBenchmarkCapture = validator(benchmarkCaptureSchema);
+const validateBenchmarkVectors = validator(benchmarkVectorSchema);
 const workloadPaths = fs
   .readdirSync(workloadsDirectory, { withFileTypes: true })
   .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
@@ -544,17 +668,168 @@ for (const [label, invalidMessage] of invalidExecutionProtocolCases) {
   }
 }
 
+
+
+const benchmarkSuitePaths = fs
+  .readdirSync(benchmarkSuitesDirectory, { withFileTypes: true })
+  .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+  .map((entry) => path.join(benchmarkSuitesDirectory, entry.name))
+  .sort();
+if (benchmarkSuitePaths.length === 0) {
+  failed = true;
+  console.error("at least one benchmarks/suites/*.json fixture is required");
+}
+for (const suitePath of benchmarkSuitePaths) {
+  const suite = readJSON(suitePath);
+  if (!validateBenchmarkSuite(suite)) {
+    failed = true;
+    for (const issue of validateBenchmarkSuite.errors ?? []) {
+      const location = issue.instancePath || "/";
+      console.error(
+        `${path.relative(repositoryRoot, suitePath)}${location}: ${issue.message ?? "schema validation failed"}`,
+      );
+    }
+  }
+  const names = new Set();
+  for (const scenario of suite.scenarios ?? []) {
+    if (names.has(scenario.name)) {
+      failed = true;
+      console.error(
+        `${path.relative(repositoryRoot, suitePath)}: duplicate scenario name ${JSON.stringify(scenario.name)}`,
+      );
+    }
+    names.add(scenario.name);
+    const workloadPath = path.join(repositoryRoot, scenario.workload ?? "");
+    if (!fs.existsSync(workloadPath)) {
+      failed = true;
+      console.error(
+        `${path.relative(repositoryRoot, suitePath)}: missing workload ${JSON.stringify(scenario.workload)}`,
+      );
+    }
+  }
+}
+
+const benchmarkVectors = readJSON(benchmarkVectorFixturePath);
+if (!validateBenchmarkVectors(benchmarkVectors)) {
+  failed = true;
+  for (const issue of validateBenchmarkVectors.errors ?? []) {
+    const location = issue.instancePath || "/";
+    console.error(
+      `${path.relative(repositoryRoot, benchmarkVectorFixturePath)}${location}: ${issue.message ?? "schema validation failed"}`,
+    );
+  }
+}
+for (const fixtureCase of benchmarkVectors.cases ?? []) {
+  if (!validateBenchmarkRequest(fixtureCase.request)) {
+    failed = true;
+    for (const issue of validateBenchmarkRequest.errors ?? []) {
+      console.error(
+        `benchmark case ${fixtureCase.name} request${issue.instancePath || "/"}: ${issue.message ?? "schema validation failed"}`,
+      );
+    }
+  }
+  if (!validateBenchmarkEngineResult(fixtureCase.engine_result)) {
+    failed = true;
+    for (const issue of validateBenchmarkEngineResult.errors ?? []) {
+      console.error(
+        `benchmark case ${fixtureCase.name} engine_result${issue.instancePath || "/"}: ${issue.message ?? "schema validation failed"}`,
+      );
+    }
+  }
+  if (
+    fixtureCase.request?.experiment_id !== fixtureCase.engine_result?.experiment_id ||
+    fixtureCase.request?.scenario_name !== fixtureCase.engine_result?.scenario_name ||
+    fixtureCase.request?.sampling?.sample_iterations !==
+      fixtureCase.engine_result?.samples?.length
+  ) {
+    failed = true;
+    console.error(
+      `benchmark case ${fixtureCase.name}: correlation echoes and sample count must agree`,
+    );
+  }
+}
+
+const benchmarkCapture = readJSON(benchmarkCaptureFixturePath);
+if (!validateBenchmarkCapture(benchmarkCapture)) {
+  failed = true;
+  for (const issue of validateBenchmarkCapture.errors ?? []) {
+    const location = issue.instancePath || "/";
+    console.error(
+      `${path.relative(repositoryRoot, benchmarkCaptureFixturePath)}${location}: ${issue.message ?? "schema validation failed"}`,
+    );
+  }
+}
+
+const invalidBenchmarkCases = [
+  [
+    "unsafe variable-width timing",
+    {
+      ...benchmarkVectors,
+      cases: benchmarkVectors.cases.map((fixtureCase, index) =>
+        index === 0
+          ? {
+              ...fixtureCase,
+              engine_result: {
+                ...fixtureCase.engine_result,
+                samples: fixtureCase.engine_result.samples.map((sample, sampleIndex) =>
+                  sampleIndex === 0 ? { ...sample, pipeline_ns: "0x1" } : sample,
+                ),
+              },
+            }
+          : fixtureCase,
+      ),
+    },
+  ],
+  [
+    "process startup inside samples",
+    {
+      ...benchmarkVectors,
+      cases: benchmarkVectors.cases.map((fixtureCase, index) =>
+        index === 0
+          ? {
+              ...fixtureCase,
+              engine_result: {
+                ...fixtureCase.engine_result,
+                timing: {
+                  ...fixtureCase.engine_result.timing,
+                  process_start_in_samples: true,
+                },
+              },
+            }
+          : fixtureCase,
+      ),
+    },
+  ],
+  [
+    "unknown suite field",
+    {
+      ...readJSON(benchmarkSuitePaths[0]),
+      unexpected: true,
+    },
+  ],
+];
+for (const [label, invalid] of invalidBenchmarkCases) {
+  const valid = label === "unknown suite field"
+    ? validateBenchmarkSuite(invalid)
+    : validateBenchmarkVectors(invalid);
+  if (valid) {
+    failed = true;
+    console.error(`benchmark schema regression case was accepted: ${label}`);
+  }
+}
+
 const rejectionCount =
   invalidCases.length +
   invalidVectorCases.length +
   invalidScalarVectorCases.length +
   invalidExecutionVectorCases.length +
-  invalidExecutionProtocolCases.length;
+  invalidExecutionProtocolCases.length +
+  invalidBenchmarkCases.length;
 
 if (failed) {
   process.exitCode = 1;
 } else {
   console.log(
-    `JSON Schema validation passed (${workloadPaths.length} workload(s), 3 conformance fixtures, ${rejectionCount} rejection cases)`,
+    `JSON Schema validation passed (${workloadPaths.length} workload(s), 5 conformance fixtures, ${rejectionCount} rejection cases)`,
   );
 }

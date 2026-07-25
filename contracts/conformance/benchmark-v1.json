@@ -1,0 +1,121 @@
+{
+  "schema_version": "paraflow.benchmark-vectors/v1",
+  "cases": [
+    {
+      "name": "edge-scalar-v1",
+      "request": {
+        "schema_version": "paraflow.benchmark-request/v1",
+        "experiment_id": "0000000000000001",
+        "scenario_name": "edge-scalar-conformance",
+        "execution": {
+          "backend": "scalar"
+        },
+        "sampling": {
+          "warmup_iterations": 1,
+          "sample_iterations": 2
+        },
+        "workload": {
+          "$schema": "../contracts/workload-v1.schema.json",
+          "schema_version": "paraflow.workload/v1",
+          "name": "edge-scalar-v1",
+          "dataset": {
+            "record_count": 8,
+            "seed": 18,
+            "generator": "splitmix64-v1",
+            "distribution": {
+              "kind": "uniform"
+            },
+            "feature_min": -4,
+            "feature_max": 5,
+            "category_count": 4,
+            "flag_probability_bps": 5000
+          },
+          "pipeline": {
+            "normalize": {
+              "offset_a": 0.0,
+              "scale_a": 1.0,
+              "offset_b": 0.0,
+              "scale_b": 1.0,
+              "clip": 2.0
+            },
+            "score": {
+              "weight_a": 1.0,
+              "weight_b": 0.5,
+              "bias": 0.0,
+              "flag_mask": 1,
+              "flag_bonus": 0.5
+            },
+            "filter": {
+              "min_score": 1.0
+            },
+            "aggregate": {
+              "histogram": "category"
+            }
+          }
+        }
+      },
+      "engine_result": {
+        "schema_version": "paraflow.benchmark-engine-result/v1",
+        "experiment_id": "0000000000000001",
+        "scenario_name": "edge-scalar-conformance",
+        "workload_name": "edge-scalar-v1",
+        "execution": {
+          "backend": "scalar"
+        },
+        "sampling": {
+          "warmup_iterations": 1,
+          "sample_iterations": 2
+        },
+        "timing": {
+          "clock": "std::time::Instant",
+          "unit": "nanoseconds",
+          "process_start_in_samples": false,
+          "experiment_total_ns": "0x0000000000000800"
+        },
+        "correctness": {
+          "status": "passed",
+          "oracle": "rust-scalar-v1",
+          "comparison": "exact"
+        },
+        "engine_build": {
+          "version": "0.1.0-alpha.2",
+          "profile": "release",
+          "target": "x86_64-unknown-linux-gnu",
+          "rustc": "rustc 1.88.0 (test)",
+          "source_commit": "0123456789abcdef0123456789abcdef01234567",
+          "source_state": "clean"
+        },
+        "samples": [
+          {
+            "ordinal": 0,
+            "generation_ns": "0x0000000000000064",
+            "pipeline_ns": "0x00000000000000c8",
+            "engine_total_ns": "0x000000000000015e"
+          },
+          {
+            "ordinal": 1,
+            "generation_ns": "0x000000000000006e",
+            "pipeline_ns": "0x00000000000000dc",
+            "engine_total_ns": "0x000000000000017c"
+          }
+        ],
+        "result": {
+          "schema_version": "paraflow.result/v1",
+          "accepted_count": "0x0000000000000003",
+          "score_sum": {
+            "encoding": "ieee754-binary64",
+            "bits": "0x401a000000000000"
+          },
+          "category_histogram": [
+            "0x0000000000000001",
+            "0x0000000000000001",
+            "0x0000000000000001",
+            "0x0000000000000000"
+          ],
+          "accepted_id_sum": "0x0000000000000010",
+          "accepted_id_xor": "0x6ebb399a18884447"
+        }
+      }
+    }
+  ]
+}

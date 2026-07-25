@@ -1,0 +1,52 @@
+{
+  "$schema": "../../contracts/benchmark-suite-v1.schema.json",
+  "schema_version": "paraflow.benchmark-suite/v1",
+  "name": "day05-scalar-baseline-v1",
+  "description": "Day 5 raw scalar evidence across three input-size orders of magnitude and one skewed distribution. Day 6 interprets these samples.",
+  "scenarios": [
+    {
+      "name": "scalar-uniform-1k",
+      "workload": "workloads/bench-uniform-1k-v1.json",
+      "execution": {
+        "backend": "scalar"
+      },
+      "sampling": {
+        "warmup_iterations": 5,
+        "sample_iterations": 25
+      }
+    },
+    {
+      "name": "scalar-uniform-64k",
+      "workload": "workloads/bench-uniform-64k-v1.json",
+      "execution": {
+        "backend": "scalar"
+      },
+      "sampling": {
+        "warmup_iterations": 5,
+        "sample_iterations": 25
+      }
+    },
+    {
+      "name": "scalar-hotspot-64k",
+      "workload": "workloads/bench-hotspot-64k-v1.json",
+      "execution": {
+        "backend": "scalar"
+      },
+      "sampling": {
+        "warmup_iterations": 5,
+        "sample_iterations": 25
+      }
+    },
+    {
+      "name": "scalar-uniform-1m",
+      "workload": "workloads/bench-uniform-1m-v1.json",
+      "execution": {
+        "backend": "scalar"
+      },
+      "sampling": {
+        "warmup_iterations": 5,
+        "sample_iterations": 20
+      }
+    }
+  ]
+}

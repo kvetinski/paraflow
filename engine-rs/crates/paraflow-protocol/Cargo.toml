@@ -1,6 +1,6 @@
 [package]
 name = "paraflow-protocol"
-description = "Versioned Go-to-Rust execution protocol for ParaFlow"
+description = "Versioned execution and benchmark protocols for ParaFlow"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

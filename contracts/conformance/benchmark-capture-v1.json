@@ -1,0 +1,151 @@
+{
+  "schema_version": "paraflow.benchmark-capture/v1",
+  "started_at": "2026-07-26T12:00:00Z",
+  "completed_at": "2026-07-26T12:00:01Z",
+  "suite": {
+    "path": "benchmarks/suites/day05-smoke-v1.json",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "schema_version": "paraflow.benchmark-suite/v1",
+    "name": "ParaFlow Day 5 smoke"
+  },
+  "controller": {
+    "version": "0.1.0-alpha.2",
+    "full_commit": "0123456789abcdef0123456789abcdef01234567",
+    "source_state": "clean"
+  },
+  "environment": {
+    "schema_version": "paraflow.environment/v3",
+    "milestone": "day-05",
+    "captured_at": "2026-07-26T12:00:00Z",
+    "os": "linux",
+    "kernel_version": "6.8.0-test",
+    "architecture": "amd64",
+    "cpu_model": "Test CPU",
+    "physical_cores": 4,
+    "logical_cpus": 8,
+    "gomaxprocs": 8,
+    "go_version": "go1.24.0",
+    "source": {
+      "version": "0.1.0-alpha.2",
+      "full_commit": "0123456789abcdef0123456789abcdef01234567",
+      "source_state": "clean"
+    },
+    "ready": true,
+    "tools": [
+      {
+        "name": "go",
+        "required_now": true,
+        "minimum_version": "1.24.0",
+        "introduced": "day-01",
+        "purpose": "experiment control plane",
+        "found": true,
+        "usable": true,
+        "path": "/usr/local/go/bin/go",
+        "version": "go version go1.24.0 linux/amd64"
+      }
+    ]
+  },
+  "engine_artifact": {
+    "path": "target/release/paraflow-engine",
+    "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "experiments": [
+    {
+      "scenario_name": "edge-scalar-conformance",
+      "workload": {
+        "path": "workloads/edge-scalar-v1.json",
+        "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "schema_version": "paraflow.workload/v1",
+        "name": "edge-scalar-v1",
+        "record_count": 8,
+        "category_count": 4
+      },
+      "orchestration_total_ns": "0x0000000000001000",
+      "engine_result": {
+        "schema_version": "paraflow.benchmark-engine-result/v1",
+        "experiment_id": "0000000000000001",
+        "scenario_name": "edge-scalar-conformance",
+        "workload_name": "edge-scalar-v1",
+        "execution": {
+          "backend": "scalar"
+        },
+        "sampling": {
+          "warmup_iterations": 1,
+          "sample_iterations": 2
+        },
+        "timing": {
+          "clock": "std::time::Instant",
+          "unit": "nanoseconds",
+          "process_start_in_samples": false,
+          "experiment_total_ns": "0x0000000000000800"
+        },
+        "correctness": {
+          "status": "passed",
+          "oracle": "rust-scalar-v1",
+          "comparison": "exact"
+        },
+        "engine_build": {
+          "version": "0.1.0-alpha.2",
+          "profile": "release",
+          "target": "x86_64-unknown-linux-gnu",
+          "rustc": "rustc 1.88.0 (test)",
+          "source_commit": "0123456789abcdef0123456789abcdef01234567",
+          "source_state": "clean"
+        },
+        "samples": [
+          {
+            "ordinal": 0,
+            "generation_ns": "0x0000000000000064",
+            "pipeline_ns": "0x00000000000000c8",
+            "engine_total_ns": "0x000000000000015e"
+          },
+          {
+            "ordinal": 1,
+            "generation_ns": "0x000000000000006e",
+            "pipeline_ns": "0x00000000000000dc",
+            "engine_total_ns": "0x000000000000017c"
+          }
+        ],
+        "result": {
+          "schema_version": "paraflow.result/v1",
+          "accepted_count": "0x0000000000000003",
+          "score_sum": {
+            "encoding": "ieee754-binary64",
+            "bits": "0x401a000000000000"
+          },
+          "category_histogram": [
+            "0x0000000000000001",
+            "0x0000000000000001",
+            "0x0000000000000001",
+            "0x0000000000000000"
+          ],
+          "accepted_id_sum": "0x0000000000000010",
+          "accepted_id_xor": "0x6ebb399a18884447"
+        }
+      },
+      "summary": {
+        "generation": {
+          "count": 2,
+          "minimum_ns": "0x0000000000000064",
+          "median_ns": "0x0000000000000069",
+          "median_absolute_deviation_ns": "0x0000000000000005",
+          "maximum_ns": "0x000000000000006e"
+        },
+        "pipeline": {
+          "count": 2,
+          "minimum_ns": "0x00000000000000c8",
+          "median_ns": "0x00000000000000d2",
+          "median_absolute_deviation_ns": "0x000000000000000a",
+          "maximum_ns": "0x00000000000000dc"
+        },
+        "engine_total": {
+          "count": 2,
+          "minimum_ns": "0x000000000000015e",
+          "median_ns": "0x000000000000016d",
+          "median_absolute_deviation_ns": "0x000000000000000f",
+          "maximum_ns": "0x000000000000017c"
+        }
+      }
+    }
+  ]
+}

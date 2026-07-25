@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvetinski/paraflow/blob/main/contracts/benchmark-capture-v1.schema.json",
+  "title": "ParaFlow benchmark capture v1",
+  "description": "Persisted Go control-plane evidence containing environment identity, raw Rust samples, and derived descriptive statistics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "started_at",
+    "completed_at",
+    "suite",
+    "controller",
+    "environment",
+    "engine_artifact",
+    "experiments"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "paraflow.benchmark-capture/v1"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "suite": {
+      "$ref": "#/$defs/suiteIdentity"
+    },
+    "controller": {
+      "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/environment-v3.schema.json#/$defs/source"
+    },
+    "environment": {
+      "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/environment-v3.schema.json"
+    },
+    "engine_artifact": {
+      "$ref": "#/$defs/artifact"
+    },
+    "experiments": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/experiment"
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "u64Hex": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{16}$"
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "suiteIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "schema_version",
+        "name"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "schema_version": {
+          "const": "paraflow.benchmark-suite/v1"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "workloadIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "schema_version",
+        "name",
+        "record_count",
+        "category_count"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "schema_version": {
+          "const": "paraflow.workload/v1"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "\\S"
+        },
+        "record_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "category_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        }
+      }
+    },
+    "statistics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "minimum_ns",
+        "median_ns",
+        "median_absolute_deviation_ns",
+        "maximum_ns"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "minimum_ns": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "median_ns": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "median_absolute_deviation_ns": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "maximum_ns": {
+          "$ref": "#/$defs/u64Hex"
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generation",
+        "pipeline",
+        "engine_total"
+      ],
+      "properties": {
+        "generation": {
+          "$ref": "#/$defs/statistics"
+        },
+        "pipeline": {
+          "$ref": "#/$defs/statistics"
+        },
+        "engine_total": {
+          "$ref": "#/$defs/statistics"
+        }
+      }
+    },
+    "experiment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scenario_name",
+        "workload",
+        "orchestration_total_ns",
+        "engine_result",
+        "summary"
+      ],
+      "properties": {
+        "scenario_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "\\S"
+        },
+        "workload": {
+          "$ref": "#/$defs/workloadIdentity"
+        },
+        "orchestration_total_ns": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "engine_result": {
+          "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/benchmark-engine-result-v1.schema.json"
+        },
+        "summary": {
+          "$ref": "#/$defs/summary"
+        }
+      }
+    }
+  }
+}

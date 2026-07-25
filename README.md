@@ -10,23 +10,27 @@ This is not a directory of disconnected course solutions. ParaFlow is original
 portfolio work designed to make every performance claim reproducible and every
 optimization comparable with the same correctness oracle.
 
-## Current milestone: Day 1
+## Current milestone: Day 2
 
-Day 1 establishes the semantic and measurement foundation:
+Day 1 established the semantic and measurement foundation. Day 2 now provides
+the first executable workload stage:
 
 - a versioned, language-neutral workload contract;
 - a Rust contract library with accumulated semantic validation;
-- a Rust CLI that reports and validates the contract, but does not pretend to
-  execute it yet;
+- pure wrapping `splitmix64-v1` sampling by seed, absolute index, and field;
+- validated random-access generation plus lazy and range-based APIs;
+- uniform and hotspot datasets with exact cross-language conformance vectors;
+- safe behavior for empty, single, large, and non-materializable batches;
 - a Go `labctl doctor` command that captures environment and toolchain
   readiness;
-- a frozen logical pipeline with a valid smoke workload;
+- a frozen logical pipeline with uniform and skewed smoke workloads;
 - architecture decisions, benchmark rules, tests, and CI quality gates;
 - explicit extension boundaries for future C++/ISPC/CUDA kernels.
 
-No runtime benchmark is published yet because no compute path exists. Baseline
-capture begins with the Day 5 harness; the first analyzed performance report is
-published on Day 6.
+There is still no normalize-through-aggregate execution or published timing
+result. The release-build preflight now exercises a real generation boundary,
+but sampling and baseline capture remain Day 5 work; the first analyzed report
+is published on Day 6.
 
 ## Stable workload
 
@@ -47,6 +51,33 @@ The complete semantics are in
 [workload-v1.md](docs/specifications/workload-v1.md). The machine-readable
 schema is [workload-v1.schema.json](contracts/workload-v1.schema.json).
 
+## Deterministic generation
+
+Every generated field is a pure function of `(seed, record index, field ID)`.
+There is no shared RNG state, so visiting indices forward, backward, or in
+future worker-sized partitions produces identical records.
+
+Manifest seeds and record counts are capped at `2^53−1`, the largest integer
+all supported JSON consumers preserve exactly. The underlying generator still
+defines full-width `u64` wrapping behavior, locked by hexadecimal vectors.
+
+The Rust API keeps random access fundamental:
+
+```rust
+let generator = DatasetGenerator::try_new(&spec.dataset)?;
+let record = generator.record_at(42);
+let partition = generator.generate_range(1_000..2_000)?;
+```
+
+`generate_range` currently returns a scalar reference `Vec<LogicalRecord>`.
+That is not a frozen AoS layout or ABI. Later backends can materialize the same
+absolute indices into SoA, aligned, or device-specific buffers.
+
+Exact [`splitmix64-v1` vectors](contracts/conformance/splitmix64-v1.json) lock
+wrapping behavior, field identifiers, and selected full-record outputs across
+uniform, hotspot, and edge-case workloads. Their `u64` values are fixed-width
+hexadecimal strings to remain lossless in every JSON consumer.
+
 ## Architecture
 
 ```mermaid
@@ -59,7 +90,7 @@ flowchart TD
 | Component | Responsibility today | Future responsibility |
 | --- | --- | --- |
 | `paraflow-contracts` | Workload types, stage order, validation | Shared semantic authority |
-| `paraflow-engine` | Contract inspection and manifest validation | Scalar oracle, task DAG, scheduling |
+| `paraflow-engine` | Manifest validation and deterministic generation | Scalar oracle, task DAG, scheduling |
 | `labctl` | Environment diagnostics | Experiment orchestration and evidence capture |
 | `abi` | Documents boundary rules | Narrow Rust-to-native C ABI |
 | `kernels-cpp` | Documents scope only | Scalar, SIMD, ISPC, and CUDA kernels |
@@ -77,7 +108,7 @@ See [architecture/overview.md](docs/architecture/overview.md) and the accepted
 .
 ├── abi/                    # Future C ABI rules, not a premature layout
 ├── benchmarks/             # Methodology and future experiment definitions
-├── contracts/              # Machine-readable workload schema
+├── contracts/              # Schemas and portable conformance vectors
 ├── docs/
 │   ├── adr/                # Architectural decisions
 │   ├── architecture/       # System design
@@ -96,14 +127,14 @@ See [architecture/overview.md](docs/architecture/overview.md) and the accepted
 
 ## Quick start
 
-Required for Day 1:
+Required for Day 2:
 
 - Git;
 - Go 1.24 or newer;
 - Rust 1.88 with `rustfmt` and `clippy`;
 - a C compiler (`cc`) for race-enabled Go tests;
 - Node.js 20 or newer with npm, used only for Draft 2020-12 contract checks;
-- Bash and GNU Make.
+- Bash 4 or newer and GNU Make.
 
 Inspect the contract:
 
@@ -116,6 +147,12 @@ Validate the checked-in workload:
 ```bash
 cargo run -p paraflow-engine -- \
   validate workloads/smoke-uniform-v1.json
+```
+
+Verify deterministic generation, boundary behavior, and portable vectors:
+
+```bash
+make generation-check
 ```
 
 Inspect environment readiness:
@@ -131,18 +168,22 @@ Run all quality gates:
 make check
 ```
 
-Run the non-timing benchmark readiness check:
+Run the release-build, non-timing benchmark readiness check:
 
 ```bash
 make benchmark-preflight
 ```
 
-The same targets run in GitHub Actions.
+GitHub Actions runs the equivalent contract, Rust, and Go correctness gates.
+Timing thresholds remain deliberately local.
 
 ## Testing strategy
 
 - Rust contract tests enforce schema parsing, accumulated semantic errors,
   stage order, round-trip behavior, and empty-workload semantics.
+- Rust generation tests enforce literal SplitMix vectors, exact generated
+  records, repeated and partitioned identity, full-width feature arithmetic,
+  probability boundaries, safe range failures, and lazy huge datasets.
 - Rust CLI tests exercise valid, malformed, and missing files plus exact command
   exit behavior.
 - Go tests inject tool probes and verify failed, timed-out, and outdated
@@ -161,13 +202,15 @@ cases as well as the wins.
 
 The full policy is in
 [benchmark-methodology.md](docs/benchmark-methodology.md). Day 1 provides a
-benchmark preflight, not an artificial benchmark of configuration parsing.
+benchmark policy; Day 2 adds release-build and generator-conformance preflight,
+not premature timing samples or an artificial benchmark of configuration
+parsing.
 
 ## Roadmap
 
 The repository will evolve without replacing the workload:
 
-1. deterministic generation;
+1. deterministic generation — **complete**;
 2. scalar Rust correctness oracle;
 3. Go-to-Rust experiment protocol;
 4. reproducible benchmark harness;

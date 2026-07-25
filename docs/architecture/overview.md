@@ -24,9 +24,11 @@ Rust owns:
 - backend selection;
 - correctness comparison and execution tracing.
 
-On Day 1, `paraflow-contracts` defines workload types and semantic validation.
-`paraflow-engine` only validates manifests and reports the active contract.
-There is deliberately no `run` command before the scalar oracle exists.
+`paraflow-contracts` defines workload types and semantic validation. Day 2 adds
+the executable generator under `paraflow-engine`: validated random access,
+lazy stable-order iteration, and safe absolute-range materialization. There is
+deliberately no normalize-through-aggregate `run` command before the scalar
+oracle exists.
 
 ### Go controller
 
@@ -51,8 +53,8 @@ C++ will own:
 - CUDA host code and kernels;
 - hardware-specific profiling hooks.
 
-C++ begins only when Week 2 introduces SIMD. Day 1 contains no fake native
-target.
+C++ begins only when Week 2 introduces SIMD. Day 2 still contains no fake
+native target or duplicate generator implementation.
 
 ## Contracts
 
@@ -94,3 +96,22 @@ Every future implementation is checked against the Rust scalar oracle:
 6. performance comparison only after correctness passes.
 
 No backend can earn a performance result by weakening correctness.
+
+## Deterministic input identity
+
+`splitmix64-v1` derives each field from the workload seed, absolute record
+index, and stable field identifier. It does not consume mutable RNG state.
+
+This gives future execution layers a clean partitioning boundary:
+
+```text
+range 0..N = range 0..A + range A..B + range B..N
+```
+
+The ranges may be visited in any order and still contain the same records.
+Day 2 does not schedule those ranges; it proves the property that later
+schedulers will rely on.
+
+Reference range materialization currently uses `Vec<LogicalRecord>`. This is a
+replaceable scalar representation, not a workload schema, C ABI, or decision
+against later columnar layouts.

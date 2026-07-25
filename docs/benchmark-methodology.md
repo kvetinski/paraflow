@@ -2,14 +2,16 @@
 
 Status: **policy defined; executable benchmark harness scheduled for Day 5**
 
-## Day 1 decision
+## Milestone boundary
 
-There is no meaningful compute path to benchmark yet. Timing schema parsing,
-CLI startup, or the environment doctor would manufacture an irrelevant result.
-Day 1 therefore provides validation, metadata preflight, directory policy, and
-claim requirements only. The preflight captures source identity, capture time,
-kernel, CPU model when available, logical CPU count, `GOMAXPROCS`, and compiler
-readiness. Day 5 extends this into the complete experiment identity below.
+Day 1 rejected timings of schema parsing, CLI startup, and the environment
+doctor because they do not measure the intended workload.
+
+Day 2 makes deterministic generation executable and validates it in an
+optimized build. It still does not collect or publish timing samples: warm-ups,
+raw samples, persistence, and complete experiment identity belong to the Day 5
+harness. Until then, `make benchmark-preflight` proves release-build,
+conformance, source-identity, and toolchain readiness only.
 
 ## Timing boundaries
 
@@ -17,13 +19,17 @@ The future harness reports separate measurements:
 
 | Boundary | Includes |
 | --- | --- |
-| `generation` | Deterministic record creation |
+| `generation` | Deterministic record materialization, including allocation |
 | `compute` | Normalize through aggregate |
 | `engine_total` | Generation, compute, validation, and engine bookkeeping |
 | `orchestration` | Go control-plane and process/protocol overhead |
 
 Process startup is excluded from individual compute samples. If measured, it is
 reported separately.
+
+An experiment that intentionally reuses preallocated buffers must name that
+different boundary explicitly rather than presenting it as the default
+`generation` measurement.
 
 ## Required experiment identity
 

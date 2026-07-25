@@ -9,8 +9,8 @@ mod splitmix64_v1;
 use std::{collections::TryReserveError, error::Error, fmt, iter::FusedIterator, ops::Range};
 
 use paraflow_contracts::{
-    DatasetSpec, DistributionSpec, GeneratorAlgorithm, LogicalRecord, Validate, ValidationErrors,
-    BASIS_POINTS_MAX,
+    BASIS_POINTS_MAX, DatasetSpec, DistributionSpec, GeneratorAlgorithm, LogicalRecord, Validate,
+    ValidationErrors,
 };
 
 pub use splitmix64_v1::{mix_v1, sample_v1};

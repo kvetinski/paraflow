@@ -16,10 +16,17 @@ those later changes comparable.
 - Architecture and benchmark policy.
 - Unit/integration tests and CI.
 
-## Day 2 — Deterministic data
+## Day 2 — Completed deterministic data
 
-Implement `splitmix64-v1` as pure `(seed, index, field)` generation. Add golden
-vectors shared across language boundaries. No pipeline execution yet.
+- Pure wrapping `splitmix64-v1` as `(seed, index, field)` generation.
+- Validated random-access generation and lazy stable-order iteration.
+- Safe reference range materialization without freezing a physical layout.
+- Uniform and hotspot workload fixtures.
+- Versioned fixed-width conformance vectors shared across language boundaries.
+- Boundary tests for ranges, probabilities, flags, and full-width features.
+
+There is still no normalize-through-aggregate pipeline execution or published
+timing result.
 
 ## Day 3 — Scalar oracle
 

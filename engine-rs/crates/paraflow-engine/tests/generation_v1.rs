@@ -1,11 +1,11 @@
 use std::{fs, path::Path};
 
 use paraflow_contracts::{
-    DistributionSpec, LogicalRecord, Validate, ValidationCode, WorkloadSpec, MAX_SAFE_JSON_INTEGER,
-    WORKLOAD_SCHEMA,
+    DistributionSpec, LogicalRecord, MAX_SAFE_JSON_INTEGER, Validate, ValidationCode,
+    WORKLOAD_SCHEMA, WorkloadSpec,
 };
 use paraflow_engine::{
-    generation::{mix_v1, sample_v1, DatasetGenerator, GenerationError},
+    generation::{DatasetGenerator, GenerationError, mix_v1, sample_v1},
     parse_manifest,
 };
 use serde::Deserialize;
@@ -201,10 +201,12 @@ fn empty_single_large_and_lazy_huge_datasets_are_safe() {
     spec.dataset.record_count = 0;
     let empty = DatasetGenerator::try_new(&spec.dataset).expect("empty dataset must validate");
     assert!(empty.records().next().is_none());
-    assert!(empty
-        .generate_all()
-        .expect("empty batch is valid")
-        .is_empty());
+    assert!(
+        empty
+            .generate_all()
+            .expect("empty batch is valid")
+            .is_empty()
+    );
     assert_eq!(empty.record_at(0), None);
 
     spec.dataset.record_count = 1;
@@ -241,9 +243,11 @@ fn features_honor_exclusive_bounds_with_widened_arithmetic() {
     spec.dataset.feature_max = -6;
     let width_one =
         DatasetGenerator::try_new(&spec.dataset).expect("width-one range must validate");
-    assert!(width_one
-        .records()
-        .all(|record| record.feature_a == -7 && record.feature_b == -7));
+    assert!(
+        width_one
+            .records()
+            .all(|record| record.feature_a == -7 && record.feature_b == -7)
+    );
 
     spec.dataset.feature_min = i32::MIN;
     spec.dataset.feature_max = i32::MAX;

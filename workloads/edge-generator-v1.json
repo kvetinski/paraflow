@@ -1,0 +1,41 @@
+{
+  "$schema": "../contracts/workload-v1.schema.json",
+  "schema_version": "paraflow.workload/v1",
+  "name": "edge-generator-v1",
+  "dataset": {
+    "record_count": 1,
+    "seed": 149,
+    "generator": "splitmix64-v1",
+    "distribution": {
+      "kind": "hotspot",
+      "category": 0,
+      "probability_bps": 0
+    },
+    "feature_min": -2147483648,
+    "feature_max": 2147483647,
+    "category_count": 1,
+    "flag_probability_bps": 5559
+  },
+  "pipeline": {
+    "normalize": {
+      "offset_a": 0.0,
+      "scale_a": 0.000000001,
+      "offset_b": 0.0,
+      "scale_b": 0.000000001,
+      "clip": 8.0
+    },
+    "score": {
+      "weight_a": 0.7,
+      "weight_b": -0.2,
+      "bias": 0.1,
+      "flag_mask": 1,
+      "flag_bonus": 0.25
+    },
+    "filter": {
+      "min_score": 0.5
+    },
+    "aggregate": {
+      "histogram": "category"
+    }
+  }
+}

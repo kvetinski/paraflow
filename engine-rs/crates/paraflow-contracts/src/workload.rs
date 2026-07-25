@@ -21,9 +21,11 @@ pub struct WorkloadSpec {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct DatasetSpec {
-    /// Number of records to generate. Zero is valid for correctness tests.
+    /// Number of records to generate, at most the portable JSON integer limit.
+    /// Zero is valid for correctness tests.
     pub record_count: u64,
-    /// Root seed from which every record field is derived.
+    /// Root seed from which every record field is derived, encoded losslessly
+    /// by every supported JSON consumer.
     pub seed: u64,
     /// Counter-based generator algorithm.
     pub generator: GeneratorAlgorithm,

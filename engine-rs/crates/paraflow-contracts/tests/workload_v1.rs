@@ -1,8 +1,8 @@
 use std::{fs, path::Path};
 
 use paraflow_contracts::{
-    BASIS_POINTS_MAX, DistributionSpec, MAX_CATEGORIES, PIPELINE_STAGES, Validate, ValidationCode,
-    WORKLOAD_SCHEMA, WorkloadSpec,
+    BASIS_POINTS_MAX, DistributionSpec, MAX_CATEGORIES, MAX_SAFE_JSON_INTEGER, PIPELINE_STAGES,
+    Validate, ValidationCode, WORKLOAD_SCHEMA, WorkloadSpec,
 };
 
 const VALID_WORKLOAD: &str = include_str!("../../../../workloads/smoke-uniform-v1.json");
@@ -86,6 +86,27 @@ fn invalid_dataset_bounds_are_rejected() {
 }
 
 #[test]
+fn manifest_integers_must_be_lossless_in_every_json_consumer() {
+    let mut spec = valid_spec();
+    spec.dataset.record_count = MAX_SAFE_JSON_INTEGER + 1;
+    spec.dataset.seed = MAX_SAFE_JSON_INTEGER + 1;
+
+    let errors = spec.validate().expect_err("unsafe JSON integers must fail");
+    let unsafe_paths = errors
+        .issues()
+        .iter()
+        .filter(|issue| issue.code == ValidationCode::UnsafeJsonInteger)
+        .map(|issue| issue.path)
+        .collect::<Vec<_>>();
+
+    assert_eq!(
+        unsafe_paths,
+        ["dataset.record_count", "dataset.seed"],
+        "both independently rounded fields must be reported"
+    );
+}
+
+#[test]
 fn invalid_hotspot_is_rejected() {
     let mut spec = valid_spec();
     spec.dataset.distribution = DistributionSpec::Hotspot {
@@ -132,6 +153,10 @@ fn every_validation_code_has_a_regression_case() {
     let mut long_name = valid_spec();
     long_name.name = "x".repeat(121);
     cases.push((long_name, ValidationCode::NameTooLong));
+
+    let mut unsafe_json_integer = valid_spec();
+    unsafe_json_integer.dataset.seed = MAX_SAFE_JSON_INTEGER + 1;
+    cases.push((unsafe_json_integer, ValidationCode::UnsafeJsonInteger));
 
     let mut empty_categories = valid_spec();
     empty_categories.dataset.category_count = 0;

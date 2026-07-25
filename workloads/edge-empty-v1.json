@@ -1,0 +1,39 @@
+{
+  "$schema": "../contracts/workload-v1.schema.json",
+  "schema_version": "paraflow.workload/v1",
+  "name": "edge-empty-v1",
+  "dataset": {
+    "record_count": 0,
+    "seed": 0,
+    "generator": "splitmix64-v1",
+    "distribution": {
+      "kind": "uniform"
+    },
+    "feature_min": 0,
+    "feature_max": 1,
+    "category_count": 1,
+    "flag_probability_bps": 0
+  },
+  "pipeline": {
+    "normalize": {
+      "offset_a": 0.0,
+      "scale_a": 1.0,
+      "offset_b": 0.0,
+      "scale_b": 1.0,
+      "clip": 1.0
+    },
+    "score": {
+      "weight_a": 1.0,
+      "weight_b": 1.0,
+      "bias": 0.0,
+      "flag_mask": 1,
+      "flag_bonus": 0.0
+    },
+    "filter": {
+      "min_score": 0.0
+    },
+    "aggregate": {
+      "histogram": "category"
+    }
+  }
+}

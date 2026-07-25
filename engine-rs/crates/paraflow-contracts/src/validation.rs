@@ -1,12 +1,15 @@
 use std::{error::Error, fmt};
 
-use crate::{DistributionSpec, WORKLOAD_SCHEMA, WorkloadSpec};
+use crate::{DatasetSpec, DistributionSpec, WORKLOAD_SCHEMA, WorkloadSpec};
 
 /// Maximum probability in basis points.
 pub const BASIS_POINTS_MAX: u16 = 10_000;
 
 /// Upper bound that prevents accidentally allocating unbounded histograms.
 pub const MAX_CATEGORIES: u32 = 65_536;
+
+/// Largest integer every supported JSON tool can represent without rounding.
+pub const MAX_SAFE_JSON_INTEGER: u64 = (1_u64 << 53) - 1;
 
 const MAX_NAME_CHARS: usize = 120;
 
@@ -19,6 +22,8 @@ pub enum ValidationCode {
     BlankName,
     /// The workload name exceeds the contract limit.
     NameTooLong,
+    /// A manifest integer exceeds the cross-language lossless JSON range.
+    UnsafeJsonInteger,
     /// Category count is zero.
     EmptyCategories,
     /// Category count exceeds the contract limit.
@@ -43,6 +48,7 @@ impl fmt::Display for ValidationCode {
             Self::UnsupportedSchema => "unsupported_schema",
             Self::BlankName => "blank_name",
             Self::NameTooLong => "name_too_long",
+            Self::UnsafeJsonInteger => "unsafe_json_integer",
             Self::EmptyCategories => "empty_categories",
             Self::TooManyCategories => "too_many_categories",
             Self::InvalidFeatureRange => "invalid_feature_range",
@@ -134,14 +140,26 @@ impl Validate for WorkloadSpec {
         let mut issues = Vec::new();
 
         validate_identity(self, &mut issues);
-        validate_dataset(self, &mut issues);
+        validate_dataset(&self.dataset, &mut issues);
         validate_pipeline(self, &mut issues);
 
-        if issues.is_empty() {
-            Ok(())
-        } else {
-            Err(ValidationErrors::new(issues))
-        }
+        finish_validation(issues)
+    }
+}
+
+impl Validate for DatasetSpec {
+    fn validate(&self) -> Result<(), ValidationErrors> {
+        let mut issues = Vec::new();
+        validate_dataset(self, &mut issues);
+        finish_validation(issues)
+    }
+}
+
+fn finish_validation(issues: Vec<ValidationIssue>) -> Result<(), ValidationErrors> {
+    if issues.is_empty() {
+        Ok(())
+    } else {
+        Err(ValidationErrors::new(issues))
     }
 }
 
@@ -172,8 +190,9 @@ fn validate_identity(spec: &WorkloadSpec, issues: &mut Vec<ValidationIssue>) {
     }
 }
 
-fn validate_dataset(spec: &WorkloadSpec, issues: &mut Vec<ValidationIssue>) {
-    let dataset = &spec.dataset;
+fn validate_dataset(dataset: &DatasetSpec, issues: &mut Vec<ValidationIssue>) {
+    validate_json_integer(issues, "dataset.record_count", dataset.record_count);
+    validate_json_integer(issues, "dataset.seed", dataset.seed);
 
     if dataset.category_count == 0 {
         issues.push(ValidationIssue::new(
@@ -224,6 +243,18 @@ fn validate_dataset(spec: &WorkloadSpec, issues: &mut Vec<ValidationIssue>) {
                 ),
             ));
         }
+    }
+}
+
+fn validate_json_integer(issues: &mut Vec<ValidationIssue>, path: &'static str, value: u64) {
+    if value > MAX_SAFE_JSON_INTEGER {
+        issues.push(ValidationIssue::new(
+            ValidationCode::UnsafeJsonInteger,
+            path,
+            format!(
+                "value must not exceed {MAX_SAFE_JSON_INTEGER} so every JSON consumer preserves it exactly"
+            ),
+        ));
     }
 }
 

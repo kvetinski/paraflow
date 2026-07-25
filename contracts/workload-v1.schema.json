@@ -52,12 +52,12 @@
         "record_count": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 18446744073709551615
+          "maximum": 9007199254740991
         },
         "seed": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 18446744073709551615
+          "maximum": 9007199254740991
         },
         "generator": {
           "const": "splitmix64-v1"

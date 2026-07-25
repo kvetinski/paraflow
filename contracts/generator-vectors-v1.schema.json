@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvetinski/paraflow/blob/main/contracts/generator-vectors-v1.schema.json",
+  "title": "ParaFlow generator conformance vectors v1",
+  "description": "Portable exact vectors for splitmix64-v1 and workload-v1 record generation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_version",
+    "workload_schema",
+    "algorithm",
+    "mix_vectors",
+    "sample_vectors",
+    "workload_vectors"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "paraflow.generator-vectors/v1"
+    },
+    "workload_schema": {
+      "const": "paraflow.workload/v1"
+    },
+    "algorithm": {
+      "const": "splitmix64-v1"
+    },
+    "mix_vectors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/mixVector"
+      }
+    },
+    "sample_vectors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/sampleVector"
+      }
+    },
+    "workload_vectors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/workloadVector"
+      }
+    }
+  },
+  "$defs": {
+    "hex64": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{16}$"
+    },
+    "mixVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "input": {
+          "$ref": "#/$defs/hex64"
+        },
+        "expected": {
+          "$ref": "#/$defs/hex64"
+        }
+      }
+    },
+    "sampleVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "seed",
+        "index",
+        "field",
+        "expected"
+      ],
+      "properties": {
+        "seed": {
+          "$ref": "#/$defs/hex64"
+        },
+        "index": {
+          "$ref": "#/$defs/hex64"
+        },
+        "field": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "expected": {
+          "$ref": "#/$defs/hex64"
+        }
+      }
+    },
+    "workloadVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workload",
+        "records"
+      ],
+      "properties": {
+        "workload": {
+          "type": "string",
+          "pattern": "^workloads/[a-z0-9-]+\\.json$"
+        },
+        "records": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/logicalRecord"
+          }
+        }
+      }
+    },
+    "logicalRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "category",
+        "feature_a",
+        "feature_b",
+        "flags"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/hex64"
+        },
+        "category": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "feature_a": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "feature_b": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    }
+  }
+}

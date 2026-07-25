@@ -20,6 +20,10 @@ alignment, allocation strategy, or ABI.
 | `feature_b` | signed 32-bit | Second raw feature |
 | `flags` | unsigned 32-bit | Bit field consumed by scoring |
 
+This logical record shape is versioned as part of `paraflow.workload/v1`.
+Changing its meaning requires workload v2. The conformance fixture's JSON
+encoding is test evidence, not a runtime wire format or physical layout.
+
 ## Stage order
 
 Every backend preserves:
@@ -31,6 +35,13 @@ generate → normalize → score → filter → aggregate
 Stages may later be fused when fusion is observationally equivalent.
 
 ## 1. Generate
+
+Workload manifests restrict `record_count` and `seed` to
+`[0, 2^53 - 1]`. They remain logical unsigned 64-bit values, but this input
+domain guarantees that Go, Rust, C++, JavaScript, and JSON Schema tooling
+preserve their identity without numeric rounding. The pure `mix` and `sample`
+functions still define wrapping behavior across the full `u64` domain, which
+the hexadecimal conformance vectors exercise.
 
 `splitmix64-v1` is a counter-derived generator. All arithmetic below is
 unsigned 64-bit arithmetic with wraparound:
@@ -60,8 +71,12 @@ Field identifiers are:
 | Hotspot fallback category | `4` |
 
 It does not depend on task order, worker count, scheduling, or prior generator
-state. Day 2 adds the executable implementation and cross-language reference
-vectors for this frozen algorithm.
+state. The Day 2 executable reference is implemented in
+[`generation`](../../engine-rs/crates/paraflow-engine/src/generation/mod.rs).
+Portable exact values are frozen in the versioned
+[`splitmix64-v1` conformance vectors](../../contracts/conformance/splitmix64-v1.json).
+All `u64` values in that JSON document use fixed-width hexadecimal strings so
+JavaScript and other JSON consumers cannot round values above `2^53`.
 
 For each record:
 
@@ -175,6 +190,7 @@ Validation accumulates independent semantic errors in one pass:
 
 - unsupported schema;
 - blank or overlong name;
+- `record_count` or `seed` above the lossless JSON integer range;
 - zero or excessive category count;
 - empty feature range;
 - probability above 10,000 basis points;

@@ -4,13 +4,25 @@ import { fileURLToPath } from "node:url";
 
 import Ajv2020 from "ajv/dist/2020.js";
 
-const EXPECTED_SCHEMA = "paraflow.workload/v1";
+const EXPECTED_WORKLOAD_SCHEMA = "paraflow.workload/v1";
+const EXPECTED_VECTOR_SCHEMA = "paraflow.generator-vectors/v1";
 const toolDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(toolDirectory, "../..");
-const schemaPath = path.join(
+const workloadSchemaPath = path.join(
   repositoryRoot,
   "contracts",
   "workload-v1.schema.json",
+);
+const vectorSchemaPath = path.join(
+  repositoryRoot,
+  "contracts",
+  "generator-vectors-v1.schema.json",
+);
+const vectorFixturePath = path.join(
+  repositoryRoot,
+  "contracts",
+  "conformance",
+  "splitmix64-v1.json",
 );
 const workloadsDirectory = path.join(repositoryRoot, "workloads");
 
@@ -22,10 +34,22 @@ function readJSON(filePath) {
   }
 }
 
-const schema = readJSON(schemaPath);
-if (schema.properties?.schema_version?.const !== EXPECTED_SCHEMA) {
+const workloadSchema = readJSON(workloadSchemaPath);
+if (
+  workloadSchema.properties?.schema_version?.const !==
+  EXPECTED_WORKLOAD_SCHEMA
+) {
   throw new Error(
-    `schema_version const must be ${JSON.stringify(EXPECTED_SCHEMA)}`,
+    `workload schema_version const must be ${JSON.stringify(EXPECTED_WORKLOAD_SCHEMA)}`,
+  );
+}
+
+const vectorSchema = readJSON(vectorSchemaPath);
+if (
+  vectorSchema.properties?.schema_version?.const !== EXPECTED_VECTOR_SCHEMA
+) {
+  throw new Error(
+    `vector schema_version const must be ${JSON.stringify(EXPECTED_VECTOR_SCHEMA)}`,
   );
 }
 
@@ -33,7 +57,8 @@ const ajv = new Ajv2020({
   allErrors: true,
   strict: true,
 });
-const validate = ajv.compile(schema);
+const validateWorkload = ajv.compile(workloadSchema);
+const validateVectors = ajv.compile(vectorSchema);
 const workloadPaths = fs
   .readdirSync(workloadsDirectory, { withFileTypes: true })
   .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
@@ -47,13 +72,13 @@ if (workloadPaths.length === 0) {
 let failed = false;
 for (const workloadPath of workloadPaths) {
   const workload = readJSON(workloadPath);
-  if (validate(workload)) {
+  if (validateWorkload(workload)) {
     continue;
   }
 
   failed = true;
   const relativePath = path.relative(repositoryRoot, workloadPath);
-  for (const issue of validate.errors ?? []) {
+  for (const issue of validateWorkload.errors ?? []) {
     const location = issue.instancePath || "/";
     console.error(
       `${relativePath}${location}: ${issue.message ?? "schema validation failed"}`,
@@ -88,6 +113,26 @@ const invalidCases = [
     },
   ],
   [
+    "record count above the portable JSON integer range",
+    {
+      ...reference,
+      dataset: {
+        ...reference.dataset,
+        record_count: 9_007_199_254_740_992,
+      },
+    },
+  ],
+  [
+    "seed above the portable JSON integer range",
+    {
+      ...reference,
+      dataset: {
+        ...reference.dataset,
+        seed: 9_007_199_254_740_992,
+      },
+    },
+  ],
+  [
     "non-positive normalization scale",
     {
       ...reference,
@@ -103,9 +148,50 @@ const invalidCases = [
 ];
 
 for (const [label, invalidWorkload] of invalidCases) {
-  if (validate(invalidWorkload)) {
+  if (validateWorkload(invalidWorkload)) {
     failed = true;
     console.error(`schema regression case was accepted: ${label}`);
+  }
+}
+
+const vectors = readJSON(vectorFixturePath);
+if (!validateVectors(vectors)) {
+  failed = true;
+  const relativePath = path.relative(repositoryRoot, vectorFixturePath);
+  for (const issue of validateVectors.errors ?? []) {
+    const location = issue.instancePath || "/";
+    console.error(
+      `${relativePath}${location}: ${issue.message ?? "schema validation failed"}`,
+    );
+  }
+}
+
+const invalidVectorCases = [
+  [
+    "unknown vector field",
+    {
+      ...vectors,
+      unexpected: true,
+    },
+  ],
+  [
+    "unsafe variable-width u64",
+    {
+      ...vectors,
+      sample_vectors: [
+        {
+          ...vectors.sample_vectors[0],
+          seed: "0x0",
+        },
+      ],
+    },
+  ],
+];
+
+for (const [label, invalidVectors] of invalidVectorCases) {
+  if (validateVectors(invalidVectors)) {
+    failed = true;
+    console.error(`vector schema regression case was accepted: ${label}`);
   }
 }
 
@@ -113,6 +199,6 @@ if (failed) {
   process.exitCode = 1;
 } else {
   console.log(
-    `JSON Schema validation passed (${workloadPaths.length} workload(s), ${invalidCases.length} rejection cases)`,
+    `JSON Schema validation passed (${workloadPaths.length} workload(s), 1 conformance fixture, ${invalidCases.length + invalidVectorCases.length} rejection cases)`,
   );
 }

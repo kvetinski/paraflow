@@ -1,0 +1,227 @@
+{
+  "$schema": "../generator-vectors-v1.schema.json",
+  "schema_version": "paraflow.generator-vectors/v1",
+  "workload_schema": "paraflow.workload/v1",
+  "algorithm": "splitmix64-v1",
+  "mix_vectors": [
+    {
+      "input": "0x0000000000000000",
+      "expected": "0xe220a8397b1dcdaf"
+    },
+    {
+      "input": "0x0000000000000001",
+      "expected": "0x910a2dec89025cc1"
+    },
+    {
+      "input": "0xffffffffffffffff",
+      "expected": "0xe4d971771b652c20"
+    }
+  ],
+  "sample_vectors": [
+    {
+      "seed": "0x0000000000000000",
+      "index": "0x0000000000000000",
+      "field": 0,
+      "expected": "0xe220a8397b1dcdaf"
+    },
+    {
+      "seed": "0x0000000000000095",
+      "index": "0x0000000000000000",
+      "field": 0,
+      "expected": "0x2ac8b3c337332480"
+    },
+    {
+      "seed": "0x0000000000000095",
+      "index": "0x0000000000000000",
+      "field": 1,
+      "expected": "0x1d8ae86ac420f5a8"
+    },
+    {
+      "seed": "0x0000000000000095",
+      "index": "0x0000000000000000",
+      "field": 2,
+      "expected": "0x9c5ba42cb46b0e4f"
+    },
+    {
+      "seed": "0x0000000000000095",
+      "index": "0x0000000000000000",
+      "field": 3,
+      "expected": "0xa455b8bcb3b30cb7"
+    },
+    {
+      "seed": "0x0000000000000095",
+      "index": "0x0000000000000000",
+      "field": 4,
+      "expected": "0xa0da3b523b21e589"
+    },
+    {
+      "seed": "0x0000000000000095",
+      "index": "0x0000000000000001",
+      "field": 0,
+      "expected": "0xabf4d12eed8b7476"
+    },
+    {
+      "seed": "0x0000000000000095",
+      "index": "0x0000000000000001",
+      "field": 1,
+      "expected": "0x900bfe8fd3770da7"
+    },
+    {
+      "seed": "0x0000000000000095",
+      "index": "0x0000000000000001",
+      "field": 2,
+      "expected": "0xc86337010516a804"
+    },
+    {
+      "seed": "0x0000000000000095",
+      "index": "0x0000000000000001",
+      "field": 3,
+      "expected": "0x759917b07dd37eef"
+    },
+    {
+      "seed": "0x0000000000000095",
+      "index": "0x0000000000000001",
+      "field": 4,
+      "expected": "0x3807bb967f525296"
+    },
+    {
+      "seed": "0xffffffffffffffff",
+      "index": "0xffffffffffffffff",
+      "field": 4,
+      "expected": "0x74aa5e783d17340c"
+    }
+  ],
+  "workload_vectors": [
+    {
+      "workload": "workloads/smoke-uniform-v1.json",
+      "records": [
+        {
+          "id": "0x0000000000000000",
+          "category": 0,
+          "feature_a": 2456,
+          "feature_b": 8895,
+          "flags": 0
+        },
+        {
+          "id": "0x0000000000000001",
+          "category": 6,
+          "feature_a": 3287,
+          "feature_b": -1996,
+          "flags": 0
+        },
+        {
+          "id": "0x0000000000000002",
+          "category": 2,
+          "feature_a": -2796,
+          "feature_b": 9540,
+          "flags": 0
+        },
+        {
+          "id": "0x0000000000000003",
+          "category": 13,
+          "feature_a": -1013,
+          "feature_b": 2014,
+          "flags": 1
+        },
+        {
+          "id": "0x0000000000000011",
+          "category": 4,
+          "feature_a": -7038,
+          "feature_b": -6908,
+          "flags": 0
+        },
+        {
+          "id": "0x00000000000001ff",
+          "category": 13,
+          "feature_a": -2371,
+          "feature_b": 9726,
+          "flags": 1
+        },
+        {
+          "id": "0x00000000000003ff",
+          "category": 12,
+          "feature_a": -6030,
+          "feature_b": 7021,
+          "flags": 0
+        }
+      ]
+    },
+    {
+      "workload": "workloads/smoke-hotspot-v1.json",
+      "records": [
+        {
+          "id": "0x0000000000000000",
+          "category": 3,
+          "feature_a": 0,
+          "feature_b": -16,
+          "flags": 1
+        },
+        {
+          "id": "0x0000000000000001",
+          "category": 3,
+          "feature_a": 20,
+          "feature_b": -16,
+          "flags": 1
+        },
+        {
+          "id": "0x0000000000000002",
+          "category": 3,
+          "feature_a": 60,
+          "feature_b": -31,
+          "flags": 0
+        },
+        {
+          "id": "0x0000000000000003",
+          "category": 7,
+          "feature_a": 34,
+          "feature_b": -30,
+          "flags": 0
+        },
+        {
+          "id": "0x0000000000000011",
+          "category": 3,
+          "feature_a": 52,
+          "feature_b": -7,
+          "flags": 0
+        },
+        {
+          "id": "0x0000000000000012",
+          "category": 0,
+          "feature_a": 57,
+          "feature_b": 48,
+          "flags": 1
+        },
+        {
+          "id": "0x00000000000001ff",
+          "category": 3,
+          "feature_a": 41,
+          "feature_b": -52,
+          "flags": 0
+        },
+        {
+          "id": "0x00000000000003ff",
+          "category": 3,
+          "feature_a": -16,
+          "feature_b": 62,
+          "flags": 1
+        }
+      ]
+    },
+    {
+      "workload": "workloads/edge-generator-v1.json",
+      "records": [
+        {
+          "id": "0x0000000000000000",
+          "category": 0,
+          "feature_a": 1638653458,
+          "feature_b": -792284548,
+          "flags": 0
+        }
+      ]
+    },
+    {
+      "workload": "workloads/edge-empty-v1.json",
+      "records": []
+    }
+  ]
+}

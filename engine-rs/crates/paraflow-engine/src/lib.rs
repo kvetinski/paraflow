@@ -1,9 +1,11 @@
-//! Command-line entry points for the ParaFlow engine.
+//! Reference generation and command-line entry points for the ParaFlow engine.
 //!
-//! The Day 1 executable can report its version and contract. Workload
-//! execution is intentionally unavailable until the scalar oracle exists.
+//! Day 2 adds deterministic logical-record generation. Pipeline execution
+//! remains intentionally unavailable until the scalar oracle exists.
 
 #![forbid(unsafe_code)]
+
+pub mod generation;
 
 use std::{error::Error, ffi::OsStr, fmt, fs, io::Write, path::Path};
 

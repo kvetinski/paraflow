@@ -5,11 +5,14 @@
 
 #![forbid(unsafe_code)]
 
+mod result;
 mod stage;
 mod validation;
 mod workload;
 
 pub use stage::{PIPELINE_STAGES, Stage};
+
+pub use result::ResultV1;
 
 pub use validation::{
     BASIS_POINTS_MAX, MAX_CATEGORIES, MAX_SAFE_JSON_INTEGER, Validate, ValidationCode,

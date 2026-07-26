@@ -6,6 +6,7 @@
 #![forbid(unsafe_code)]
 
 pub mod generation;
+pub mod scalar;
 
 use std::{error::Error, ffi::OsStr, fmt, fs, io::Write, path::Path};
 

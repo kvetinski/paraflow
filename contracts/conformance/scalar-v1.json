@@ -1,0 +1,239 @@
+{
+  "$schema": "../scalar-vectors-v1.schema.json",
+  "schema_version": "paraflow.scalar-vectors/v1",
+  "workload_schema": "paraflow.workload/v1",
+  "oracle": "rust-scalar-v1",
+  "stage_vectors": [
+    {
+      "workload": "workloads/edge-generator-v1.json",
+      "record_id": "0x0000000000000000",
+      "normalized_a_bits": "0x3fd1bf65",
+      "normalized_b_bits": "0xbf4ad329",
+      "score_bits": "0x3fb3e7e5",
+      "accepted": true
+    },
+    {
+      "workload": "workloads/edge-scalar-v1.json",
+      "record_id": "0x0000000000000000",
+      "normalized_a_bits": "0xc0000000",
+      "normalized_b_bits": "0xc0000000",
+      "score_bits": "0xc0400000",
+      "accepted": false
+    },
+    {
+      "workload": "workloads/edge-scalar-v1.json",
+      "record_id": "0x0000000000000001",
+      "normalized_a_bits": "0x3f800000",
+      "normalized_b_bits": "0xc0000000",
+      "score_bits": "0x3f000000",
+      "accepted": false
+    },
+    {
+      "workload": "workloads/edge-scalar-v1.json",
+      "record_id": "0x0000000000000002",
+      "normalized_a_bits": "0xc0000000",
+      "normalized_b_bits": "0x40000000",
+      "score_bits": "0xbf800000",
+      "accepted": false
+    },
+    {
+      "workload": "workloads/edge-scalar-v1.json",
+      "record_id": "0x0000000000000003",
+      "normalized_a_bits": "0xc0000000",
+      "normalized_b_bits": "0x00000000",
+      "score_bits": "0xbfc00000",
+      "accepted": false
+    },
+    {
+      "workload": "workloads/edge-scalar-v1.json",
+      "record_id": "0x0000000000000004",
+      "normalized_a_bits": "0x3f800000",
+      "normalized_b_bits": "0x40000000",
+      "score_bits": "0x40200000",
+      "accepted": true
+    },
+    {
+      "workload": "workloads/edge-scalar-v1.json",
+      "record_id": "0x0000000000000005",
+      "normalized_a_bits": "0x40000000",
+      "normalized_b_bits": "0x40000000",
+      "score_bits": "0x40400000",
+      "accepted": true
+    },
+    {
+      "workload": "workloads/edge-scalar-v1.json",
+      "record_id": "0x0000000000000006",
+      "normalized_a_bits": "0xbf800000",
+      "normalized_b_bits": "0xbf800000",
+      "score_bits": "0xbfc00000",
+      "accepted": false
+    },
+    {
+      "workload": "workloads/edge-scalar-v1.json",
+      "record_id": "0x0000000000000007",
+      "normalized_a_bits": "0x40000000",
+      "normalized_b_bits": "0xc0000000",
+      "score_bits": "0x3f800000",
+      "accepted": true
+    },
+    {
+      "workload": "workloads/edge-scalar-ops-v1.json",
+      "record_id": "0x0000000000000000",
+      "normalized_a_bits": "0x3fc00000",
+      "normalized_b_bits": "0xc0400000",
+      "score_bits": "0x3fe00000",
+      "accepted": true
+    },
+    {
+      "workload": "workloads/edge-scalar-mask-v1.json",
+      "record_id": "0x0000000000000000",
+      "normalized_a_bits": "0x00000000",
+      "normalized_b_bits": "0x00000000",
+      "score_bits": "0x3f800000",
+      "accepted": true
+    },
+    {
+      "workload": "workloads/smoke-hotspot-v1.json",
+      "record_id": "0x00000000000001cd",
+      "normalized_a_bits": "0xc0000000",
+      "normalized_b_bits": "0xc0f80000",
+      "score_bits": "0x3f000002",
+      "accepted": true
+    },
+    {
+      "workload": "workloads/smoke-uniform-v1.json",
+      "record_id": "0x0000000000000000",
+      "normalized_a_bits": "0x401d2f1b",
+      "normalized_b_bits": "0x41000000",
+      "score_bits": "0x3e6075f6",
+      "accepted": false
+    }
+  ],
+  "workload_vectors": [
+    {
+      "workload": "workloads/edge-empty-v1.json",
+      "result": {
+        "accepted_count": "0x0000000000000000",
+        "score_sum_bits": "0x0000000000000000",
+        "category_histogram": [
+          "0x0000000000000000"
+        ],
+        "accepted_id_sum": "0x0000000000000000",
+        "accepted_id_xor": "0x0000000000000000"
+      },
+      "compacted_ids": []
+    },
+    {
+      "workload": "workloads/edge-generator-v1.json",
+      "result": {
+        "accepted_count": "0x0000000000000001",
+        "score_sum_bits": "0x3ff67cfca0000000",
+        "category_histogram": [
+          "0x0000000000000001"
+        ],
+        "accepted_id_sum": "0x0000000000000000",
+        "accepted_id_xor": "0xe220a8397b1dcdaf"
+      },
+      "compacted_ids": [
+        "0x0000000000000000"
+      ]
+    },
+    {
+      "workload": "workloads/edge-scalar-v1.json",
+      "result": {
+        "accepted_count": "0x0000000000000003",
+        "score_sum_bits": "0x401a000000000000",
+        "category_histogram": [
+          "0x0000000000000001",
+          "0x0000000000000001",
+          "0x0000000000000001",
+          "0x0000000000000000"
+        ],
+        "accepted_id_sum": "0x0000000000000010",
+        "accepted_id_xor": "0x6ebb399a18884447"
+      },
+      "compacted_ids": [
+        "0x0000000000000004",
+        "0x0000000000000005",
+        "0x0000000000000007"
+      ]
+    },
+    {
+      "workload": "workloads/edge-scalar-ops-v1.json",
+      "result": {
+        "accepted_count": "0x0000000000000002",
+        "score_sum_bits": "0x400c000000000000",
+        "category_histogram": [
+          "0x0000000000000002"
+        ],
+        "accepted_id_sum": "0x0000000000000001",
+        "accepted_id_xor": "0x732a85d5f21f916e"
+      },
+      "compacted_ids": [
+        "0x0000000000000000",
+        "0x0000000000000001"
+      ]
+    },
+    {
+      "workload": "workloads/edge-scalar-mask-v1.json",
+      "result": {
+        "accepted_count": "0x0000000000000001",
+        "score_sum_bits": "0x3ff0000000000000",
+        "category_histogram": [
+          "0x0000000000000001"
+        ],
+        "accepted_id_sum": "0x0000000000000000",
+        "accepted_id_xor": "0xe220a8397b1dcdaf"
+      },
+      "compacted_ids": [
+        "0x0000000000000000"
+      ]
+    },
+    {
+      "workload": "workloads/smoke-hotspot-v1.json",
+      "result": {
+        "accepted_count": "0x00000000000001ed",
+        "score_sum_bits": "0x4097fa3ff2d80000",
+        "category_histogram": [
+          "0x000000000000000f",
+          "0x000000000000000d",
+          "0x0000000000000015",
+          "0x000000000000017d",
+          "0x000000000000000d",
+          "0x000000000000000e",
+          "0x000000000000000e",
+          "0x0000000000000016"
+        ],
+        "accepted_id_sum": "0x000000000003c5b4",
+        "accepted_id_xor": "0xcc33c22766e947ce"
+      }
+    },
+    {
+      "workload": "workloads/smoke-uniform-v1.json",
+      "result": {
+        "accepted_count": "0x00000000000001e5",
+        "score_sum_bits": "0x409c3f2df9500000",
+        "category_histogram": [
+          "0x0000000000000021",
+          "0x0000000000000014",
+          "0x000000000000001a",
+          "0x0000000000000012",
+          "0x0000000000000020",
+          "0x0000000000000025",
+          "0x0000000000000023",
+          "0x000000000000001d",
+          "0x0000000000000022",
+          "0x0000000000000022",
+          "0x0000000000000023",
+          "0x000000000000001d",
+          "0x000000000000001f",
+          "0x0000000000000027",
+          "0x0000000000000019",
+          "0x000000000000001c"
+        ],
+        "accepted_id_sum": "0x000000000003d34e",
+        "accepted_id_xor": "0xaa989c3649fe2f10"
+      }
+    }
+  ]
+}

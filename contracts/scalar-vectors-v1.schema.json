@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvetinski/paraflow/blob/main/contracts/scalar-vectors-v1.schema.json",
+  "title": "ParaFlow scalar oracle conformance vectors v1",
+  "description": "Exact bit-pattern evidence for the Rust scalar correctness oracle.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_version",
+    "workload_schema",
+    "oracle",
+    "stage_vectors",
+    "workload_vectors"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "../scalar-vectors-v1.schema.json"
+    },
+    "schema_version": {
+      "const": "paraflow.scalar-vectors/v1"
+    },
+    "workload_schema": {
+      "const": "paraflow.workload/v1"
+    },
+    "oracle": {
+      "const": "rust-scalar-v1"
+    },
+    "stage_vectors": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/stageVector"
+      }
+    },
+    "workload_vectors": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/workloadVector"
+      }
+    }
+  },
+  "$defs": {
+    "workloadPath": {
+      "type": "string",
+      "pattern": "^workloads/[A-Za-z0-9._-]+\\.json$"
+    },
+    "u64Hex": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{16}$"
+    },
+    "f32Bits": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{8}$"
+    },
+    "f64Bits": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{16}$"
+    },
+    "stageVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workload",
+        "record_id",
+        "normalized_a_bits",
+        "normalized_b_bits",
+        "score_bits",
+        "accepted"
+      ],
+      "properties": {
+        "workload": {
+          "$ref": "#/$defs/workloadPath"
+        },
+        "record_id": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "normalized_a_bits": {
+          "$ref": "#/$defs/f32Bits"
+        },
+        "normalized_b_bits": {
+          "$ref": "#/$defs/f32Bits"
+        },
+        "score_bits": {
+          "$ref": "#/$defs/f32Bits"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "workloadVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workload",
+        "result"
+      ],
+      "properties": {
+        "workload": {
+          "$ref": "#/$defs/workloadPath"
+        },
+        "result": {
+          "$ref": "#/$defs/result"
+        },
+        "compacted_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/u64Hex"
+          }
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accepted_count",
+        "score_sum_bits",
+        "category_histogram",
+        "accepted_id_sum",
+        "accepted_id_xor"
+      ],
+      "properties": {
+        "accepted_count": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "score_sum_bits": {
+          "$ref": "#/$defs/f64Bits"
+        },
+        "category_histogram": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/$defs/u64Hex"
+          }
+        },
+        "accepted_id_sum": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "accepted_id_xor": {
+          "$ref": "#/$defs/u64Hex"
+        }
+      }
+    }
+  }
+}

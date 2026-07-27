@@ -1,0 +1,159 @@
+{
+  "$schema": "../execution-vectors-v1.schema.json",
+  "schema_version": "paraflow.execution-vectors/v1",
+  "protocol_schema": "paraflow.job/v1",
+  "result_schema": "paraflow.result/v1",
+  "cases": [
+    {
+      "name": "edge-empty-v1",
+      "request": {
+        "schema_version": "paraflow.job/v1",
+        "request_id": "conformance.empty",
+        "kind": "execute",
+        "job": {
+          "execution": {
+            "backend": "scalar"
+          },
+          "workload": {
+            "$schema": "../contracts/workload-v1.schema.json",
+            "schema_version": "paraflow.workload/v1",
+            "name": "edge-empty-v1",
+            "dataset": {
+              "record_count": 0,
+              "seed": 0,
+              "generator": "splitmix64-v1",
+              "distribution": {
+                "kind": "uniform"
+              },
+              "feature_min": 0,
+              "feature_max": 1,
+              "category_count": 1,
+              "flag_probability_bps": 0
+            },
+            "pipeline": {
+              "normalize": {
+                "offset_a": 0.0,
+                "scale_a": 1.0,
+                "offset_b": 0.0,
+                "scale_b": 1.0,
+                "clip": 1.0
+              },
+              "score": {
+                "weight_a": 1.0,
+                "weight_b": 1.0,
+                "bias": 0.0,
+                "flag_mask": 1,
+                "flag_bonus": 0.0
+              },
+              "filter": {
+                "min_score": 0.0
+              },
+              "aggregate": {
+                "histogram": "category"
+              }
+            }
+          }
+        }
+      },
+      "expected_response": {
+        "schema_version": "paraflow.job-result/v1",
+        "request_id": "conformance.empty",
+        "kind": "completed",
+        "workload_name": "edge-empty-v1",
+        "execution": {
+          "backend": "scalar"
+        },
+        "result": {
+          "schema_version": "paraflow.result/v1",
+          "accepted_count": "0x0000000000000000",
+          "score_sum": {
+            "encoding": "ieee754-binary64",
+            "bits": "0x0000000000000000"
+          },
+          "category_histogram": [
+            "0x0000000000000000"
+          ],
+          "accepted_id_sum": "0x0000000000000000",
+          "accepted_id_xor": "0x0000000000000000"
+        }
+      }
+    },
+    {
+      "name": "edge-scalar-v1",
+      "request": {
+        "schema_version": "paraflow.job/v1",
+        "request_id": "conformance.scalar",
+        "kind": "execute",
+        "job": {
+          "execution": {
+            "backend": "scalar"
+          },
+          "workload": {
+            "$schema": "../contracts/workload-v1.schema.json",
+            "schema_version": "paraflow.workload/v1",
+            "name": "edge-scalar-v1",
+            "dataset": {
+              "record_count": 8,
+              "seed": 18,
+              "generator": "splitmix64-v1",
+              "distribution": {
+                "kind": "uniform"
+              },
+              "feature_min": -4,
+              "feature_max": 5,
+              "category_count": 4,
+              "flag_probability_bps": 5000
+            },
+            "pipeline": {
+              "normalize": {
+                "offset_a": 0.0,
+                "scale_a": 1.0,
+                "offset_b": 0.0,
+                "scale_b": 1.0,
+                "clip": 2.0
+              },
+              "score": {
+                "weight_a": 1.0,
+                "weight_b": 0.5,
+                "bias": 0.0,
+                "flag_mask": 1,
+                "flag_bonus": 0.5
+              },
+              "filter": {
+                "min_score": 1.0
+              },
+              "aggregate": {
+                "histogram": "category"
+              }
+            }
+          }
+        }
+      },
+      "expected_response": {
+        "schema_version": "paraflow.job-result/v1",
+        "request_id": "conformance.scalar",
+        "kind": "completed",
+        "workload_name": "edge-scalar-v1",
+        "execution": {
+          "backend": "scalar"
+        },
+        "result": {
+          "schema_version": "paraflow.result/v1",
+          "accepted_count": "0x0000000000000003",
+          "score_sum": {
+            "encoding": "ieee754-binary64",
+            "bits": "0x401a000000000000"
+          },
+          "category_histogram": [
+            "0x0000000000000001",
+            "0x0000000000000001",
+            "0x0000000000000001",
+            "0x0000000000000000"
+          ],
+          "accepted_id_sum": "0x0000000000000010",
+          "accepted_id_xor": "0x6ebb399a18884447"
+        }
+      }
+    }
+  ]
+}

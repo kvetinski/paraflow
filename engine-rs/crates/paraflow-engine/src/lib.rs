@@ -7,6 +7,7 @@
 
 pub mod generation;
 pub mod scalar;
+pub mod server;
 
 use std::{error::Error, ffi::OsStr, fmt, fs, io::Write, path::Path};
 

@@ -27,6 +27,16 @@ name = "paraflow-engine"
 version = "0.1.0-alpha.1"
 dependencies = [
  "paraflow-contracts",
+ "paraflow-protocol",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "paraflow-protocol"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "paraflow-contracts",
  "serde",
  "serde_json",
 ]

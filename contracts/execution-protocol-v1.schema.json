@@ -1,0 +1,308 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvetinski/paraflow/blob/main/contracts/execution-protocol-v1.schema.json",
+  "title": "ParaFlow execution protocol v1",
+  "description": "Strict, newline-delimited JSON envelopes for submitting workloads and receiving canonical results.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/request"
+    },
+    {
+      "$ref": "#/$defs/response"
+    }
+  ],
+  "$defs": {
+    "requestId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$"
+    },
+    "backendIdentifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,63}$"
+    },
+    "u64Hex": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{16}$"
+    },
+    "f64Bits": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{16}$"
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "backend"
+      ],
+      "properties": {
+        "backend": {
+          "$ref": "#/$defs/backendIdentifier"
+        }
+      }
+    },
+    "executeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "request_id",
+        "kind",
+        "job"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "paraflow.job/v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/requestId"
+        },
+        "kind": {
+          "const": "execute"
+        },
+        "job": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "execution",
+            "workload"
+          ],
+          "properties": {
+            "execution": {
+              "$ref": "#/$defs/execution"
+            },
+            "workload": {
+              "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/workload-v1.schema.json"
+            }
+          }
+        }
+      }
+    },
+    "shutdownRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "request_id",
+        "kind"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "paraflow.job/v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/requestId"
+        },
+        "kind": {
+          "const": "shutdown"
+        }
+      }
+    },
+    "request": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/executeRequest"
+        },
+        {
+          "$ref": "#/$defs/shutdownRequest"
+        }
+      ]
+    },
+    "scoreSum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "bits"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "ieee754-binary64"
+        },
+        "bits": {
+          "$ref": "#/$defs/f64Bits"
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "accepted_count",
+        "score_sum",
+        "category_histogram",
+        "accepted_id_sum",
+        "accepted_id_xor"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "paraflow.result/v1"
+        },
+        "accepted_count": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "score_sum": {
+          "$ref": "#/$defs/scoreSum"
+        },
+        "category_histogram": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/$defs/u64Hex"
+          }
+        },
+        "accepted_id_sum": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "accepted_id_xor": {
+          "$ref": "#/$defs/u64Hex"
+        }
+      }
+    },
+    "completedResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "request_id",
+        "kind",
+        "workload_name",
+        "execution",
+        "result"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "paraflow.job-result/v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/requestId"
+        },
+        "kind": {
+          "const": "completed"
+        },
+        "workload_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "\\S"
+        },
+        "execution": {
+          "$ref": "#/$defs/execution"
+        },
+        "result": {
+          "$ref": "#/$defs/result"
+        }
+      }
+    },
+    "errorIssue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "path",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "path": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "invalid_workload",
+            "unsupported_backend",
+            "execution_failed"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "issues": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/errorIssue"
+          }
+        }
+      }
+    },
+    "errorResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "request_id",
+        "kind",
+        "error"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "paraflow.job-result/v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/requestId"
+        },
+        "kind": {
+          "const": "error"
+        },
+        "error": {
+          "$ref": "#/$defs/error"
+        }
+      }
+    },
+    "shutdownAckResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "request_id",
+        "kind"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "paraflow.job-result/v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/requestId"
+        },
+        "kind": {
+          "const": "shutdown_ack"
+        }
+      }
+    },
+    "response": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/completedResponse"
+        },
+        {
+          "$ref": "#/$defs/errorResponse"
+        },
+        {
+          "$ref": "#/$defs/shutdownAckResponse"
+        }
+      ]
+    }
+  }
+}

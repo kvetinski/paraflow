@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvetinski/paraflow/blob/main/contracts/execution-vectors-v1.schema.json",
+  "title": "ParaFlow execution protocol conformance vectors v1",
+  "description": "Full request envelopes and exact expected responses for portable protocol implementations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_version",
+    "protocol_schema",
+    "result_schema",
+    "cases"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "../execution-vectors-v1.schema.json"
+    },
+    "schema_version": {
+      "const": "paraflow.execution-vectors/v1"
+    },
+    "protocol_schema": {
+      "const": "paraflow.job/v1"
+    },
+    "result_schema": {
+      "const": "paraflow.result/v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/case"
+      }
+    }
+  },
+  "$defs": {
+    "caseName": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$"
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "request",
+        "expected_response"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/caseName"
+        },
+        "request": {
+          "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/execution-protocol-v1.schema.json#/$defs/executeRequest"
+        },
+        "expected_response": {
+          "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/execution-protocol-v1.schema.json#/$defs/completedResponse"
+        }
+      }
+    }
+  }
+}

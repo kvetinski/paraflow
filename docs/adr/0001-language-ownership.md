@@ -17,7 +17,9 @@ entire engine three times would consume the roadmap and obscure system design.
 - Go owns experiment control, environment evidence, and future result
   orchestration.
 - Go remains outside timed compute regions.
-- Inter-language execution crosses one narrow, versioned C ABI.
+- Go-to-Rust control crosses the versioned process protocol accepted in
+  [ADR 0005](0005-long-lived-versioned-worker-protocol.md).
+- Future Rust-to-C++ compute crosses one narrow, versioned C ABI.
 
 ## Consequences
 

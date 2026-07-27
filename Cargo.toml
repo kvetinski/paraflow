@@ -2,6 +2,7 @@
 members = [
   "engine-rs/crates/paraflow-contracts",
   "engine-rs/crates/paraflow-engine",
+  "engine-rs/crates/paraflow-protocol",
 ]
 resolver = "2"
 

@@ -59,7 +59,7 @@ func TestCheckIsReadyWhenRequiredToolsAreUsable(t *testing.T) {
 	if report.SchemaVersion != "paraflow.environment/v2" {
 		t.Fatalf("unexpected report schema: %q", report.SchemaVersion)
 	}
-	if report.Milestone != "day-02" {
+	if report.Milestone != "day-04" {
 		t.Fatalf("unexpected milestone: %q", report.Milestone)
 	}
 	if report.CapturedAt.IsZero() {
@@ -225,7 +225,7 @@ func TestReportStringLabelsRequirementsAndSource(t *testing.T) {
 		"cc      required",
 		"nvcc    planned",
 		"Source: test (commit 0123456789abcdef0123456789abcdef01234567, source clean)",
-		"Ready for current milestone (day-02): true",
+		"Ready for current milestone (day-04): true",
 	} {
 		if !strings.Contains(output, expected) {
 			t.Fatalf("expected output to contain %q:\n%s", expected, output)

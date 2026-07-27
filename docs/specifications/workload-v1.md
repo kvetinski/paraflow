@@ -12,13 +12,13 @@ alignment, allocation strategy, or ABI.
 
 ## Logical record
 
-| Field | Type | Meaning |
-| --- | --- | --- |
-| `id` | unsigned 64-bit | Stable input position |
-| `category` | unsigned 32-bit | Value in `[0, category_count)` |
-| `feature_a` | signed 32-bit | First raw feature |
-| `feature_b` | signed 32-bit | Second raw feature |
-| `flags` | unsigned 32-bit | Bit field consumed by scoring |
+| Field       | Type            | Meaning                        |
+| ----------- | --------------- | ------------------------------ |
+| `id`        | unsigned 64-bit | Stable input position          |
+| `category`  | unsigned 32-bit | Value in `[0, category_count)` |
+| `feature_a` | signed 32-bit   | First raw feature              |
+| `feature_b` | signed 32-bit   | Second raw feature             |
+| `flags`     | unsigned 32-bit | Bit field consumed by scoring  |
 
 This logical record shape is versioned as part of `paraflow.workload/v1`.
 Changing its meaning requires workload v2. The conformance fixture's JSON
@@ -62,13 +62,13 @@ sample(seed, index, field):
 
 Field identifiers are:
 
-| Field | Identifier |
-| --- | --- |
-| Category selector | `0` |
-| Feature A | `1` |
-| Feature B | `2` |
-| Flags | `3` |
-| Hotspot fallback category | `4` |
+| Field                     | Identifier |
+| ------------------------- | ---------- |
+| Category selector         | `0`        |
+| Feature A                 | `1`        |
+| Feature B                 | `2`        |
+| Flags                     | `3`        |
+| Hotspot fallback category | `4`        |
 
 It does not depend on task order, worker count, scheduling, or prior generator
 state. The Day 2 executable reference is implemented in
@@ -128,8 +128,10 @@ b = clamp((f32(feature_b) + offset_b) × scale_b, -clip, clip)
 
 Scales and `clip` are finite and strictly positive. Offsets are finite.
 
-The scalar reference is compiled without fast-math. Future optimized backends
-must document contraction or reordering that can change rounding.
+The scalar reference converts each raw feature to `f32`, performs addition,
+then multiplication, then clamp as separate operations. It is compiled without
+fast-math and does not use fused multiply-add. Future optimized backends must
+document contraction or reordering that can change rounding.
 
 ## 3. Score
 
@@ -142,8 +144,10 @@ if (flags & flag_mask) == flag_mask:
     score = score + flag_bonus
 ```
 
-All score parameters are finite. A zero `flag_mask` intentionally enables the
-bonus for every record.
+All score parameters are finite. The scalar reference calculates both
+multiplications, adds their results, adds `bias`, and then conditionally adds
+`flag_bonus` as separate `f32` operations. A zero `flag_mask` intentionally
+enables the bonus for every record.
 
 ## 4. Filter and compact
 
@@ -157,17 +161,21 @@ Compaction is stable: accepted records preserve input order. Datasets used for
 cross-backend performance reports must avoid threshold-sensitive values unless
 the report is specifically studying floating-point differences.
 
+The operations use IEEE floating-point behavior. Finite validated parameters
+can still overflow. Because `min_score` is finite, positive infinity passes,
+while negative infinity and NaN fail `score >= min_score`.
+
 ## 5. Aggregate
 
 The canonical `ResultV1` contains:
 
-| Field | Type | Definition |
-| --- | --- | --- |
-| `accepted_count` | `u64` | Number of accepted records |
-| `score_sum` | `f64` | Accepted `f32` scores converted to `f64` and added in stable input order |
+| Field                | Type       | Definition                                                                                               |
+| -------------------- | ---------- | -------------------------------------------------------------------------------------------------------- |
+| `accepted_count`     | `u64`      | Number of accepted records                                                                               |
+| `score_sum`          | `f64`      | Accepted `f32` scores converted to `f64` and added in stable input order                                 |
 | `category_histogram` | `Vec<u64>` | Exactly `category_count` bins; each accepted record increments its category with wrapping `u64` addition |
-| `accepted_id_sum` | `u64` | Wrapping sum of accepted record IDs |
-| `accepted_id_xor` | `u64` | Bitwise XOR of `mix(id)` for every accepted record |
+| `accepted_id_sum`    | `u64`      | Wrapping sum of accepted record IDs                                                                      |
+| `accepted_id_xor`    | `u64`      | Bitwise XOR of `mix(id)` for every accepted record                                                       |
 
 All integer addition wraps modulo `2^64`. The empty-input identity is
 `accepted_count = 0`, `score_sum = 0.0`, an all-zero histogram,
@@ -183,6 +191,17 @@ in stable input order. Parallel reductions may use a different tree.
 `accepted_count`, histogram bins, both ID checksums, and requested compacted IDs
 are exact. Score sums use the verification tolerance documented with the
 benchmark result.
+
+An accepted positive-infinite score makes `score_sum` positive infinity.
+Negative infinity and NaN cannot enter the canonical aggregation path because
+the finite filter threshold rejects them. `ResultV1` is a logical in-memory
+contract, not a JSON encoding. Execution protocol v1 represents full-width
+integers and positive infinity losslessly.
+
+The Day 3 executable reference is implemented in
+[`scalar`](../../engine-rs/crates/paraflow-engine/src/scalar/mod.rs). Exact
+stage outputs and final results are frozen in the versioned
+[`scalar-v1` conformance vectors](../../contracts/conformance/scalar-v1.json).
 
 ## Validation
 
@@ -205,4 +224,5 @@ parameters.
 
 Breaking semantic changes require `paraflow.workload/v2`. Adding an execution
 backend, data layout, scheduler, or measurement policy does not change this
-schema.
+schema. Process transport and backend selection are defined separately by the
+[execution protocol](execution-protocol-v1.md).

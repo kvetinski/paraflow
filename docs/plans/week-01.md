@@ -28,20 +28,44 @@ those later changes comparable.
 There is still no normalize-through-aggregate pipeline execution or published
 timing result.
 
-## Day 3 — Scalar oracle
+## Day 3 — Completed scalar oracle
 
-Implement each pipeline stage and final reference result in Rust. Freeze
-correctness fixtures and edge-case behavior.
+- Typed scalar normalize, score, inclusive filter, and accepted-record stages.
+- Stable-order streaming execution without dataset-sized intermediate buffers.
+- Canonical `ResultV1` with wrapping structural fields and sequential `f64`
+  score accumulation.
+- Optional, fallibly allocated stable compacted-ID diagnostics.
+- Exact `f32` stage bits and `f64` result bits in portable conformance vectors.
+- Uniform, hotspot, empty, full-width generator, and dedicated scalar-edge
+  results.
+- One-shot Rust `oracle` CLI plus optimized release conformance preflight.
+- Explicit IEEE infinity/NaN behavior without inventing the Day 4 wire format.
 
-## Day 4 — Execution protocol
+There is still no published timing result.
 
-Add versioned job/result envelopes. Go submits one experiment to a long-lived
-Rust process and validates the structured response.
+## Day 4 — Completed execution protocol
+
+- Strict, versioned execute, result, error, shutdown, and acknowledgment
+  envelopes.
+- One long-lived Rust `serve` process owned and reaped by Go.
+- Bounded 4 MiB NDJSON frames over stdin/stdout, with protocol-only stdout and
+  bounded stderr capture.
+- One in-flight request carrying a complete embedded workload.
+- Scalar backend selection kept separate from workload meaning.
+- Lossless fixed-width hexadecimal `u64` results and exact binary64 score bits.
+- Recoverable correlated job errors separated from fatal protocol and transport
+  failures.
+- Portable vectors, cross-language conformance, process lifecycle tests, and
+  explicit graceful shutdown.
+
+There are still no timings, retries, schedules, or persisted benchmark results.
 
 ## Day 5 — Benchmark harness
 
-Add warm-ups, raw samples, precise timing boundaries, release-build enforcement,
-and result persistence.
+Reuse protocol v1 for warm-ups, execution, and correctness. Add an engine-side
+measurement harness for precise internal timing boundaries, release-build
+enforcement, raw samples, and result persistence without adding timing fields
+to protocol v1.
 
 ## Day 6 — Baseline analysis
 

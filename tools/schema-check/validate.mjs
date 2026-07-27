@@ -6,6 +6,11 @@ import Ajv2020 from "ajv/dist/2020.js";
 
 const EXPECTED_WORKLOAD_SCHEMA = "paraflow.workload/v1";
 const EXPECTED_VECTOR_SCHEMA = "paraflow.generator-vectors/v1";
+const EXPECTED_SCALAR_VECTOR_SCHEMA = "paraflow.scalar-vectors/v1";
+const EXPECTED_JOB_SCHEMA = "paraflow.job/v1";
+const EXPECTED_JOB_RESULT_SCHEMA = "paraflow.job-result/v1";
+const EXPECTED_RESULT_SCHEMA = "paraflow.result/v1";
+const EXPECTED_EXECUTION_VECTOR_SCHEMA = "paraflow.execution-vectors/v1";
 const toolDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(toolDirectory, "../..");
 const workloadSchemaPath = path.join(
@@ -23,6 +28,33 @@ const vectorFixturePath = path.join(
   "contracts",
   "conformance",
   "splitmix64-v1.json",
+);
+const scalarVectorSchemaPath = path.join(
+  repositoryRoot,
+  "contracts",
+  "scalar-vectors-v1.schema.json",
+);
+const scalarVectorFixturePath = path.join(
+  repositoryRoot,
+  "contracts",
+  "conformance",
+  "scalar-v1.json",
+);
+const executionProtocolSchemaPath = path.join(
+  repositoryRoot,
+  "contracts",
+  "execution-protocol-v1.schema.json",
+);
+const executionVectorSchemaPath = path.join(
+  repositoryRoot,
+  "contracts",
+  "execution-vectors-v1.schema.json",
+);
+const executionVectorFixturePath = path.join(
+  repositoryRoot,
+  "contracts",
+  "conformance",
+  "execution-v1.json",
 );
 const workloadsDirectory = path.join(repositoryRoot, "workloads");
 
@@ -53,12 +85,61 @@ if (
   );
 }
 
+const scalarVectorSchema = readJSON(scalarVectorSchemaPath);
+if (
+  scalarVectorSchema.properties?.schema_version?.const !==
+  EXPECTED_SCALAR_VECTOR_SCHEMA
+) {
+  throw new Error(
+    `scalar vector schema_version const must be ${JSON.stringify(EXPECTED_SCALAR_VECTOR_SCHEMA)}`,
+  );
+}
+
+const executionProtocolSchema = readJSON(executionProtocolSchemaPath);
+if (
+  executionProtocolSchema.$defs?.executeRequest?.properties?.schema_version
+    ?.const !== EXPECTED_JOB_SCHEMA
+) {
+  throw new Error(
+    `execution request schema_version const must be ${JSON.stringify(EXPECTED_JOB_SCHEMA)}`,
+  );
+}
+if (
+  executionProtocolSchema.$defs?.completedResponse?.properties?.schema_version
+    ?.const !== EXPECTED_JOB_RESULT_SCHEMA
+) {
+  throw new Error(
+    `execution response schema_version const must be ${JSON.stringify(EXPECTED_JOB_RESULT_SCHEMA)}`,
+  );
+}
+if (
+  executionProtocolSchema.$defs?.result?.properties?.schema_version?.const !==
+  EXPECTED_RESULT_SCHEMA
+) {
+  throw new Error(
+    `result schema_version const must be ${JSON.stringify(EXPECTED_RESULT_SCHEMA)}`,
+  );
+}
+
+const executionVectorSchema = readJSON(executionVectorSchemaPath);
+if (
+  executionVectorSchema.properties?.schema_version?.const !==
+  EXPECTED_EXECUTION_VECTOR_SCHEMA
+) {
+  throw new Error(
+    `execution vector schema_version const must be ${JSON.stringify(EXPECTED_EXECUTION_VECTOR_SCHEMA)}`,
+  );
+}
+
 const ajv = new Ajv2020({
   allErrors: true,
   strict: true,
 });
 const validateWorkload = ajv.compile(workloadSchema);
 const validateVectors = ajv.compile(vectorSchema);
+const validateScalarVectors = ajv.compile(scalarVectorSchema);
+const validateExecutionProtocol = ajv.compile(executionProtocolSchema);
+const validateExecutionVectors = ajv.compile(executionVectorSchema);
 const workloadPaths = fs
   .readdirSync(workloadsDirectory, { withFileTypes: true })
   .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
@@ -195,10 +276,285 @@ for (const [label, invalidVectors] of invalidVectorCases) {
   }
 }
 
+const scalarVectors = readJSON(scalarVectorFixturePath);
+if (!validateScalarVectors(scalarVectors)) {
+  failed = true;
+  const relativePath = path.relative(repositoryRoot, scalarVectorFixturePath);
+  for (const issue of validateScalarVectors.errors ?? []) {
+    const location = issue.instancePath || "/";
+    console.error(
+      `${relativePath}${location}: ${issue.message ?? "schema validation failed"}`,
+    );
+  }
+}
+
+const invalidScalarVectorCases = [
+  [
+    "unknown scalar vector field",
+    {
+      ...scalarVectors,
+      unexpected: true,
+    },
+  ],
+  [
+    "unsafe variable-width f32 bits",
+    {
+      ...scalarVectors,
+      stage_vectors: [
+        {
+          ...scalarVectors.stage_vectors[0],
+          score_bits: "0x0",
+        },
+      ],
+    },
+  ],
+];
+
+for (const [label, invalidVectors] of invalidScalarVectorCases) {
+  if (validateScalarVectors(invalidVectors)) {
+    failed = true;
+    console.error(`scalar vector schema regression case was accepted: ${label}`);
+  }
+}
+
+const executionVectors = readJSON(executionVectorFixturePath);
+if (!validateExecutionVectors(executionVectors)) {
+  failed = true;
+  const relativePath = path.relative(repositoryRoot, executionVectorFixturePath);
+  for (const issue of validateExecutionVectors.errors ?? []) {
+    const location = issue.instancePath || "/";
+    console.error(
+      `${relativePath}${location}: ${issue.message ?? "schema validation failed"}`,
+    );
+  }
+}
+
+for (const fixtureCase of executionVectors.cases ?? []) {
+  for (const [messageKind, message] of [
+    ["request", fixtureCase.request],
+    ["expected_response", fixtureCase.expected_response],
+  ]) {
+    if (validateExecutionProtocol(message)) {
+      continue;
+    }
+
+    failed = true;
+    for (const issue of validateExecutionProtocol.errors ?? []) {
+      const location = issue.instancePath || "/";
+      console.error(
+        `execution case ${fixtureCase.name} ${messageKind}${location}: ${issue.message ?? "schema validation failed"}`,
+      );
+    }
+  }
+
+  if (fixtureCase.request?.request_id !== fixtureCase.expected_response?.request_id) {
+    failed = true;
+    console.error(
+      `execution case ${fixtureCase.name}: expected_response request_id must correlate with request`,
+    );
+  }
+  if (
+    fixtureCase.request?.job?.execution?.backend !==
+    fixtureCase.expected_response?.execution?.backend
+  ) {
+    failed = true;
+    console.error(
+      `execution case ${fixtureCase.name}: completed response must echo the requested execution`,
+    );
+  }
+  if (
+    fixtureCase.request?.job?.workload?.name !==
+    fixtureCase.expected_response?.workload_name
+  ) {
+    failed = true;
+    console.error(
+      `execution case ${fixtureCase.name}: completed response must echo the workload name`,
+    );
+  }
+
+  const canonicalWorkloadPath = path.join(
+    workloadsDirectory,
+    `${fixtureCase.name}.json`,
+  );
+  if (!fs.existsSync(canonicalWorkloadPath)) {
+    failed = true;
+    console.error(
+      `execution case ${fixtureCase.name}: matching workloads/${fixtureCase.name}.json is required`,
+    );
+  } else if (
+    JSON.stringify(fixtureCase.request?.job?.workload) !==
+    JSON.stringify(readJSON(canonicalWorkloadPath))
+  ) {
+    failed = true;
+    console.error(
+      `execution case ${fixtureCase.name}: embedded workload must exactly match workloads/${fixtureCase.name}.json`,
+    );
+  }
+}
+
+const protocolBranchCases = [
+  {
+    label: "unsupported backend error",
+    request: {
+      ...executionVectors.cases[0].request,
+      request_id: "validation.unsupported",
+      job: {
+        ...executionVectors.cases[0].request.job,
+        execution: {
+          backend: "unavailable",
+        },
+      },
+    },
+    response: {
+      schema_version: "paraflow.job-result/v1",
+      request_id: "validation.unsupported",
+      kind: "error",
+      error: {
+        code: "unsupported_backend",
+        message: "backend unavailable is not supported",
+        issues: [
+          {
+            code: "unknown_backend",
+            path: "/job/execution/backend",
+            message: "choose a backend supported by this worker",
+          },
+        ],
+      },
+    },
+  },
+  {
+    label: "shutdown acknowledgement",
+    request: {
+      schema_version: "paraflow.job/v1",
+      request_id: "validation.shutdown",
+      kind: "shutdown",
+    },
+    response: {
+      schema_version: "paraflow.job-result/v1",
+      request_id: "validation.shutdown",
+      kind: "shutdown_ack",
+    },
+  },
+];
+
+for (const branchCase of protocolBranchCases) {
+  for (const [messageKind, message] of [
+    ["request", branchCase.request],
+    ["response", branchCase.response],
+  ]) {
+    if (validateExecutionProtocol(message)) {
+      continue;
+    }
+
+    failed = true;
+    for (const issue of validateExecutionProtocol.errors ?? []) {
+      const location = issue.instancePath || "/";
+      console.error(
+        `execution protocol ${branchCase.label} ${messageKind}${location}: ${issue.message ?? "schema validation failed"}`,
+      );
+    }
+  }
+
+  if (branchCase.request.request_id !== branchCase.response.request_id) {
+    failed = true;
+    console.error(
+      `execution protocol ${branchCase.label}: response request_id must correlate with request`,
+    );
+  }
+}
+
+const invalidExecutionVectorCases = [
+  [
+    "wrong-width result u64",
+    {
+      ...executionVectors,
+      cases: executionVectors.cases.map((fixtureCase, index) =>
+        index === 0
+          ? {
+            ...fixtureCase,
+            expected_response: {
+              ...fixtureCase.expected_response,
+              result: {
+                ...fixtureCase.expected_response.result,
+                accepted_count: "0x0",
+              },
+            },
+          }
+          : fixtureCase,
+      ),
+    },
+  ],
+  [
+    "unknown completed response field",
+    {
+      ...executionVectors,
+      cases: executionVectors.cases.map((fixtureCase, index) =>
+        index === 0
+          ? {
+            ...fixtureCase,
+            expected_response: {
+              ...fixtureCase.expected_response,
+              unexpected: true,
+            },
+          }
+          : fixtureCase,
+      ),
+    },
+  ],
+];
+
+for (const [label, invalidVectors] of invalidExecutionVectorCases) {
+  if (validateExecutionVectors(invalidVectors)) {
+    failed = true;
+    console.error(`execution vector schema regression case was accepted: ${label}`);
+  }
+}
+
+const invalidExecutionProtocolCases = [
+  [
+    "payload-kind mixing",
+    {
+      schema_version: "paraflow.job/v1",
+      request_id: "rejection.payload-mixing",
+      kind: "shutdown",
+      job: executionVectors.cases[0].request.job,
+    },
+  ],
+  [
+    "malformed backend identifier",
+    {
+      ...executionVectors.cases[0].request,
+      request_id: "rejection.backend",
+      job: {
+        ...executionVectors.cases[0].request.job,
+        execution: {
+          backend: "1invalid",
+        },
+      },
+    },
+  ],
+];
+
+for (const [label, invalidMessage] of invalidExecutionProtocolCases) {
+  if (validateExecutionProtocol(invalidMessage)) {
+    failed = true;
+    console.error(
+      `execution protocol schema regression case was accepted: ${label}`,
+    );
+  }
+}
+
+const rejectionCount =
+  invalidCases.length +
+  invalidVectorCases.length +
+  invalidScalarVectorCases.length +
+  invalidExecutionVectorCases.length +
+  invalidExecutionProtocolCases.length;
+
 if (failed) {
   process.exitCode = 1;
 } else {
   console.log(
-    `JSON Schema validation passed (${workloadPaths.length} workload(s), 1 conformance fixture, ${invalidCases.length + invalidVectorCases.length} rejection cases)`,
+    `JSON Schema validation passed (${workloadPaths.length} workload(s), 3 conformance fixtures, ${rejectionCount} rejection cases)`,
   );
 }

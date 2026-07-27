@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/kvetinski/paraflow/labctl-go/internal/app"
 	"github.com/kvetinski/paraflow/labctl-go/internal/buildinfo"
@@ -21,8 +23,14 @@ func main() {
 		FullCommit:  commit,
 		SourceState: sourceState,
 	})
-	exitCode := app.Run(
+	ctx, stop := signal.NotifyContext(
 		context.Background(),
+		os.Interrupt,
+		syscall.SIGTERM,
+	)
+	defer stop()
+	exitCode := app.Run(
+		ctx,
 		os.Args[1:],
 		os.Stdout,
 		os.Stderr,

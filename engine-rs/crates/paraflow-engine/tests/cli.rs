@@ -8,6 +8,7 @@ use std::{
 use paraflow_engine::{parse_manifest, run};
 
 const VALID_WORKLOAD: &str = include_str!("../../../../workloads/smoke-uniform-v1.json");
+const SCALAR_WORKLOAD: &str = include_str!("../../../../workloads/edge-scalar-v1.json");
 
 #[test]
 fn contract_command_reports_stable_pipeline() {
@@ -106,6 +107,108 @@ fn validate_command_distinguishes_missing_and_invalid_files() {
     assert_eq!(invalid_exit, 4);
     assert!(stdout.is_empty());
     assert!(String::from_utf8_lossy(&stderr).contains("JSON error"));
+}
+
+#[test]
+fn oracle_command_prints_the_exact_scalar_result() {
+    let path = write_temp_manifest("scalar", SCALAR_WORKLOAD);
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+
+    let exit_code = run(
+        &["oracle".to_owned(), path.display().to_string()],
+        &mut stdout,
+        &mut stderr,
+    );
+
+    remove_temp_manifest(&path);
+    assert_eq!(exit_code, 0);
+    assert!(stderr.is_empty());
+    assert_eq!(
+        String::from_utf8(stdout).expect("output must be UTF-8"),
+        "\
+workload: \"edge-scalar-v1\"
+accepted_count: 3
+score_sum: 6.5
+category_histogram: [1, 1, 1, 0]
+accepted_id_sum: 0x0000000000000010
+accepted_id_xor: 0x6ebb399a18884447
+"
+    );
+}
+
+#[test]
+fn oracle_command_escapes_the_workload_name_as_one_diagnostic_line() {
+    let workload =
+        SCALAR_WORKLOAD.replace("\"name\": \"edge-scalar-v1\"", "\"name\": \"line\\nbreak\"");
+    let path = write_temp_manifest("escaped-name", &workload);
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+
+    let exit_code = run(
+        &["oracle".to_owned(), path.display().to_string()],
+        &mut stdout,
+        &mut stderr,
+    );
+
+    remove_temp_manifest(&path);
+    assert_eq!(exit_code, 0);
+    assert!(stderr.is_empty());
+    let output = String::from_utf8(stdout).expect("output must be UTF-8");
+    assert!(output.starts_with("workload: \"line\\nbreak\"\naccepted_count: 3\n"));
+}
+
+#[test]
+fn oracle_command_preserves_manifest_error_exit_codes() {
+    let missing = unique_temp_path("missing-oracle");
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+
+    let missing_exit = run(
+        &["oracle".to_owned(), missing.display().to_string()],
+        &mut stdout,
+        &mut stderr,
+    );
+    assert_eq!(missing_exit, 3);
+    assert!(stdout.is_empty());
+    assert!(String::from_utf8_lossy(&stderr).contains("cannot read workload manifest"));
+
+    let invalid = write_temp_manifest("invalid-oracle", "{ not-json }");
+    stdout.clear();
+    stderr.clear();
+    let invalid_exit = run(
+        &["oracle".to_owned(), invalid.display().to_string()],
+        &mut stdout,
+        &mut stderr,
+    );
+    remove_temp_manifest(&invalid);
+
+    assert_eq!(invalid_exit, 4);
+    assert!(stdout.is_empty());
+    assert!(String::from_utf8_lossy(&stderr).contains("JSON error"));
+}
+
+#[test]
+fn oracle_command_requires_exactly_one_path() {
+    for args in [
+        vec!["oracle".to_owned()],
+        vec![
+            "oracle".to_owned(),
+            "first.json".to_owned(),
+            "second.json".to_owned(),
+        ],
+    ] {
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+
+        let exit_code = run(&args, &mut stdout, &mut stderr);
+
+        assert_eq!(exit_code, 2);
+        assert!(stdout.is_empty());
+        assert!(
+            String::from_utf8_lossy(&stderr).contains("oracle requires exactly one manifest path")
+        );
+    }
 }
 
 #[test]

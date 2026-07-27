@@ -18,7 +18,7 @@ import (
 
 const (
 	reportSchema        = "paraflow.environment/v2"
-	currentMilestone    = "day-02"
+	currentMilestone    = "day-04"
 	defaultProbeTimeout = 2 * time.Second
 )
 

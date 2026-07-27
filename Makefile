@@ -3,9 +3,12 @@ SHELL := /bin/bash
 
 GO_DIR := labctl-go
 GO_FILES := $(shell find $(GO_DIR) -type f -name '*.go' | sort)
+ENGINE_RELEASE_BIN := target/release/paraflow-engine
+LABCTL_BIN := bin/labctl
 VERSION := 0.1.0-alpha.1
 GIT_COMMIT := $(shell git rev-parse HEAD 2>/dev/null || printf 'unknown')
 GIT_STATE := $(shell if [[ -z "$$(git status --porcelain 2>/dev/null)" ]]; then printf 'clean'; else printf 'dirty'; fi)
+CARGO_BUILD_ENV := PARAFLOW_SOURCE_COMMIT="$(GIT_COMMIT)" PARAFLOW_SOURCE_STATE="$(GIT_STATE)"
 
 .DEFAULT_GOAL := help
 
@@ -99,16 +102,47 @@ workload-check: ## Semantically validate every checked-in workload with Rust.
 		cargo run --locked --quiet -p paraflow-engine -- validate "$$workload_path"; \
 	done
 
+.PHONY: generation-conformance
+generation-conformance: rust-release-build ## Run optimized generator conformance tests.
+	$(CARGO_BUILD_ENV) cargo test --locked --release -p paraflow-engine --test generation_v1
+
 .PHONY: generation-check
 generation-check: contract-check workload-check rust-release-build ## Verify Day 2 generation and portable conformance vectors.
 	cargo test --locked --release -p paraflow-engine --test generation_v1
 
+.PHONY: generation-check
+generation-check: contract-check workload-check generation-conformance ## Verify Day 2 generation and portable conformance vectors.
+
+.PHONY: scalar-conformance
+scalar-conformance: generation-conformance ## Run optimized scalar-oracle conformance and CLI smoke checks.
+	cargo test --locked --release -p paraflow-engine --test scalar_v1
+	cargo run --locked --release --quiet -p paraflow-engine -- \
+		oracle workloads/edge-scalar-v1.json >/dev/null
+
+.PHONY: scalar-check
+scalar-check: contract-check workload-check scalar-conformance ## Verify the complete Day 3 scalar correctness oracle.
+
+.PHONY: protocol-conformance
+protocol-conformance: rust-release-build go-build ## Exercise the release Rust worker through the real Go controller.
+	cargo test --locked --release -p paraflow-engine --test protocol_v1
+	cd $(GO_DIR) && \
+		PARAFLOW_ENGINE_PATH="$(abspath $(ENGINE_RELEASE_BIN))" \
+		PARAFLOW_REPOSITORY_ROOT="$(CURDIR)" \
+		go test -count=1 ./internal/worker \
+			-run '^TestRealEngineSessionReusesOneProcess$$'
+	./tools/check-protocol-integration.sh \
+		"$(LABCTL_BIN)" \
+		"$(ENGINE_RELEASE_BIN)"
+
+.PHONY: protocol-check
+protocol-check: contract-check workload-check scalar-conformance protocol-conformance ## Verify the complete Day 4 execution protocol.
+
 .PHONY: benchmark-preflight
-benchmark-preflight: generation-check go-build-smoke ## Verify release-build readiness without collecting timing samples.
-	./bin/labctl doctor
+benchmark-preflight: protocol-check go-build-smoke ## Verify release-build readiness without collecting timing samples.
+	$(LABCTL_BIN) doctor
 
 .PHONY: check
-check: contract-check rust-check workload-check go-check ## Run every current quality gate.
+check: contract-check rust-check workload-check go-check scalar-conformance protocol-conformance ## Run every current quality gate.
 
 .PHONY: clean
 clean: ## Remove generated build outputs.

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kvetinski/paraflow/labctl-go/internal/benchmark"
 	"github.com/kvetinski/paraflow/labctl-go/internal/buildinfo"
 	"github.com/kvetinski/paraflow/labctl-go/internal/doctor"
 	"github.com/kvetinski/paraflow/labctl-go/internal/protocol"
@@ -103,10 +104,10 @@ func TestDoctorJSON(t *testing.T) {
 	if !report.Ready {
 		t.Fatal("expected doctor report to be ready")
 	}
-	if report.SchemaVersion != "paraflow.environment/v2" {
+	if report.SchemaVersion != "paraflow.environment/v3" {
 		t.Fatalf("unexpected report schema: %q", report.SchemaVersion)
 	}
-	if report.Milestone != "day-04" {
+	if report.Milestone != "day-05" {
 		t.Fatalf("unexpected report milestone: %q", report.Milestone)
 	}
 	if report.Source != testDependencies().Build {
@@ -121,10 +122,10 @@ func TestDoctorJSON(t *testing.T) {
 		t.Fatalf("decode doctor envelope: %v", err)
 	}
 	if _, exists := envelope["ready_for_day_1"]; exists {
-		t.Fatal("legacy ready_for_day_1 key must not appear in environment/v2")
+		t.Fatal("legacy ready_for_day_1 key must not appear in environment/v3")
 	}
 	if _, exists := envelope["ready"]; !exists {
-		t.Fatal("environment/v2 must contain the ready key")
+		t.Fatal("environment/v3 must contain the ready key")
 	}
 }
 
@@ -207,11 +208,83 @@ func TestDoctorRejectsUnexpectedArguments(t *testing.T) {
 	}
 }
 
+func TestBenchmarkCommandPassesExplicitBoundariesAndPrintsMedians(t *testing.T) {
+	t.Parallel()
+
+	dependencies := testDependencies()
+	dependencies.RunBenchmark = func(
+		_ context.Context,
+		options benchmark.Options,
+	) (benchmark.Capture, error) {
+		if options.EnginePath != "engine" || options.SuitePath != "suite.json" ||
+			options.OutputPath != "results/capture.json" || options.RepositoryRoot != "repo" {
+			t.Fatalf("unexpected benchmark options: %#v", options)
+		}
+		if options.Build != dependencies.Build || options.Probe == nil {
+			t.Fatalf("benchmark dependencies were not injected: %#v", options)
+		}
+		return benchmark.Capture{
+			Suite: benchmark.SuiteIdentity{Name: "day05 baseline"},
+			Experiments: []benchmark.Experiment{{
+				ScenarioName: "uniform-1k",
+				Summary: benchmark.Summary{
+					Generation: benchmark.Statistics{MedianNS: 10},
+					Pipeline:   benchmark.Statistics{MedianNS: 20},
+					EngineTotal: benchmark.Statistics{
+						Count:    3,
+						MedianNS: 35,
+					},
+				},
+			}},
+		}, nil
+	}
+
+	exitCode, stdout, stderr := runForTest(
+		t,
+		dependencies,
+		"benchmark",
+		"--suite", "suite.json",
+		"--engine", "engine",
+		"--repository-root", "repo",
+		"--output", "results/capture.json",
+	)
+	if exitCode != 0 || stderr != "" {
+		t.Fatalf("exit = %d, stderr = %q", exitCode, stderr)
+	}
+	for _, expected := range []string{
+		"capture: results/capture.json",
+		"suite: \"day05 baseline\"",
+		"samples=3",
+		"pipeline_median_ns=20",
+		"no speedup claim is implied",
+	} {
+		if !strings.Contains(stdout, expected) {
+			t.Fatalf("stdout missing %q:\n%s", expected, stdout)
+		}
+	}
+}
+
+func TestBenchmarkCommandRejectsIncompleteOrDuplicateFlags(t *testing.T) {
+	t.Parallel()
+
+	for _, args := range [][]string{
+		{"benchmark"},
+		{"benchmark", "--engine", "engine"},
+		{"benchmark", "--engine", "engine", "--engine", "again", "--suite", "s", "--output", "o"},
+		{"benchmark", "--unknown", "x", "--engine", "e", "--suite", "s", "--output", "o"},
+	} {
+		exitCode, _, _ := runForTest(t, testDependencies(), args...)
+		if exitCode != 2 {
+			t.Fatalf("Run(%v) exit code = %d, want 2", args, exitCode)
+		}
+	}
+}
+
 func TestRunExecutesThroughWorkerAndShutsItDown(t *testing.T) {
 	t.Parallel()
 
 	workload := []byte(
-		`{"name":"day-04-smoke","dataset":` +
+		`{"schema_version":"paraflow.workload/v1","name":"day-05-smoke","dataset":` +
 			`{"record_count":3,"category_count":2}}`,
 	)
 	session := &fakeWorkerSession{
@@ -269,7 +342,7 @@ func TestRunExecutesThroughWorkerAndShutsItDown(t *testing.T) {
 	}
 
 	wantOutput := "" +
-		"workload: \"day-04-smoke\"\n" +
+		"workload: \"day-05-smoke\"\n" +
 		"backend: scalar\n" +
 		"accepted_count: 3\n" +
 		"score_sum: 6.5\n" +
@@ -285,7 +358,7 @@ func TestRunExecutesThroughWorkerAndShutsItDown(t *testing.T) {
 func TestRunFailuresAreActionableAndLeakFree(t *testing.T) {
 	t.Parallel()
 
-	const workload = `{"name":"failure","dataset":` +
+	const workload = `{"schema_version":"paraflow.workload/v1","name":"failure","dataset":` +
 		`{"record_count":1,"category_count":1}}`
 
 	t.Run("read", func(t *testing.T) {

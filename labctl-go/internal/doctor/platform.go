@@ -3,9 +3,11 @@ package doctor
 import (
 	"bufio"
 	"context"
+	"io"
 	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -27,6 +29,64 @@ func captureKernelVersion(ctx context.Context) string {
 	default:
 		return unavailablePlatformValue
 	}
+}
+
+func capturePhysicalCores(ctx context.Context) int {
+	if runtime.GOOS == "linux" {
+		file, err := os.Open("/proc/cpuinfo")
+		if err == nil {
+			defer func() {
+				_ = file.Close()
+			}()
+			if count := linuxPhysicalCoreCount(file); count > 0 {
+				return count
+			}
+		}
+	}
+
+	if runtime.GOOS == "darwin" {
+		value := platformCommand(ctx, "sysctl", "-n", "hw.physicalcpu")
+		count, err := strconv.Atoi(strings.TrimSpace(value))
+		if err == nil && count > 0 {
+			return count
+		}
+	}
+	return 0
+}
+
+func linuxPhysicalCoreCount(input io.Reader) int {
+	scanner := bufio.NewScanner(input)
+	cores := make(map[string]struct{})
+	physicalID := ""
+	coreID := ""
+
+	commit := func() {
+		if physicalID != "" && coreID != "" {
+			cores[physicalID+":"+coreID] = struct{}{}
+		}
+		physicalID = ""
+		coreID = ""
+	}
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.TrimSpace(line) == "" {
+			commit()
+			continue
+		}
+		key, value, ok := strings.Cut(line, ":")
+		if !ok {
+			continue
+		}
+		switch strings.TrimSpace(key) {
+		case "physical id":
+			physicalID = strings.TrimSpace(value)
+		case "core id":
+			coreID = strings.TrimSpace(value)
+		}
+	}
+	commit()
+	return len(cores)
 }
 
 func captureCPUModel(ctx context.Context) string {

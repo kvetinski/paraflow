@@ -10,11 +10,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"math"
 	"strconv"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/kvetinski/paraflow/labctl-go/internal/jsoncheck"
 )
 
 const (
@@ -37,6 +38,7 @@ const (
 // WorkloadProjection is the small portion of a workload needed to correlate
 // and validate a worker result without duplicating workload execution logic.
 type WorkloadProjection struct {
+	SchemaVersion string
 	Name          string
 	RecordCount   uint64
 	CategoryCount uint64
@@ -151,14 +153,18 @@ func EncodeShutdownFrame(requestID string) ([]byte, error) {
 // responsibility.
 func ProjectWorkload(raw json.RawMessage) (WorkloadProjection, error) {
 	var value struct {
-		Name    *string `json:"name"`
-		Dataset *struct {
+		SchemaVersion *string `json:"schema_version"`
+		Name          *string `json:"name"`
+		Dataset       *struct {
 			RecordCount   *uint64 `json:"record_count"`
 			CategoryCount *uint64 `json:"category_count"`
 		} `json:"dataset"`
 	}
-	if err := decodeJSON(raw, &value, false); err != nil {
+	if err := jsoncheck.Decode(raw, &value, false); err != nil {
 		return WorkloadProjection{}, protocolErrorf("decode workload projection: %v", err)
+	}
+	if value.SchemaVersion == nil {
+		return WorkloadProjection{}, protocolErrorf("workload schema_version is required")
 	}
 	if value.Name == nil {
 		return WorkloadProjection{}, protocolErrorf("workload name is required")
@@ -176,6 +182,7 @@ func ProjectWorkload(raw json.RawMessage) (WorkloadProjection, error) {
 	}
 
 	return WorkloadProjection{
+		SchemaVersion: *value.SchemaVersion,
 		Name:          *value.Name,
 		RecordCount:   *value.Dataset.RecordCount,
 		CategoryCount: *value.Dataset.CategoryCount,
@@ -197,7 +204,7 @@ func DecodeResponse(
 	}
 
 	var envelope responseEnvelope
-	if err := decodeJSON(frame, &envelope, true); err != nil {
+	if err := jsoncheck.Decode(frame, &envelope, true); err != nil {
 		return Response{}, protocolErrorf("decode response envelope: %v", err)
 	}
 	if envelope.SchemaVersion != JobResultSchema {
@@ -351,7 +358,7 @@ func decodeCompleted(
 	}
 
 	var actualExecution execution
-	if err := decodeJSON(envelope.Execution, &actualExecution, true); err != nil {
+	if err := jsoncheck.Decode(envelope.Execution, &actualExecution, true); err != nil {
 		return Response{}, protocolErrorf("decode execution echo: %v", err)
 	}
 	if actualExecution.Backend != BackendScalar {
@@ -362,11 +369,7 @@ func decodeCompleted(
 		)
 	}
 
-	var wire wireResult
-	if err := decodeJSON(envelope.Result, &wire, true); err != nil {
-		return Response{}, protocolErrorf("decode result: %v", err)
-	}
-	result, err := validateResult(wire, *expected)
+	result, err := DecodeResult(envelope.Result, *expected)
 	if err != nil {
 		return Response{}, err
 	}
@@ -386,7 +389,7 @@ func decodeRemoteError(envelope responseEnvelope) (Response, error) {
 	}
 
 	var wire wireRemoteError
-	if err := decodeJSON(envelope.Error, &wire, true); err != nil {
+	if err := jsoncheck.Decode(envelope.Error, &wire, true); err != nil {
 		return Response{}, protocolErrorf("decode remote error: %v", err)
 	}
 	switch wire.Code {
@@ -411,7 +414,7 @@ func decodeRemoteError(envelope responseEnvelope) (Response, error) {
 			)
 		}
 		var wireIssues []wireRemoteIssue
-		if err := decodeJSON(wire.Issues, &wireIssues, true); err != nil {
+		if err := jsoncheck.Decode(wire.Issues, &wireIssues, true); err != nil {
 			return Response{}, protocolErrorf("decode remote error issues: %v", err)
 		}
 		if len(wireIssues) == 0 {
@@ -591,100 +594,14 @@ func marshalFrame(value any) ([]byte, error) {
 	return append(payload, '\n'), nil
 }
 
-func decodeJSON(data []byte, target any, strict bool) error {
-	if !utf8.Valid(data) {
-		return errors.New("JSON must use valid UTF-8")
+// DecodeResult strictly decodes and validates one canonical result object.
+// It is shared by ordinary execute responses and Day 5 benchmark captures.
+func DecodeResult(raw json.RawMessage, workload WorkloadProjection) (ResultV1, error) {
+	var wire wireResult
+	if err := jsoncheck.Decode(raw, &wire, true); err != nil {
+		return ResultV1{}, protocolErrorf("decode result: %v", err)
 	}
-	if err := rejectDuplicateObjectKeys(data); err != nil {
-		return err
-	}
-
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	if strict {
-		decoder.DisallowUnknownFields()
-	}
-	if err := decoder.Decode(target); err != nil {
-		return err
-	}
-	var trailing any
-	if err := decoder.Decode(&trailing); !errors.Is(err, io.EOF) {
-		if err == nil {
-			return errors.New("unexpected trailing JSON value")
-		}
-		return fmt.Errorf("decode trailing data: %w", err)
-	}
-	return nil
-}
-
-func rejectDuplicateObjectKeys(data []byte) error {
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.UseNumber()
-	if err := scanJSONValue(decoder); err != nil {
-		return err
-	}
-	if _, err := decoder.Token(); !errors.Is(err, io.EOF) {
-		if err == nil {
-			return errors.New("unexpected trailing JSON value")
-		}
-		return fmt.Errorf("decode trailing data: %w", err)
-	}
-	return nil
-}
-
-func scanJSONValue(decoder *json.Decoder) error {
-	token, err := decoder.Token()
-	if err != nil {
-		return err
-	}
-	delimiter, isDelimiter := token.(json.Delim)
-	if !isDelimiter {
-		return nil
-	}
-
-	switch delimiter {
-	case '{':
-		keys := make(map[string]struct{})
-		for decoder.More() {
-			keyToken, err := decoder.Token()
-			if err != nil {
-				return err
-			}
-			key, ok := keyToken.(string)
-			if !ok {
-				return errors.New("object key must be a string")
-			}
-			if _, duplicate := keys[key]; duplicate {
-				return fmt.Errorf("duplicate object key %q", key)
-			}
-			keys[key] = struct{}{}
-			if err := scanJSONValue(decoder); err != nil {
-				return err
-			}
-		}
-		end, err := decoder.Token()
-		if err != nil {
-			return err
-		}
-		if end != json.Delim('}') {
-			return errors.New("object is missing its closing delimiter")
-		}
-	case '[':
-		for decoder.More() {
-			if err := scanJSONValue(decoder); err != nil {
-				return err
-			}
-		}
-		end, err := decoder.Token()
-		if err != nil {
-			return err
-		}
-		if end != json.Delim(']') {
-			return errors.New("array is missing its closing delimiter")
-		}
-	default:
-		return fmt.Errorf("unexpected JSON delimiter %q", delimiter)
-	}
-	return nil
+	return validateResult(wire, workload)
 }
 
 func validateRequestID(requestID string) error {

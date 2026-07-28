@@ -4,11 +4,14 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
 	"os"
+	"strings"
 
+	"github.com/kvetinski/paraflow/labctl-go/internal/benchmark"
 	"github.com/kvetinski/paraflow/labctl-go/internal/buildinfo"
 	"github.com/kvetinski/paraflow/labctl-go/internal/doctor"
 	"github.com/kvetinski/paraflow/labctl-go/internal/protocol"
@@ -19,12 +22,14 @@ const help = `ParaFlow experiment controller
 
 Usage:
   labctl run --engine <path> <workload.json>
+  labctl benchmark --engine <path> --suite <suite.json> --output <capture.json> [--repository-root <path>]
   labctl doctor [--json]
   labctl version
   labctl help
 
-The run command executes one workload through the versioned Rust worker
-protocol. It verifies correctness but does not collect timing samples.`
+The run command verifies one workload through the versioned Rust worker.
+The benchmark command runs warm-ups and repeated samples inside one Rust
+process per scenario, then persists raw evidence and descriptive statistics.`
 
 // BuildInfo identifies the controller binary.
 type BuildInfo = buildinfo.Info
@@ -39,12 +44,16 @@ type WorkerSession interface {
 // StartWorker launches one reusable engine session.
 type StartWorker func(context.Context, string) (WorkerSession, error)
 
+// RunBenchmark executes and persists one benchmark capture.
+type RunBenchmark func(context.Context, benchmark.Options) (benchmark.Capture, error)
+
 // Dependencies contains side effects injected into command dispatch.
 type Dependencies struct {
-	Build       BuildInfo
-	Probe       doctor.Probe
-	ReadFile    func(string) ([]byte, error)
-	StartWorker StartWorker
+	Build        BuildInfo
+	Probe        doctor.Probe
+	ReadFile     func(string) ([]byte, error)
+	StartWorker  StartWorker
+	RunBenchmark RunBenchmark
 }
 
 // Run dispatches a labctl command and returns a process-compatible exit code.
@@ -82,6 +91,14 @@ func Run(
 			dependencies.Probe,
 			dependencies.Build,
 		)
+	case "benchmark":
+		return runBenchmark(
+			ctx,
+			args[1:],
+			stdout,
+			stderr,
+			dependencies,
+		)
 	case "run":
 		return runWorkload(
 			ctx,
@@ -94,6 +111,93 @@ func Run(
 	default:
 		return usageError(stderr, fmt.Sprintf("unknown command %q", args[0]))
 	}
+}
+
+func runBenchmark(
+	ctx context.Context,
+	args []string,
+	stdout io.Writer,
+	stderr io.Writer,
+	dependencies Dependencies,
+) int {
+	options, err := parseBenchmarkOptions(args)
+	if err != nil {
+		return usageError(stderr, err.Error())
+	}
+	options.Build = dependencies.Build
+	options.Probe = dependencies.Probe
+	options.ReadFile = dependencies.ReadFile
+
+	execute := dependencies.RunBenchmark
+	if execute == nil {
+		execute = benchmark.Execute
+	}
+	capture, err := execute(ctx, options)
+	if err != nil {
+		return commandError(stderr, fmt.Sprintf("benchmark suite: %v", err))
+	}
+
+	var builder strings.Builder
+	_, _ = fmt.Fprintf(
+		&builder,
+		"capture: %s\nsuite: %q\nscenarios: %d\n",
+		options.OutputPath,
+		capture.Suite.Name,
+		len(capture.Experiments),
+	)
+	for _, experiment := range capture.Experiments {
+		_, _ = fmt.Fprintf(
+			&builder,
+			"- %s: samples=%d generation_median_ns=%d pipeline_median_ns=%d engine_total_median_ns=%d\n",
+			experiment.ScenarioName,
+			experiment.Summary.EngineTotal.Count,
+			experiment.Summary.Generation.MedianNS.Uint64(),
+			experiment.Summary.Pipeline.MedianNS.Uint64(),
+			experiment.Summary.EngineTotal.MedianNS.Uint64(),
+		)
+	}
+	builder.WriteString("raw samples retained; no speedup claim is implied")
+	return write(stdout, builder.String())
+}
+
+func parseBenchmarkOptions(args []string) (benchmark.Options, error) {
+	if len(args) == 0 || len(args)%2 != 0 {
+		return benchmark.Options{}, errors.New(
+			"benchmark requires --engine <path> --suite <suite.json> --output <capture.json> [--repository-root <path>]",
+		)
+	}
+
+	options := benchmark.Options{RepositoryRoot: "."}
+	seen := make(map[string]struct{})
+	for index := 0; index < len(args); index += 2 {
+		flag := args[index]
+		value := args[index+1]
+		if _, duplicate := seen[flag]; duplicate {
+			return benchmark.Options{}, fmt.Errorf("benchmark flag %s was provided more than once", flag)
+		}
+		seen[flag] = struct{}{}
+		if value == "" {
+			return benchmark.Options{}, fmt.Errorf("benchmark flag %s requires a non-empty value", flag)
+		}
+		switch flag {
+		case "--engine":
+			options.EnginePath = value
+		case "--suite":
+			options.SuitePath = value
+		case "--output":
+			options.OutputPath = value
+		case "--repository-root":
+			options.RepositoryRoot = value
+		default:
+			return benchmark.Options{}, fmt.Errorf("unknown benchmark flag %q", flag)
+		}
+	}
+	if options.EnginePath == "" || options.SuitePath == "" || options.OutputPath == "" {
+		return benchmark.Options{}, errors.New(
+			"benchmark requires --engine <path> --suite <suite.json> --output <capture.json>",
+		)
+	}
+	return options, nil
 }
 
 func runWorkload(

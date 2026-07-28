@@ -34,6 +34,7 @@ func TestEncodeExecuteFrameUsesExactVersionedShape(t *testing.T) {
 		t.Fatalf("frame mismatch\n got: %s\nwant: %s", frame, expected)
 	}
 	if projection != (WorkloadProjection{
+		SchemaVersion: "paraflow.workload/v1",
 		Name:          "edge",
 		RecordCount:   3,
 		CategoryCount: 2,
@@ -98,7 +99,7 @@ func TestProjectWorkloadPreservesInvalidValuesForRustValidation(t *testing.T) {
 	t.Parallel()
 
 	raw := json.RawMessage(
-		`{"name":"   ","dataset":{` +
+		`{"schema_version":"paraflow.workload/v1","name":"   ","dataset":{` +
 			`"record_count":9007199254740992,"category_count":0}}`,
 	)
 	frame, projection, err := EncodeExecuteFrame(
@@ -109,6 +110,7 @@ func TestProjectWorkloadPreservesInvalidValuesForRustValidation(t *testing.T) {
 		t.Fatalf("EncodeExecuteFrame() error = %v", err)
 	}
 	if projection != (WorkloadProjection{
+		SchemaVersion: "paraflow.workload/v1",
 		Name:          "   ",
 		RecordCount:   9_007_199_254_740_992,
 		CategoryCount: 0,

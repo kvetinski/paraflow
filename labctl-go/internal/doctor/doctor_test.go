@@ -56,10 +56,10 @@ func TestCheckIsReadyWhenRequiredToolsAreUsable(t *testing.T) {
 	if !report.Ready {
 		t.Fatal("expected report to be ready")
 	}
-	if report.SchemaVersion != "paraflow.environment/v2" {
+	if report.SchemaVersion != "paraflow.environment/v3" {
 		t.Fatalf("unexpected report schema: %q", report.SchemaVersion)
 	}
-	if report.Milestone != "day-04" {
+	if report.Milestone != "day-05" {
 		t.Fatalf("unexpected milestone: %q", report.Milestone)
 	}
 	if report.CapturedAt.IsZero() {
@@ -225,7 +225,7 @@ func TestReportStringLabelsRequirementsAndSource(t *testing.T) {
 		"cc      required",
 		"nvcc    planned",
 		"Source: test (commit 0123456789abcdef0123456789abcdef01234567, source clean)",
-		"Ready for current milestone (day-04): true",
+		"Ready for current milestone (day-05): true",
 	} {
 		if !strings.Contains(output, expected) {
 			t.Fatalf("expected output to contain %q:\n%s", expected, output)
@@ -292,5 +292,18 @@ func TestProbeHelperProcess(t *testing.T) {
 		time.Sleep(5 * time.Second)
 	default:
 		os.Exit(8)
+	}
+}
+
+func TestLinuxPhysicalCoreCountDeduplicatesSMTSiblings(t *testing.T) {
+	t.Parallel()
+
+	cpuinfo := "" +
+		"processor : 0\nphysical id : 0\ncore id : 0\n\n" +
+		"processor : 1\nphysical id : 0\ncore id : 0\n\n" +
+		"processor : 2\nphysical id : 0\ncore id : 1\n\n" +
+		"processor : 3\nphysical id : 1\ncore id : 0\n"
+	if got := linuxPhysicalCoreCount(strings.NewReader(cpuinfo)); got != 3 {
+		t.Fatalf("linuxPhysicalCoreCount() = %d, want 3", got)
 	}
 }

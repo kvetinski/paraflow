@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	reportSchema        = "paraflow.environment/v2"
-	currentMilestone    = "day-04"
+	reportSchema        = "paraflow.environment/v3"
+	currentMilestone    = "day-05"
 	defaultProbeTimeout = 2 * time.Second
 )
 
@@ -61,6 +61,7 @@ type Report struct {
 	KernelVersion string         `json:"kernel_version"`
 	Architecture  string         `json:"architecture"`
 	CPUModel      string         `json:"cpu_model"`
+	PhysicalCores int            `json:"physical_cores"`
 	LogicalCPUs   int            `json:"logical_cpus"`
 	GoMaxProcs    int            `json:"gomaxprocs"`
 	GoVersion     string         `json:"go_version"`
@@ -214,6 +215,7 @@ func Check(ctx context.Context, probe Probe, source buildinfo.Info) Report {
 		KernelVersion: captureKernelVersion(ctx),
 		Architecture:  runtime.GOARCH,
 		CPUModel:      captureCPUModel(ctx),
+		PhysicalCores: capturePhysicalCores(ctx),
 		LogicalCPUs:   runtime.NumCPU(),
 		GoMaxProcs:    runtime.GOMAXPROCS(0),
 		GoVersion:     runtime.Version(),
@@ -277,9 +279,10 @@ func (report Report) String() string {
 	var builder strings.Builder
 	_, _ = fmt.Fprintf(
 		&builder,
-		"ParaFlow environment\nOS/arch: %s/%s\nLogical CPUs: %d\nGo runtime: %s\n\n",
+		"ParaFlow environment\nOS/arch: %s/%s\nPhysical/logical CPUs: %d/%d\nGo runtime: %s\n\n",
 		report.OS,
 		report.Architecture,
+		report.PhysicalCores,
 		report.LogicalCPUs,
 		report.GoVersion,
 	)

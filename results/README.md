@@ -1,18 +1,21 @@
 # Results
 
-This directory contains curated performance evidence that can be reproduced
-from a clean checkout.
+`results/raw/` contains local immutable captures produced by
+`make benchmark-day05`. Raw files are ignored by Git by default.
 
-Every report must identify:
+A capture contains:
 
-- source commit;
-- workload and execution configuration;
-- machine and toolchains;
-- correctness status;
-- raw-sample location;
-- timing boundaries;
-- both improvements and regressions.
+- exact suite and workload SHA-256 hashes plus an engine hash verified before
+  and after the suite;
+- matching controller and engine source identity;
+- machine and toolchain metadata;
+- timing-boundary declarations;
+- every retained raw sample;
+- median, median absolute deviation, minimum, and maximum;
+- scalar-oracle correctness evidence.
 
-Local raw captures belong in `results/raw/` and are ignored by Git. A curated
-dataset may be promoted into version control together with its metadata and
-analysis.
+Day 5 records data but does not interpret bottlenecks. Day 6 may promote a raw
+capture into a curated report only when the source tree is clean, the command
+is reproducible, and the report states both limitations and non-claims.
+
+Never edit a raw capture in place. Run a new experiment and retain the new file.

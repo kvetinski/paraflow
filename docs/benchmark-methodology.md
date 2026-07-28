@@ -1,23 +1,24 @@
 # Benchmark methodology
 
-Status: **policy defined; executable benchmark harness scheduled for Day 5**
+## Purpose
 
-## Milestone boundary
+ParaFlow benchmarks are engineering evidence, not decorative numbers. A timing
+is useful only when its workload, implementation, boundary, machine, source,
+and correctness status can be reconstructed.
 
-Day 1 rejected timings of schema parsing, CLI startup, and the environment
-doctor because they do not measure the intended workload.
+Day 5 establishes the scalar baseline. Day 6 profiles and explains it. Later
+weeks may compare SIMD, multicore, scheduling, layout, synchronization, and GPU
+backends under the same evidence rules.
 
-Day 2 made deterministic generation executable. Day 3 extended the optimized
-preflight through normalize, score, stable filter/compaction, and aggregate.
-Day 4 adds a long-lived Go-to-Rust execution boundary so later samples can reuse
-one process. It still does not collect or publish timing samples: warm-ups, raw
-samples, persistence, and complete experiment identity belong to the Day 5
-harness. Until then, `make benchmark-preflight` proves release-build, exact
-scalar and protocol conformance, source identity, and toolchain readiness only.
+## Contract separation
 
-## Timing boundaries
+- **Workload contract:** dataset and pipeline meaning.
+- **Execution contract:** backend and process interaction.
+- **Measurement contract:** warm-ups, samples, clocks, timing boundaries,
+  metadata, and persistence.
 
-The future harness reports separate measurements:
+A benchmark setting may change how evidence is collected, but not what the
+workload computes.
 
 | Boundary        | Includes                                                   |
 | --------------- | ---------------------------------------------------------- |
@@ -26,56 +27,65 @@ The future harness reports separate measurements:
 | `engine_total`  | Generation, compute, validation, and engine bookkeeping    |
 | `orchestration` | Go control-plane and process/protocol overhead             |
 
-Process startup is excluded from individual compute samples. If measured, it is
-reported separately.
+## Required measurement process
 
-Protocol exchange is not silently folded into `compute`. When Day 5 records it,
-Go-side request encoding, pipe transfer, response decoding, and validation
-belong to `orchestration`; the Rust workload remains the source of
-`generation`, `compute`, and `engine_total` boundaries.
+1. Build the measured engine in release mode.
+2. Record controller and engine source identity, including dirty state, and
+   require both binaries to report the same commit and source state.
+3. Hash the exact suite, workloads, and engine executable; hash the engine again
+   after the final scenario and reject a mixed-binary run.
+4. Capture OS, kernel, CPU model, physical/logical CPU counts, Go runtime,
+   compiler/tool versions, and `GOMAXPROCS`.
+5. Strictly validate the workload and compute the scalar-oracle reference before
+   sampling.
+6. Execute warm-ups without retaining them as observations.
+7. Retain every timed sample; never store only an average.
+8. Validate every sample's result against the oracle.
+9. Run scenarios sequentially unless interference is the subject under study.
+10. Persist the complete capture atomically and never overwrite prior evidence.
 
-Protocol v1 remains the execution and correctness contract; it does not grow
-timing fields. Day 5's engine-side measurement harness must capture the three
-internal Rust boundaries separately, while Go can measure and persist
-orchestration evidence around the exchange.
+## Day 5 boundaries
 
-An experiment that intentionally reuses preallocated buffers must name that
-different boundary explicitly rather than presenting it as the default
-`generation` measurement.
+One Rust process performs all warm-ups and retained samples for one scenario.
+Process startup is excluded from per-sample engine time and included in Go's
+orchestration time.
 
-## Required experiment identity
+- `generation_ns`: fresh allocation plus deterministic logical-record
+  materialization.
+- `pipeline_ns`: normalize through aggregate over that materialized batch.
+- `engine_total_ns`: generation, pipeline, exact correctness comparison,
+  reclamation of per-iteration record/result buffers, and engine bookkeeping.
+- `experiment_total_ns`: all warm-ups and retained iterations inside Rust.
+- `orchestration_total_ns`: Go encoding, process launch, transport, complete
+  engine execution, decoding, and validation.
 
-Every stored result includes:
+The current materialized representation is a scalar `Vec<LogicalRecord>`. This
+is a measurement boundary, not a frozen AoS ABI or a decision against future
+SoA layouts.
 
-- Git commit and dirty-worktree state;
-- workload schema, name, and content hash;
-- execution configuration;
-- compiler and relevant library versions;
-- release flags and target architecture;
-- OS, architecture, logical CPU count, and available CPU model;
-- warm-up count and raw sample count;
-- timing clock and units;
-- correctness result;
-- profiler/tool versions when cited.
+## Sampling and summaries
 
-## Sampling
+The checked-in baseline suite uses five warm-ups and 20–25 retained samples per
+scenario. The CI smoke suite uses one warm-up and three samples only to exercise
+the boundary.
 
-- Build optimized binaries before measurement.
-- Run warm-ups before recording samples.
-- Store every raw sample.
-- Report median plus a robust measure of spread.
-- Repeat across meaningful input sizes and distributions.
-- Run scenarios sequentially unless concurrent interference is itself the
-  subject of the experiment.
-- Never turn shared-runner timing into a CI pass/fail threshold.
+Report at least:
 
-Minimum and best-of-N may be useful for studying achievable machine execution,
-but they must not be presented as typical latency.
+- sample count;
+- median;
+- median absolute deviation (MAD);
+- minimum;
+- maximum;
+- all raw samples.
+
+Median and MAD describe typical behavior and spread without allowing one large
+outlier to dominate the summary. Minimum can help study achievable execution,
+but it must not be labeled typical latency. Best-of-one is not a portfolio
+claim.
 
 ## Correctness gate
 
-A result is publishable only after the backend matches the scalar oracle under
-the declared comparison policy. Incorrect output has no performance value.
+Incorrect output has no performance value.
 
 Exact comparison applies to:
 - accepted count;
@@ -83,27 +93,58 @@ Exact comparison applies to:
 - integer checksums;
 - compacted IDs and their order when the diagnostic is requested.
 
-Finite floating-point sums must state absolute and relative tolerances.
-Reachable positive infinity must match positive infinity as an exact state;
-NaN is not a valid canonical scalar-oracle output. Results near the filter
-threshold require explicit investigation.
+Day 5's scalar materialized path must match the stable streaming scalar oracle
+exactly, including binary64 score-sum bits. Go independently checks result
+encodings and conservation invariants before persistence.
 
-Day 3's streaming scalar oracle is the correctness path, not a commitment to
-Day 5's measured buffer boundary. Day 4's process protocol is the stable
-control boundary, not a timer or persistence format. A future materialized
-benchmark runner can time compute-only execution without changing `ResultV1`,
-the oracle, or protocol v1.
+Future parallel reductions may use a declared absolute/relative tolerance for
+finite floating-point sums while still requiring exact structural results.
+That policy must be versioned rather than silently introduced.
+
+## Noise controls
+
+Before a curated local run:
+
+- close unrelated CPU-heavy work;
+- use AC power and a stable performance policy when available;
+- record, rather than hide, container or virtualization context;
+- avoid concurrent scenario execution;
+- repeat the complete suite when results appear unstable;
+- do not mix samples from different commits or binaries; the controller
+  enforces source alignment and re-hashes the engine after the suite.
+
+The 64K uniform and hotspot cases keep seed, dimensions, feature domain, flag
+probability, and pipeline parameters identical; only distribution changes.
+
+CPU pinning, frequency control, NUMA placement, and hardware counters are not
+required for the Day 5 baseline, but their absence is a limitation to state in
+analysis. Day 6 may add controlled profiling commands without changing the raw
+measurement contract.
+
+## CI policy
+
+Shared hosted runners are suitable for:
+
+- schema and conformance checks;
+- exact correctness tests;
+- process-boundary smoke tests;
+- proving that raw samples and metadata are produced.
+
+They are not suitable for a fixed percentage performance gate. Placement,
+contention, frequency policy, and virtualization noise are uncontrolled. CI
+must never fail because a shared-runner timing moved by an arbitrary threshold.
 
 ## Claim format
 
-A performance statement must answer:
+A publishable statement must answer:
 
-1. Faster than what baseline?
-2. On which machine and input?
-3. Which timing boundary?
-4. Across how many samples?
-5. With what correctness check?
-6. Where does the optimization lose?
+1. Faster than which named baseline?
+2. On which exact machine and source state?
+3. For which workload and execution settings?
+4. Which timing boundary is compared?
+5. Across how many raw samples and with what spread?
+6. Which correctness policy passed?
+7. Where does the change lose or stop scaling?
 
-Curated reports live under `results/`. Raw local captures live under
-`results/raw/` and are ignored by Git.
+Day 5 makes no speedup claim because only one implementation exists. Its output
+is the denominator future comparisons will require.

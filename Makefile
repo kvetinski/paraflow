@@ -7,11 +7,7 @@ ENGINE_RELEASE_BIN := target/release/paraflow-engine
 LABCTL_BIN := bin/labctl
 VERSION := 0.1.0-alpha.2
 GIT_COMMIT := $(shell git rev-parse HEAD 2>/dev/null || printf 'unknown')
-<<<<<<< HEAD
-GIT_STATE := $(shell if [[ -z "$$(git status --porcelain 2>/dev/null)" ]]; then printf 'clean'; else printf 'dirty'; fi)
-=======
 GIT_STATE := $(shell if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then printf 'unknown'; elif [[ -z "$$(git status --porcelain)" ]]; then printf 'clean'; else printf 'dirty'; fi)
->>>>>>> 4b93d5b (day 5: ci: exercise disposable benchmark smoke suite)
 CARGO_BUILD_ENV := PARAFLOW_SOURCE_COMMIT="$(GIT_COMMIT)" PARAFLOW_SOURCE_STATE="$(GIT_STATE)"
 
 .DEFAULT_GOAL := help

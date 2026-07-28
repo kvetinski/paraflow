@@ -1,17 +1,16 @@
 use std::io::Cursor;
 
 use paraflow_engine::{
-    benchmark::{self, execute, BenchmarkError, MAX_SAMPLE_ITERATIONS},
+    benchmark::{self, BenchmarkError, MAX_SAMPLE_ITERATIONS, execute},
     run_with_input,
 };
 use paraflow_protocol::benchmark::{
-    BenchmarkEngineResultV1, BenchmarkRequestV1, BENCHMARK_ENGINE_RESULT_SCHEMA_V1,
-    BENCHMARK_REQUEST_SCHEMA_V1,
+    BENCHMARK_ENGINE_RESULT_SCHEMA_V1, BENCHMARK_REQUEST_SCHEMA_V1, BenchmarkEngineResultV1,
+    BenchmarkRequestV1,
 };
 use serde::Deserialize;
 
-const BENCHMARK_VECTORS: &str =
-    include_str!("../../../../contracts/conformance/benchmark-v1.json");
+const BENCHMARK_VECTORS: &str = include_str!("../../../../contracts/conformance/benchmark-v1.json");
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -40,8 +39,14 @@ fn benchmark_wire_vectors_round_trip_strictly() {
             vector.engine_result.schema_version,
             BENCHMARK_ENGINE_RESULT_SCHEMA_V1
         );
-        assert_eq!(vector.request.experiment_id, vector.engine_result.experiment_id);
-        assert_eq!(vector.request.scenario_name, vector.engine_result.scenario_name);
+        assert_eq!(
+            vector.request.experiment_id,
+            vector.engine_result.experiment_id
+        );
+        assert_eq!(
+            vector.request.scenario_name,
+            vector.engine_result.scenario_name
+        );
         assert_eq!(vector.name, "edge-scalar-v1");
 
         let request_json = serde_json::to_string(&vector.request).expect("serialize request");
@@ -71,7 +76,10 @@ fn one_process_runs_warmups_and_retains_every_raw_sample() {
     assert_eq!(result.correctness.oracle, "rust-scalar-v1");
     assert_eq!(result.correctness.comparison, "exact");
     assert_eq!(result.result.accepted_count.value(), 3);
-    assert_eq!(result.result.score_sum.to_float().to_bits(), 6.5_f64.to_bits());
+    assert_eq!(
+        result.result.score_sum.to_float().to_bits(),
+        6.5_f64.to_bits()
+    );
 
     let mut retained_total = 0_u64;
     for (ordinal, sample) in result.samples.iter().enumerate() {
@@ -95,7 +103,10 @@ fn one_process_runs_warmups_and_retains_every_raw_sample() {
 fn invalid_sampling_is_rejected_before_workload_execution() {
     let mut zero = request();
     zero.sampling.sample_iterations = 0;
-    assert!(matches!(execute(zero), Err(BenchmarkError::InvalidRequest(_))));
+    assert!(matches!(
+        execute(zero),
+        Err(BenchmarkError::InvalidRequest(_))
+    ));
 
     let mut too_many = request();
     too_many.sampling.sample_iterations = MAX_SAMPLE_ITERATIONS + 1;

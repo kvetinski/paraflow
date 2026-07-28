@@ -13,13 +13,13 @@ use std::{
 
 use paraflow_contracts::{ResultV1, Validate, ValidationErrors, WorkloadSpec};
 use paraflow_protocol::{
+    ExecutionV1, HexU64, MAX_FRAME_BYTES, ResultWireV1, SCALAR_BACKEND_V1,
     benchmark::{
-        BenchmarkCorrectnessV1, BenchmarkEngineResultV1, BenchmarkRequestV1,
-        BenchmarkSampleV1, BenchmarkTimingV1, EngineBuildV1, BENCHMARK_CLOCK_V1,
-        BENCHMARK_COMPARISON_V1, BENCHMARK_ENGINE_RESULT_SCHEMA_V1, BENCHMARK_ORACLE_V1,
-        BENCHMARK_REQUEST_SCHEMA_V1, BENCHMARK_TIME_UNIT_V1,
+        BENCHMARK_CLOCK_V1, BENCHMARK_COMPARISON_V1, BENCHMARK_ENGINE_RESULT_SCHEMA_V1,
+        BENCHMARK_ORACLE_V1, BENCHMARK_REQUEST_SCHEMA_V1, BENCHMARK_TIME_UNIT_V1,
+        BenchmarkCorrectnessV1, BenchmarkEngineResultV1, BenchmarkRequestV1, BenchmarkSampleV1,
+        BenchmarkTimingV1, EngineBuildV1,
     },
-    ExecutionV1, HexU64, ResultWireV1, MAX_FRAME_BYTES, SCALAR_BACKEND_V1,
 };
 
 use crate::{generation::DatasetGenerator, scalar::ScalarOracle};
@@ -179,8 +179,8 @@ pub fn execute(request: BenchmarkRequestV1) -> Result<BenchmarkEngineResultV1, B
 
     let oracle = ScalarOracle::try_new(&workload).map_err(BenchmarkError::Scalar)?;
     let expected = oracle.run_result().map_err(BenchmarkError::Scalar)?;
-    let generator = DatasetGenerator::try_new(&workload.dataset)
-        .map_err(BenchmarkError::InvalidWorkload)?;
+    let generator =
+        DatasetGenerator::try_new(&workload.dataset).map_err(BenchmarkError::InvalidWorkload)?;
 
     let experiment_started = Instant::now();
     for warmup in 0..request.sampling.warmup_iterations {
@@ -371,7 +371,10 @@ mod tests {
 
         let too_long = "a".repeat(65);
         for invalid in ["", "Upper", "-leading", "contains space", too_long.as_str()] {
-            assert!(!valid_identifier(invalid, 64), "{invalid:?} must be invalid");
+            assert!(
+                !valid_identifier(invalid, 64),
+                "{invalid:?} must be invalid"
+            );
         }
     }
 

@@ -46,8 +46,7 @@ fn env_value(name: &str) -> String {
 
 fn rustc_version() -> String {
     let rustc = env::var_os("RUSTC").unwrap_or_else(|| "rustc".into());
-    command_output(Command::new(rustc).arg("--version"))
-        .unwrap_or_else(|| "unknown".to_owned())
+    command_output(Command::new(rustc).arg("--version")).unwrap_or_else(|| "unknown".to_owned())
 }
 
 fn git_state(repository_root: &Path) -> String {

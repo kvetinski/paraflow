@@ -2,9 +2,9 @@
 
 ## Week outcome
 
-By the end of Week 1, `labctl` will run a deterministic Rust scalar engine and
-persist reproducible benchmark evidence. Day 1 creates the contracts that keep
-those later changes comparable.
+By the end of Week 1, `labctl` runs a deterministic Rust scalar engine and
+persists reproducible benchmark evidence. Day 1 created the contracts that keep
+all later changes comparable.
 
 ## Day 1 — Completed foundation
 
@@ -60,12 +60,22 @@ There is still no published timing result.
 
 There are still no timings, retries, schedules, or persisted benchmark results.
 
-## Day 5 — Benchmark harness
+## Day 5 — Completed benchmark harness
 
-Reuse protocol v1 for warm-ups, execution, and correctness. Add an engine-side
-measurement harness for precise internal timing boundaries, release-build
-enforcement, raw samples, and result persistence without adding timing fields
-to protocol v1.
+- Separate measurement contracts that do not inflate the Day 4 execution
+  protocol.
+- One fresh Rust process per scenario with in-process warm-ups and retained
+  samples.
+- Generation, pipeline, engine-total, experiment-total, and orchestration-total
+  boundaries.
+- Exact oracle comparison for every iteration and strict Go-side evidence
+  validation.
+- Release-profile, source-alignment, and stable-engine-artifact gates.
+- Raw samples, median/MAD summaries, environment metadata, and atomic
+  no-overwrite capture persistence.
+- Controlled 1K, 64K uniform, 64K hotspot, and 1M suites plus CI smoke coverage.
+
+No SIMD, multicore, GPU, or bottleneck claim is made yet.
 
 ## Day 6 — Baseline analysis
 

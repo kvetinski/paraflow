@@ -1,26 +1,33 @@
 # Benchmarks
 
-Executable performance sampling begins on Day 5.
+Day 5 introduces executable, versioned benchmark suites.
 
-This directory will contain:
+A suite references semantic workloads and adds only execution and sampling
+configuration. It never duplicates or changes workload meaning.
 
-- execution configurations;
-- scenario matrices;
-- harness documentation;
-- scripts that reproduce curated reports.
+## Suites
 
-Semantic workload files live in `../workloads/`. A benchmark scenario references
-a workload and adds execution and sampling configuration; it never duplicates
-or mutates workload meaning.
+- `suites/day05-smoke-v1.json` — one 1K scenario, one warm-up, three retained
+  samples; intended for correctness and integration smoke checks.
+- `suites/day05-scalar-baseline-v1.json` — 1K, 64K uniform, 64K hotspot, and 1M
+  scalar scenarios; intended for the first raw baseline capture. The 64K pair
+  changes only the distribution, preserving every other workload setting.
 
-Day 4 has a complete scalar generate-through-aggregate path behind one
-long-lived Go-to-Rust worker protocol. It deliberately records no timings
-before the harness can preserve warm-ups, every raw sample, and complete
-experiment identity. Process reuse is readiness infrastructure, not a
-performance claim. Use the release-build and conformance preflight instead:
+## Run
 
 ```bash
-make benchmark-preflight
+make benchmark-smoke
+make benchmark-day05
 ```
 
-See `../docs/benchmark-methodology.md` before adding a result.
+The smoke output is disposable. The full command creates a unique file under
+`results/raw/` and refuses to overwrite an existing capture.
+
+The Rust process owns warm-ups and sample timing. Go owns process orchestration,
+identity capture, strict validation, source alignment, engine-artifact
+immutability checks, statistics, and persistence. See
+[`docs/specifications/benchmark-v1.md`](../docs/specifications/benchmark-v1.md)
+for exact boundaries.
+
+No suite contains a pass/fail latency threshold. Shared CI verifies integrity,
+not machine performance.

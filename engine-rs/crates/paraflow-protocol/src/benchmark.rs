@@ -12,8 +12,7 @@ use crate::{ExecutionV1, HexU64, ResultWireV1};
 /// Version accepted for one benchmark experiment request.
 pub const BENCHMARK_REQUEST_SCHEMA_V1: &str = "paraflow.benchmark-request/v1";
 /// Version emitted for one engine-side benchmark result.
-pub const BENCHMARK_ENGINE_RESULT_SCHEMA_V1: &str =
-    "paraflow.benchmark-engine-result/v1";
+pub const BENCHMARK_ENGINE_RESULT_SCHEMA_V1: &str = "paraflow.benchmark-engine-result/v1";
 /// Monotonic clock used by the Rust harness.
 pub const BENCHMARK_CLOCK_V1: &str = "std::time::Instant";
 /// Unit used by every timing field.

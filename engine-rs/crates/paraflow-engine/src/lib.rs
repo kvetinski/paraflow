@@ -1,8 +1,9 @@
-//! Deterministic generation, scalar correctness, and command-line entry points
+//! Deterministic generation, scalar correctness, measurement, and command-line entry points
 //! for the ParaFlow engine.
 
 #![forbid(unsafe_code)]
 
+pub mod benchmark;
 pub mod generation;
 pub mod scalar;
 pub mod server;
@@ -62,8 +63,8 @@ pub fn run<S: AsRef<OsStr>>(args: &[S], stdout: &mut impl Write, stderr: &mut im
 
 /// Run the engine command with an injected input stream.
 ///
-/// Regular one-shot commands ignore `stdin`; the long-lived `serve` command
-/// consumes versioned protocol frames from it.
+/// File-oriented commands ignore `stdin`; `benchmark` consumes one versioned
+/// request and `serve` consumes a long-lived stream of versioned frames.
 pub fn run_with_input<S: AsRef<OsStr>>(
     args: &[S],
     stdin: &mut impl BufRead,
@@ -91,6 +92,16 @@ pub fn run_with_input<S: AsRef<OsStr>>(
         "validate" => write_usage_error(stderr, "validate requires exactly one manifest path"),
         "oracle" if args.len() == 2 => oracle_file(Path::new(args[1].as_ref()), stdout, stderr),
         "oracle" => write_usage_error(stderr, "oracle requires exactly one manifest path"),
+        "benchmark" if args.len() == 1 => match benchmark::run(stdin, stdout) {
+            Ok(()) => 0,
+            Err(benchmark_error) => {
+                write_error(stderr, 6, &format!("benchmark failed: {benchmark_error}"))
+            }
+        },
+        "benchmark" => write_usage_error(
+            stderr,
+            "benchmark accepts no arguments and reads one request from stdin",
+        ),
         "serve" if args.len() == 1 => match server::serve(stdin, stdout) {
             Ok(()) => 0,
             Err(server_error) => write_error(stderr, 1, &format!("worker failed: {server_error}")),
@@ -108,11 +119,13 @@ Usage:
   paraflow-engine contract
   paraflow-engine validate <workload.json>
   paraflow-engine oracle <workload.json>
+  paraflow-engine benchmark < benchmark-request.json
   paraflow-engine serve
   paraflow-engine version
   paraflow-engine help
 
-The serve command is a long-lived NDJSON worker for labctl.";
+The benchmark command performs warm-ups and repeated samples inside one process.
+The serve command is a long-lived NDJSON correctness worker for labctl.";
     write_output(output, help)
 }
 

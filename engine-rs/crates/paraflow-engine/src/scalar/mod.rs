@@ -9,7 +9,9 @@ mod stages;
 use std::{collections::TryReserveError, error::Error, fmt};
 
 use aggregate::Accumulator;
-use paraflow_contracts::{PipelineSpec, ResultV1, Validate, ValidationErrors, WorkloadSpec};
+use paraflow_contracts::{
+    LogicalRecord, PipelineSpec, ResultV1, Validate, ValidationErrors, WorkloadSpec,
+};
 
 use crate::generation::DatasetGenerator;
 
@@ -158,9 +160,36 @@ impl<'a> ScalarOracle<'a> {
 
     /// Execute every stage in stable input order.
     pub fn run(&self, options: ScalarRunOptions) -> Result<ScalarRunOutput, ScalarError> {
+        self.run_records(self.generator.records(), options)
+    }
+
+    /// Execute the canonical result path without retaining accepted IDs.
+    pub fn run_result(&self) -> Result<ResultV1, ScalarError> {
+        self.run(ScalarRunOptions::default())
+            .map(|output| output.result)
+    }
+
+    /// Execute normalize through aggregate over a materialized logical batch.
+    ///
+    /// The Day 5 harness generates this batch from the same validated workload
+    /// immediately before calling this method. Keeping the materialized path
+    /// internal prevents it from becoming a public layout or ABI promise.
+    pub(crate) fn run_materialized_result(
+        &self,
+        records: &[LogicalRecord],
+    ) -> Result<ResultV1, ScalarError> {
+        self.run_records(records.iter().copied(), ScalarRunOptions::default())
+            .map(|output| output.result)
+    }
+
+    fn run_records(
+        &self,
+        records: impl IntoIterator<Item = LogicalRecord>,
+        options: ScalarRunOptions,
+    ) -> Result<ScalarRunOutput, ScalarError> {
         let mut accumulator = Accumulator::try_new(self.category_count, options.compacted_ids)?;
 
-        for logical in self.generator.records() {
+        for logical in records {
             let normalized = normalize_record(logical, &self.pipeline.normalize);
             let scored = score_record(normalized, &self.pipeline.score);
             if let Some(accepted) = filter_record(scored, &self.pipeline.filter) {
@@ -169,11 +198,5 @@ impl<'a> ScalarOracle<'a> {
         }
 
         Ok(accumulator.finish())
-    }
-
-    /// Execute the canonical result path without retaining accepted IDs.
-    pub fn run_result(&self) -> Result<ResultV1, ScalarError> {
-        self.run(ScalarRunOptions::default())
-            .map(|output| output.result)
     }
 }

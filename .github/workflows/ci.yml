@@ -84,3 +84,33 @@ jobs:
 
       - name: Exercise release protocol
         run: make protocol-conformance
+
+  benchmark:
+    name: Day 5 benchmark boundary
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Rust
+        run: >-
+          rustup toolchain install 1.88.0
+          --profile minimal
+          --component clippy
+          --component rustfmt
+
+      - name: Install Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: labctl-go/go.mod
+
+      - name: Install Node
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: tools/schema-check/package-lock.json
+
+      - name: Exercise disposable Day 5 benchmark suite
+        run: make benchmark-smoke

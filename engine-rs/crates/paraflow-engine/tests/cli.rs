@@ -213,7 +213,7 @@ fn oracle_command_requires_exactly_one_path() {
 
 #[test]
 fn commands_reject_trailing_arguments() {
-    for command in ["help", "version", "contract"] {
+    for command in ["help", "version", "contract", "benchmark", "profile"] {
         let mut stdout = Vec::new();
         let mut stderr = Vec::new();
         let exit_code = run(

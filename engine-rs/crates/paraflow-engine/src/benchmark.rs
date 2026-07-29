@@ -314,11 +314,11 @@ fn strip_optional_line_ending(payload: &mut Vec<u8>) -> Result<(), BenchmarkErro
     Ok(())
 }
 
-fn duration_ns(duration: Duration) -> Result<u64, BenchmarkError> {
+pub(crate) fn duration_ns(duration: Duration) -> Result<u64, BenchmarkError> {
     u64::try_from(duration.as_nanos()).map_err(|_| BenchmarkError::DurationOverflow)
 }
 
-fn results_equal_exact(actual: &ResultV1, expected: &ResultV1) -> bool {
+pub(crate) fn results_equal_exact(actual: &ResultV1, expected: &ResultV1) -> bool {
     actual.accepted_count == expected.accepted_count
         && actual.score_sum.to_bits() == expected.score_sum.to_bits()
         && actual.category_histogram == expected.category_histogram
@@ -326,7 +326,7 @@ fn results_equal_exact(actual: &ResultV1, expected: &ResultV1) -> bool {
         && actual.accepted_id_xor == expected.accepted_id_xor
 }
 
-fn valid_identifier(value: &str, maximum_bytes: usize) -> bool {
+pub(crate) fn valid_identifier(value: &str, maximum_bytes: usize) -> bool {
     let bytes = value.as_bytes();
     let Some(first) = bytes.first() else {
         return false;
@@ -340,14 +340,14 @@ fn valid_identifier(value: &str, maximum_bytes: usize) -> bool {
         })
 }
 
-fn valid_name(value: &str, maximum_characters: usize) -> bool {
+pub(crate) fn valid_name(value: &str, maximum_characters: usize) -> bool {
     let length = value.chars().count();
     length != 0
         && length <= maximum_characters
         && value.chars().any(|character| !character.is_whitespace())
 }
 
-fn current_engine_build() -> EngineBuildV1 {
+pub(crate) fn current_engine_build() -> EngineBuildV1 {
     EngineBuildV1 {
         version: env!("CARGO_PKG_VERSION").to_owned(),
         profile: env!("PARAFLOW_BUILD_PROFILE").to_owned(),

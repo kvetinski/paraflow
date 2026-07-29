@@ -5,6 +5,7 @@
 
 pub mod benchmark;
 pub mod generation;
+pub mod profile;
 pub mod scalar;
 pub mod server;
 
@@ -63,8 +64,9 @@ pub fn run<S: AsRef<OsStr>>(args: &[S], stdout: &mut impl Write, stderr: &mut im
 
 /// Run the engine command with an injected input stream.
 ///
-/// File-oriented commands ignore `stdin`; `benchmark` consumes one versioned
-/// request and `serve` consumes a long-lived stream of versioned frames.
+/// File-oriented commands ignore `stdin`; `benchmark` and `profile` consume
+/// one versioned request, while `serve` consumes a long-lived stream of
+/// versioned frames.
 pub fn run_with_input<S: AsRef<OsStr>>(
     args: &[S],
     stdin: &mut impl BufRead,
@@ -102,6 +104,16 @@ pub fn run_with_input<S: AsRef<OsStr>>(
             stderr,
             "benchmark accepts no arguments and reads one request from stdin",
         ),
+        "profile" if args.len() == 1 => match profile::run(stdin, stdout) {
+            Ok(()) => 0,
+            Err(profile_error) => {
+                write_error(stderr, 7, &format!("profile failed: {profile_error}"))
+            }
+        },
+        "profile" => write_usage_error(
+            stderr,
+            "profile accepts no arguments and reads one request from stdin",
+        ),
         "serve" if args.len() == 1 => match server::serve(stdin, stdout) {
             Ok(()) => 0,
             Err(server_error) => write_error(stderr, 1, &format!("worker failed: {server_error}")),
@@ -120,11 +132,13 @@ Usage:
   paraflow-engine validate <workload.json>
   paraflow-engine oracle <workload.json>
   paraflow-engine benchmark < benchmark-request.json
+  paraflow-engine profile < profile-request.json
   paraflow-engine serve
   paraflow-engine version
   paraflow-engine help
 
-The benchmark command performs warm-ups and repeated samples inside one process.
+The benchmark command measures the fused scalar baseline. The profile command
+measures explicit materialized stage passes with observer cost kept visible.
 The serve command is a long-lived NDJSON correctness worker for labctl.";
     write_output(output, help)
 }

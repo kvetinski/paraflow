@@ -30,62 +30,51 @@ This repository is not a collection of disconnected assignments. Every future
 backend must preserve the same workload semantics and pass the same correctness
 oracle before its performance is considered.
 
-## Current milestone: Day 5
+## Current milestone: Day 6
 
-Day 5 ships a reproducible scalar benchmark harness:
+Day 6 explains the scalar baseline without optimizing it:
 
-- versioned benchmark suite, request, engine-result, environment, and capture
-  schemas;
-- one fresh Rust process per scenario;
-- all warm-ups and retained samples executed inside that process;
-- process startup excluded from individual engine samples and retained in a
-  separate Go orchestration boundary;
-- distinct generation, pipeline, engine-total, experiment-total, and
-  orchestration-total durations;
-- fresh deterministic materialization for every iteration;
-- exact comparison of every materialized iteration with the frozen streaming
-  scalar oracle;
-- strict Go validation of correlation, build profile, sample order, timing
-  conservation, encodings, and logical result invariants;
-- exact controller/engine source-commit and source-state alignment;
-- engine hashing before and after the suite so a replaced binary cannot produce a
-  mixed capture;
-- every raw sample retained;
-- integer median, median absolute deviation, minimum, and maximum summaries;
-- SHA-256 identity for the suite, workloads, and measured engine executable;
-- controller, engine, source-state, host, CPU, OS, and toolchain metadata;
-- atomic no-overwrite persistence of complete captures;
-- a disposable CI smoke suite with no performance threshold;
-- a full local baseline suite spanning 1K, 64K uniform, 64K hotspot, and 1M
-  records.
+- the fused Day 5 benchmark remains unchanged as the comparison denominator;
+- a separate `materialized-stage-passes-v1` profile exposes generation,
+  normalize, score, filter, and aggregate boundaries;
+- one coarse `boundary-timers-v1` observer surrounds each complete pass—never
+  each record;
+- every warm-up and retained profile iteration matches the streaming scalar
+  oracle exactly;
+- Go pairs a fresh fused baseline and stage profile for every scenario;
+- scenario, workload, sampling, release build, source identity, engine hash,
+  and exact canonical results must agree;
+- all fused and profile samples remain in one self-contained immutable report;
+- median/MAD, selectivity, stage shares, dominant stages, per-record costs, and
+  observer/topology ratios use overflow-checked integer calculations;
+- shared schemas, conformance fixtures, real release-process tests, and 24
+  understanding questions make the milestone reviewable.
 
-Day 5 establishes the denominator for future comparisons. It makes no SIMD,
-multicore, or GPU speedup claim. Day 6 profiles and explains the scalar baseline
-before optimization begins.
+The materialized stage profile changes allocation, fusion, and memory access.
+Its values are diagnostic evidence, not an exact decomposition of the fused
+loop and not a speedup claim.
 
-The implementation map, test inventory, benchmark setup, and commit structure
-are collected in [`DAY5_IMPLEMENTATION.md`](DAY5_IMPLEMENTATION.md).
+The complete implementation map, design, tests, benchmark setup, limitations,
+and expected GitHub outcome are in
+[`docs/plans/day-06.md`](docs/plans/day-06.md).
 
-## Why the measurement boundary is credible
+## Why the paired evidence is credible
 
-The Go controller does not time repeated pipe transactions. It sends one
-self-contained request to `paraflow-engine benchmark`; Rust performs the entire
-sample loop in process.
+Go does not time repeated pipe transactions as compute. For each scenario, it
+sends one self-contained request to a fused benchmark process and one to a
+diagnostic profile process. Rust owns both sample loops.
 
 ```mermaid
 sequenceDiagram
     participant G as Go labctl
-    participant R as Rust benchmark process
-    G->>R: suite scenario + embedded workload
-    R->>R: strict validation + untimed scalar oracle
-    R->>R: warm-up iterations
-    loop every retained sample
-        R->>R: allocate and generate batch
-        R->>R: normalize -> score -> filter -> aggregate
-        R->>R: exact result comparison
-    end
-    R-->>G: raw samples + result + build identity
-    G->>G: strict validation + median/MAD + atomic persistence
+    participant B as Rust fused baseline
+    participant P as Rust stage profile
+    G->>B: scenario + embedded workload
+    B-->>G: fused raw samples + exact result
+    G->>P: same scenario + workload
+    P->>P: coarse materialized stage passes
+    P-->>G: stage raw samples + exact result
+    G->>G: pair, validate, analyze, persist
 ```
 
 Per retained sample:
@@ -96,15 +85,17 @@ Per retained sample:
 | `pipeline_ns`     | normalize through aggregate over materialized records                                    |
 | `engine_total_ns` | generation, pipeline, exact comparison, temporary-output reclamation, engine bookkeeping |
 
-The Rust response also includes `experiment_total_ns` for all warm-ups and
-samples. Go separately records `orchestration_total_ns`, which includes request
-encoding, process launch, transport, execution, response decoding, and
-validation.
+The profile adds `normalize_ns`, `score_ns`, `filter_ns`, `aggregate_ns`,
+`stage_sum_ns`, and `profile_total_ns`. The exact stage sum is conserved and
+the enclosing total may be larger. Both Rust responses include an
+`experiment_total_ns`; Go records each process's `orchestration_total_ns`
+separately.
 
 Request and response payloads are bounded at 4 MiB; one optional LF or CRLF
 terminator is excluded from that payload limit. All durations use exact
 fixed-width hexadecimal nanoseconds. The complete contract is documented in
-[`docs/specifications/benchmark-v1.md`](docs/specifications/benchmark-v1.md).
+[`docs/specifications/benchmark-v1.md`](docs/specifications/benchmark-v1.md)
+and [`docs/specifications/profile-v1.md`](docs/specifications/profile-v1.md).
 
 ## Correctness foundation
 
@@ -197,22 +188,23 @@ flowchart TD
 | -------------------- | ---------------------------------------------------------- | -------------------------------------- |
 | `paraflow-contracts` | Workload types, stage order, validation                    | Shared semantic authority              |
 | `paraflow-protocol`  | Lossless job/result transport types                        | Additional backend identifiers         |
-| `paraflow-engine`    | Deterministic generation, scalar oracle, long-lived worker | Task DAG, scheduling, backend dispatch |
-| `labctl`             | Diagnostics and Rust process orchestration                 | Sampling and evidence capture          |
+| `paraflow-engine`    | Generation, oracle, fused benchmark, stage profiler         | Task DAG, scheduling, backend dispatch |
+| `labctl`             | Diagnostics, orchestration, analysis, evidence persistence  | Result indexing and comparison         |
 | `abi`                | Documents boundary rules                                   | Narrow Rust-to-native C ABI            |
 | `kernels-cpp`        | Documents scope only                                       | Scalar, SIMD, ISPC, and CUDA kernels   |
 
 
-| Contract    | Responsibility                                         | Status                                               |
-| ----------- | ------------------------------------------------------ | ---------------------------------------------------- |
-| Workload    | What the computation means                             | `paraflow.workload/v1` frozen                        |
-| Execution   | Reusable Go-to-Rust correctness transactions           | Day 4 protocol v1 frozen                             |
-| Measurement | Warm-ups, samples, timing boundaries, capture identity | Day 5 benchmark v1 frozen                            |
-| Native ABI  | Rust-to-C++ buffer calls                               | constraints documented; implementation begins Week 2 |
+| Contract    | Responsibility                                            | Status                                               |
+| ----------- | --------------------------------------------------------- | ---------------------------------------------------- |
+| Workload    | What the computation means                                | `paraflow.workload/v1` frozen                        |
+| Execution   | Reusable Go-to-Rust correctness transactions              | Day 4 protocol v1 frozen                             |
+| Measurement | Fused warm-ups, samples, boundaries, and capture identity | Day 5 benchmark v1 frozen                            |
+| Profiling   | Explicit observer/topology and paired scalar analysis      | Day 6 profile/report v1                              |
+| Native ABI  | Rust-to-C++ buffer calls                                  | constraints documented; implementation begins Week 2 |
 
 The Day 4 `serve` worker remains available for reusable correctness execution.
-The Day 5 one-shot `benchmark` process is separate so measurement policy does
-not inflate or destabilize the execution protocol.
+The Day 5 `benchmark` and Day 6 `profile` processes are separate so measurement
+and diagnostic policies do not inflate or destabilize that protocol.
 
 ## Repository structure
 
@@ -235,6 +227,7 @@ not inflate or destabilize the execution protocol.
 │   └── paraflow-protocol/       # lossless execution and measurement types
 ├── kernels-cpp/                 # C++/ISPC starts Week 2; CUDA later
 ├── labctl-go/                   # control plane and evidence persistence
+├── questions/                   # schema-checked CS149 understanding evidence
 ├── results/raw/                 # ignored local immutable captures
 ├── tools/schema-check/          # pinned Draft 2020-12 validation
 └── workloads/                   # semantic workload fixtures
@@ -243,7 +236,7 @@ not inflate or destabilize the execution protocol.
 ## Requirements
 - Git;
 - Go 1.24 or newer;
-- Rust 1.88 with `rustfmt` and `clippy`;
+- Rust 1.97.1 with `rustfmt` and `clippy`;
 - a C compiler for race-enabled Go tests;
 - Node.js 20 or newer with npm;
 - Bash 4 or newer and GNU Make.
@@ -310,12 +303,39 @@ Only a release-profile engine result is accepted. Its embedded commit and
 source state must match `labctl`, and its executable hash must remain unchanged
 for the complete suite.
 
+Exercise the paired Day 6 boundary without retaining its output:
+
+```bash
+make profile-smoke
+```
+
+Persist a full paired scalar profile:
+
+```bash
+make profile-day06
+```
+
+Or invoke the controller directly:
+
+```bash
+./bin/labctl profile \
+  --engine ./target/release/paraflow-engine \
+  --suite benchmarks/suites/day06-scalar-profile-v1.json \
+  --output results/raw/my-day06-profile.json \
+  --repository-root .
+```
+
+The report retains both topologies. The printed stage-pass/fused ratio describes
+observer context and is never labeled a speedup.
+
 ## Benchmark suites
 
-| Suite                           | Purpose                                                |
-| ------------------------------- | ------------------------------------------------------ |
-| `day05-smoke-v1.json`           | one warm-up and three 1K samples; integration/CI only  |
-| `day05-scalar-baseline-v1.json` | 1K, 64K uniform, 64K hotspot, and 1M baseline evidence |
+| Suite                           | Purpose                                                        |
+| ------------------------------- | -------------------------------------------------------------- |
+| `day05-smoke-v1.json`           | disposable fused integration evidence                          |
+| `day05-scalar-baseline-v1.json` | 1K, 64K uniform/hotspot, and 1M fused evidence                  |
+| `day06-profile-smoke-v1.json`   | disposable paired fused/profile integration evidence           |
+| `day06-scalar-profile-v1.json`  | 1K, 64K uniform/hotspot, and 1M paired stage-analysis evidence  |
 
 The two 64K workloads are identical except for the declared distribution, so
 the skew experiment changes one controlled variable. The full suite runs
@@ -328,28 +348,34 @@ median and MAD; it does not turn timing into a CI threshold.
 
 - Draft 2020-12 schema validation and rejection cases;
 - semantic validation of every workload;
-- generator, scalar, execution, and benchmark conformance fixtures;
+- generator, scalar, execution, benchmark, profile, report, and question
+  conformance fixtures;
 - Rust formatting, Clippy, unit, integration, and release tests;
 - Go formatting, `vet`, race-enabled tests, and source-identity build smoke;
 - real release Go-to-Rust reusable-worker integration;
 - real release Go-to-Rust benchmark integration;
+- real release Go-to-Rust stage-profile integration;
 - exact-limit LF/CRLF framing, unsupported-terminator rejection, and oversized-payload rejection;
-- source-alignment and engine-mutation rejection before persistence.
+- exact stage conservation, paired-result equality, source alignment, and
+  engine-mutation rejection before persistence.
 
-`make benchmark-smoke` additionally proves that a complete capture can be
-produced in the current environment. It checks structure and correctness only,
-never a fixed latency.
+`make benchmark-smoke` and `make profile-smoke` additionally prove that complete
+evidence can be produced in the current environment. They check structure and
+correctness only, never a fixed latency.
 
 ## Evidence and limitations
 
-A Day 5 capture records enough identity to reproduce the experiment, but the
-baseline still has explicit limitations:
+A Day 6 report records enough identity to reproduce both experiment topologies,
+but its analysis still has explicit limitations:
 
 - no CPU pinning or NUMA policy;
 - no forced frequency or turbo policy;
 - no hardware-counter attribution yet;
 - the generation boundary includes allocation;
 - the pipeline boundary uses the current scalar materialized representation;
+- profile stage passes add intermediate allocations and lose fused-loop memory
+  behavior;
+- boundary timers perturb the diagnostic topology;
 - scenarios use separate processes, so they do not share warmed allocator or
   calibration state;
 - one machine's timings do not generalize automatically to another.
@@ -357,16 +383,15 @@ baseline still has explicit limitations:
 1. deterministic generation — **complete**;
 2. scalar Rust correctness oracle — **complete**;
 3. Go-to-Rust experiment protocol — **complete**;
-4. reproducible benchmark harness;
-5. profiling and the first performance report;
+4. reproducible benchmark harness — **complete**;
+5. observer-aware scalar profiling and analysis — **complete**;
 6. SIMD/ISPC kernels;
 7. multicore task execution and scheduling;
 8. CUDA and heterogeneous execution.
 
-These are not hidden defects. They define the questions Day 6 profiling and
-later layout/runtime experiments must answer. The repository intentionally
-ships no fabricated machine timings; `make benchmark-day05` produces the first
-raw capture on the machine whose metadata it records.
+These are not hidden defects. They define the questions later layout and runtime
+experiments must answer. `make profile-day06` produces a fresh report on the
+machine whose metadata it records.
 
 See [`docs/benchmark-methodology.md`](docs/benchmark-methodology.md) and
 [ADR 0006](docs/adr/0006-engine-owned-sampling-and-immutable-captures.md).
@@ -379,9 +404,10 @@ See [`docs/benchmark-methodology.md`](docs/benchmark-methodology.md) and
 - [ADR 0004 — Typed streaming scalar oracle](docs/adr/0004-typed-streaming-scalar-oracle.md)
 - [ADR 0005 — Long-lived versioned worker protocol](docs/adr/0005-long-lived-versioned-worker-protocol.md)
 - [ADR 0006 — Engine-owned sampling and immutable captures](docs/adr/0006-engine-owned-sampling-and-immutable-captures.md)
+- [ADR 0007 — Observer-aware scalar profiling](docs/adr/0007-observer-aware-scalar-profiling.md)
 
 ## Next milestone
 
-Day 6 consumes a clean Day 5 capture, adds stage-level profiling evidence, and
-publishes the first baseline analysis. No optimization is chosen until the
-profile identifies where time is actually spent.
+Day 7 hardens reproducibility, documentation, failure behavior, and curated
+evidence before tagging the Week 1 scalar `v0.1` baseline. SIMD work begins only
+after that stable checkpoint.

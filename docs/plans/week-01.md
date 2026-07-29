@@ -77,10 +77,20 @@ There are still no timings, retries, schedules, or persisted benchmark results.
 
 No SIMD, multicore, GPU, or bottleneck claim is made yet.
 
-## Day 6 — Baseline analysis
+## Day 6 — Completed baseline analysis
 
-Profile stage costs across sizes and distributions. Publish the first evidence
-without optimizing the result.
+- Unchanged fused Day 5 baseline paired with a separate materialized stage-pass
+  profile for every scenario.
+- Coarse generation, normalize, score, filter, and aggregate boundaries with an
+  explicit observer and topology.
+- Exact stage-sum, enclosing-total, result-equality, release-build,
+  source-alignment, and engine-immutability gates.
+- All raw samples plus median/MAD, selectivity, stage shares, dominant stages,
+  per-record costs, and observer/topology ratios.
+- Portable request/result/report fixtures, real release integration, disposable
+  smoke evidence, and a schema-checked 24-question understanding set.
+
+No optimization, SIMD, multicore, GPU, or speedup claim is made.
 
 ## Day 7 — `v0.1`
 

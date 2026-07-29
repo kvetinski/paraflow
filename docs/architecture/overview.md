@@ -21,7 +21,8 @@ Rust owns:
 
 - workload execution and the frozen scalar correctness oracle;
 - deterministic generation;
-- Day 5 warm-ups, retained sample timing, and per-iteration correctness checks;
+- Day 5 fused sampling and Day 6 materialized stage profiling, with
+  per-iteration correctness checks;
 - future logical buffers, task graph, worker lifecycle, scheduling,
   synchronization, cancellation, and backpressure;
 - future dispatch to native CPU and GPU kernels.
@@ -40,7 +41,7 @@ Go owns:
 - strict cross-process validation;
 - source, environment, artifact, suite, and workload identity;
 - controller/engine revision alignment and in-suite engine immutability checks;
-- descriptive statistics and immutable result persistence;
+- descriptive statistics, paired profile analysis, and immutable persistence;
 - future indexing and optional API exposure.
 
 Go never enters the timed compute loop. It starts one Rust process per scenario,
@@ -59,16 +60,17 @@ Rust will call it through a narrow C ABI with caller-owned buffers, explicit
 lengths and error codes, no crossing exceptions, and opaque handles for device
 state.
 
-## Four distinct contracts
+## Five distinct contracts
 
-ParaFlow separates three concerns:
+ParaFlow separates five concerns:
 
-| Contract    | Purpose                                        | Current status                          |
-| ----------- | ---------------------------------------------- | --------------------------------------- |
-| Workload    | What records and stages mean                   | `paraflow.workload/v1` frozen           |
-| Execution   | Reusable Go-to-Rust correctness transactions   | Day 4 protocol v1 frozen                |
-| Measurement | Warm-ups, samples, timing boundaries, evidence | Day 5 benchmark v1 frozen               |
-| Native ABI  | Rust-to-C++ in-memory calls                    | Documented constraints; not implemented |
+| Contract    | Purpose                                            | Current status                          |
+| ----------- | -------------------------------------------------- | --------------------------------------- |
+| Workload    | What records and stages mean                       | `paraflow.workload/v1` frozen           |
+| Execution   | Reusable Go-to-Rust correctness transactions       | Day 4 protocol v1 frozen                |
+| Measurement | Fused warm-ups, samples, boundaries, and evidence  | Day 5 benchmark v1 frozen               |
+| Profiling   | Observer/topology identity and paired analysis      | Day 6 profile/report v1                 |
+| Native ABI  | Rust-to-C++ in-memory calls                        | Documented constraints; not implemented |
 
 
 Keeping them separate prevents worker count, sample count, backend choice, or
@@ -131,6 +133,31 @@ Generation and pipeline durations are also retained separately. Every timing is
 encoded as fixed-width hexadecimal nanoseconds. Request and response payloads
 share the 4 MiB bound while excluding one optional LF or CRLF terminator.
 
+## Day 6 paired profiling process
+
+```mermaid
+flowchart TD
+    C["Go profile controller"] --> B["Fused benchmark process"]
+    C --> P["Stage-profile process"]
+    B --> V["Paired exact validation"]
+    P --> V
+    V --> E["Immutable report"]
+```
+
+The stage-profile process uses an internal materialized pass for normalize,
+score, filter, and aggregate. One coarse timer surrounds each pass. Intermediate
+buffers make the boundaries observable but change allocation, fusion, and
+memory traffic, so the topology and observer are first-class protocol fields.
+
+For every retained sample, the five stage durations sum exactly to
+`stage_sum_ns`, and `profile_total_ns` encloses that sum. The profile result must
+match both the streaming oracle and the paired fused result exactly. Go retains
+both sample sets, enforces identical release build identity, and derives
+integer-only analysis.
+
+The materialized-stage/fused-pipeline ratio is descriptive observer context. It
+is not a backend speedup.
+
 ## Correctness hierarchy
 
 Every future backend must pass, in order:
@@ -154,7 +181,7 @@ field ID. There is no shared mutable RNG cursor.
 ```
 
 Partitions can be generated independently without changing record identity.
-Day 5 still executes sequentially; Week 3 will exploit this property for
+Day 6 still executes sequentially; Week 3 will exploit this property for
 multicore decomposition. The two 64K Day 5 workloads keep every setting equal
 except distribution, creating a controlled skew comparison.
 
@@ -171,4 +198,5 @@ Evidence, not preference, must decide:
 - mutex versus lock-free structures;
 - CPU versus GPU crossover thresholds.
 
-Day 5 produces the measured scalar reference needed to evaluate those choices.
+Day 6 publishes the observer-aware scalar evidence needed to evaluate those
+choices without prematurely freezing one of them.

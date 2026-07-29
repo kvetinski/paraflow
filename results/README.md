@@ -1,7 +1,8 @@
 # Results
 
 `results/raw/` contains local immutable captures produced by
-`make benchmark-day05`. Raw files are ignored by Git by default.
+`make benchmark-day05` and paired reports produced by `make profile-day06`. Raw
+files are ignored by Git by default.
 
 A capture contains:
 
@@ -14,8 +15,15 @@ A capture contains:
 - median, median absolute deviation, minimum, and maximum;
 - scalar-oracle correctness evidence.
 
-Day 5 records data but does not interpret bottlenecks. Day 6 may promote a raw
-capture into a curated report only when the source tree is clean, the command
-is reproducible, and the report states both limitations and non-claims.
+A Day 6 report additionally contains the complete unchanged fused baseline,
+complete materialized stage-profile evidence, exact paired-result validation,
+stage summaries, selectivity, stage shares, per-record costs, variability, and
+an explicitly labeled observer/topology ratio.
+
+Promote evidence into a tracked report only when the source tree is clean, the
+command is reproducible, and the accompanying analysis states limitations and
+non-claims. The generated report identifies the clean source commit it
+measured; a later documentation commit may curate that file without changing
+the measured identity.
 
 Never edit a raw capture in place. Run a new experiment and retain the new file.

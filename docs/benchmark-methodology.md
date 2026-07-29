@@ -16,6 +16,8 @@ backends under the same evidence rules.
 - **Execution contract:** backend and process interaction.
 - **Measurement contract:** warm-ups, samples, clocks, timing boundaries,
   metadata, and persistence.
+- **Profile contract:** diagnostic topology, observer, stage boundaries, and
+  paired analysis.
 
 A benchmark setting may change how evidence is collected, but not what the
 workload computes.
@@ -63,6 +65,33 @@ The current materialized representation is a scalar `Vec<LogicalRecord>`. This
 is a measurement boundary, not a frozen AoS ABI or a decision against future
 SoA layouts.
 
+## Day 6 profile boundaries
+
+Day 6 does not modify the fused benchmark boundary. For each scenario, Go first
+collects a fresh fused result and then starts a separate Rust profile process.
+The profile uses `materialized-stage-passes-v1` and identifies its instrumentation
+as `boundary-timers-v1`.
+
+| Profile boundary | Includes |
+| --- | --- |
+| `generation_ns` | fresh logical-record allocation and materialization |
+| `normalize_ns` | normalized-buffer allocation and complete normalize pass |
+| `score_ns` | scored-buffer allocation and complete score pass |
+| `filter_ns` | accepted-buffer allocation and stable filter pass |
+| `aggregate_ns` | histogram allocation and stable aggregate pass |
+| `stage_sum_ns` | exact sum of the five declared stage boundaries |
+| `profile_total_ns` | stage work, exact comparison, reclamation, and bookkeeping |
+
+One timer surrounds each pass; no clock is read per record. Every profile sample
+must satisfy exact stage-sum and enclosing-total conservation. Both the
+materialized profile and fused path must match the streaming scalar oracle and
+each other exactly.
+
+The stage passes alter allocation, fusion, memory traffic, and lifetime. Their
+medians therefore do not reconstruct the fused pipeline median. The
+stage-pass/fused ratio is retained to quantify observer/topology context, not to
+claim a speedup.
+
 ## Sampling and summaries
 
 The checked-in baseline suite uses five warm-ups and 20–25 retained samples per
@@ -82,6 +111,18 @@ Median and MAD describe typical behavior and spread without allowing one large
 outlier to dominate the summary. Minimum can help study achievable execution,
 but it must not be labeled typical latency. Best-of-one is not a portfolio
 claim.
+
+Day 6 additionally reports:
+
+- accepted-record selectivity in basis points;
+- stage shares apportioned to exactly 10,000 basis points;
+- dominant all-stage and pipeline-only boundaries;
+- fused and materialized pipeline costs per record;
+- MAD relative to the median;
+- the explicitly labeled materialized-stage/fused-pipeline ratio.
+
+Those fields are derived with overflow-checked integer arithmetic so another
+reader can reproduce them exactly from the raw report.
 
 ## Correctness gate
 
@@ -117,9 +158,8 @@ The 64K uniform and hotspot cases keep seed, dimensions, feature domain, flag
 probability, and pipeline parameters identical; only distribution changes.
 
 CPU pinning, frequency control, NUMA placement, and hardware counters are not
-required for the Day 5 baseline, but their absence is a limitation to state in
-analysis. Day 6 may add controlled profiling commands without changing the raw
-measurement contract.
+required for the Day 6 baseline report, but their absence is a limitation to
+state in analysis.
 
 ## CI policy
 
@@ -146,5 +186,6 @@ A publishable statement must answer:
 6. Which correctness policy passed?
 7. Where does the change lose or stop scaling?
 
-Day 5 makes no speedup claim because only one implementation exists. Its output
-is the denominator future comparisons will require.
+Day 6 still makes no speedup claim because only one implementation exists. The
+fused output remains the denominator future comparisons will require; the
+profile supplies bounded, observer-aware hypotheses about where to investigate.

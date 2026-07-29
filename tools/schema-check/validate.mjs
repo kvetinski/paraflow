@@ -18,6 +18,12 @@ const EXPECTED_BENCHMARK_ENGINE_RESULT_SCHEMA =
 const EXPECTED_BENCHMARK_CAPTURE_SCHEMA = "paraflow.benchmark-capture/v1";
 const EXPECTED_BENCHMARK_VECTOR_SCHEMA = "paraflow.benchmark-vectors/v1";
 const EXPECTED_ENVIRONMENT_SCHEMA = "paraflow.environment/v3";
+const EXPECTED_PROFILE_REQUEST_SCHEMA = "paraflow.profile-request/v1";
+const EXPECTED_PROFILE_ENGINE_RESULT_SCHEMA =
+  "paraflow.profile-engine-result/v1";
+const EXPECTED_PROFILE_VECTOR_SCHEMA = "paraflow.profile-vectors/v1";
+const EXPECTED_SCALAR_PROFILE_REPORT_SCHEMA =
+  "paraflow.scalar-profile-report/v1";
 const toolDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(toolDirectory, "../..");
 const workloadSchemaPath = path.join(
@@ -93,6 +99,26 @@ const environmentSchemaPath = path.join(
   "contracts",
   "environment-v3.schema.json",
 );
+const profileRequestSchemaPath = path.join(
+  repositoryRoot,
+  "contracts",
+  "profile-request-v1.schema.json",
+);
+const profileEngineResultSchemaPath = path.join(
+  repositoryRoot,
+  "contracts",
+  "profile-engine-result-v1.schema.json",
+);
+const profileVectorSchemaPath = path.join(
+  repositoryRoot,
+  "contracts",
+  "profile-vectors-v1.schema.json",
+);
+const scalarProfileReportSchemaPath = path.join(
+  repositoryRoot,
+  "contracts",
+  "scalar-profile-report-v1.schema.json",
+);
 const benchmarkVectorFixturePath = path.join(
   repositoryRoot,
   "contracts",
@@ -105,6 +131,18 @@ const benchmarkCaptureFixturePath = path.join(
   "conformance",
   "benchmark-capture-v1.json",
 );
+const profileVectorFixturePath = path.join(
+  repositoryRoot,
+  "contracts",
+  "conformance",
+  "profile-v1.json",
+);
+const scalarProfileReportFixturePath = path.join(
+  repositoryRoot,
+  "contracts",
+  "conformance",
+  "scalar-profile-report-v1.json",
+);
 const benchmarkSuitesDirectory = path.join(repositoryRoot, "benchmarks", "suites");
 const workloadsDirectory = path.join(repositoryRoot, "workloads");
 
@@ -113,6 +151,19 @@ function readJSON(filePath) {
     return JSON.parse(fs.readFileSync(filePath, "utf8"));
   } catch (error) {
     throw new Error(`${path.relative(repositoryRoot, filePath)}: ${error.message}`);
+  }
+}
+
+function u64Hex(value) {
+  return BigInt(value);
+}
+
+function reportValidationErrors(label, validate) {
+  for (const issue of validate.errors ?? []) {
+    const location = issue.instancePath || "/";
+    console.error(
+      `${label}${location}: ${issue.message ?? "schema validation failed"}`,
+    );
   }
 }
 
@@ -187,6 +238,10 @@ const benchmarkEngineResultSchema = readJSON(benchmarkEngineResultSchemaPath);
 const benchmarkCaptureSchema = readJSON(benchmarkCaptureSchemaPath);
 const benchmarkVectorSchema = readJSON(benchmarkVectorSchemaPath);
 const environmentSchema = readJSON(environmentSchemaPath);
+const profileRequestSchema = readJSON(profileRequestSchemaPath);
+const profileEngineResultSchema = readJSON(profileEngineResultSchemaPath);
+const profileVectorSchema = readJSON(profileVectorSchemaPath);
+const scalarProfileReportSchema = readJSON(scalarProfileReportSchemaPath);
 
 for (const [label, actual, expected] of [
   [
@@ -219,6 +274,26 @@ for (const [label, actual, expected] of [
     environmentSchema.properties?.schema_version?.const,
     EXPECTED_ENVIRONMENT_SCHEMA,
   ],
+  [
+    "profile request",
+    profileRequestSchema.properties?.schema_version?.const,
+    EXPECTED_PROFILE_REQUEST_SCHEMA,
+  ],
+  [
+    "profile engine result",
+    profileEngineResultSchema.properties?.schema_version?.const,
+    EXPECTED_PROFILE_ENGINE_RESULT_SCHEMA,
+  ],
+  [
+    "profile vectors",
+    profileVectorSchema.properties?.schema_version?.const,
+    EXPECTED_PROFILE_VECTOR_SCHEMA,
+  ],
+  [
+    "scalar profile report",
+    scalarProfileReportSchema.properties?.schema_version?.const,
+    EXPECTED_SCALAR_PROFILE_REPORT_SCHEMA,
+  ],
 ]) {
   if (actual !== expected) {
     throw new Error(
@@ -244,6 +319,10 @@ for (const schema of [
   benchmarkCaptureSchema,
   benchmarkVectorSchema,
   environmentSchema,
+  profileRequestSchema,
+  profileEngineResultSchema,
+  profileVectorSchema,
+  scalarProfileReportSchema,
 ]) {
   ajv.addSchema(schema);
 }
@@ -264,6 +343,11 @@ const validateBenchmarkRequest = validator(benchmarkRequestSchema);
 const validateBenchmarkEngineResult = validator(benchmarkEngineResultSchema);
 const validateBenchmarkCapture = validator(benchmarkCaptureSchema);
 const validateBenchmarkVectors = validator(benchmarkVectorSchema);
+const validateProfileRequest = validator(profileRequestSchema);
+const validateProfileEngineResult = validator(profileEngineResultSchema);
+const validateProfileVectors = validator(profileVectorSchema);
+const validateScalarProfileReport = validator(scalarProfileReportSchema);
+
 const workloadPaths = fs
   .readdirSync(workloadsDirectory, { withFileTypes: true })
   .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
@@ -740,7 +824,7 @@ for (const fixtureCase of benchmarkVectors.cases ?? []) {
     fixtureCase.request?.experiment_id !== fixtureCase.engine_result?.experiment_id ||
     fixtureCase.request?.scenario_name !== fixtureCase.engine_result?.scenario_name ||
     fixtureCase.request?.sampling?.sample_iterations !==
-      fixtureCase.engine_result?.samples?.length
+    fixtureCase.engine_result?.samples?.length
   ) {
     failed = true;
     console.error(
@@ -768,14 +852,14 @@ const invalidBenchmarkCases = [
       cases: benchmarkVectors.cases.map((fixtureCase, index) =>
         index === 0
           ? {
-              ...fixtureCase,
-              engine_result: {
-                ...fixtureCase.engine_result,
-                samples: fixtureCase.engine_result.samples.map((sample, sampleIndex) =>
-                  sampleIndex === 0 ? { ...sample, pipeline_ns: "0x1" } : sample,
-                ),
-              },
-            }
+            ...fixtureCase,
+            engine_result: {
+              ...fixtureCase.engine_result,
+              samples: fixtureCase.engine_result.samples.map((sample, sampleIndex) =>
+                sampleIndex === 0 ? { ...sample, pipeline_ns: "0x1" } : sample,
+              ),
+            },
+          }
           : fixtureCase,
       ),
     },
@@ -787,15 +871,15 @@ const invalidBenchmarkCases = [
       cases: benchmarkVectors.cases.map((fixtureCase, index) =>
         index === 0
           ? {
-              ...fixtureCase,
-              engine_result: {
-                ...fixtureCase.engine_result,
-                timing: {
-                  ...fixtureCase.engine_result.timing,
-                  process_start_in_samples: true,
-                },
+            ...fixtureCase,
+            engine_result: {
+              ...fixtureCase.engine_result,
+              timing: {
+                ...fixtureCase.engine_result.timing,
+                process_start_in_samples: true,
               },
-            }
+            },
+          }
           : fixtureCase,
       ),
     },
@@ -818,18 +902,227 @@ for (const [label, invalid] of invalidBenchmarkCases) {
   }
 }
 
+function profileSemanticIssues(request, result) {
+  const issues = [];
+  if (
+    request?.experiment_id !== result?.experiment_id ||
+    request?.scenario_name !== result?.scenario_name
+  ) {
+    issues.push("request/result correlation echoes differ");
+  }
+  if (request?.workload?.name !== result?.workload_name) {
+    issues.push("workload_name does not echo the embedded workload");
+  }
+  if (
+    request?.sampling?.sample_iterations !== result?.samples?.length
+  ) {
+    issues.push("retained sample count does not match sampling policy");
+  }
+
+  let retainedTotal = 0n;
+  for (const [index, sample] of (result?.samples ?? []).entries()) {
+    if (sample.ordinal !== index) {
+      issues.push(`sample ${index} has a non-contiguous ordinal`);
+    }
+    const exactStageSum = [
+      sample.generation_ns,
+      sample.normalize_ns,
+      sample.score_ns,
+      sample.filter_ns,
+      sample.aggregate_ns,
+    ].reduce((total, value) => total + u64Hex(value), 0n);
+    if (u64Hex(sample.stage_sum_ns) !== exactStageSum) {
+      issues.push(`sample ${index} stage_sum_ns is not the exact stage sum`);
+    }
+    if (u64Hex(sample.profile_total_ns) < exactStageSum) {
+      issues.push(`sample ${index} profile_total_ns is smaller than stage_sum_ns`);
+    }
+    retainedTotal += u64Hex(sample.profile_total_ns);
+  }
+  if (
+    result?.timing?.experiment_total_ns !== undefined &&
+    u64Hex(result.timing.experiment_total_ns) < retainedTotal
+  ) {
+    issues.push("experiment_total_ns is smaller than retained profile totals");
+  }
+  return issues;
+}
+
+const profileVectors = readJSON(profileVectorFixturePath);
+if (!validateProfileVectors(profileVectors)) {
+  failed = true;
+  reportValidationErrors(
+    path.relative(repositoryRoot, profileVectorFixturePath),
+    validateProfileVectors,
+  );
+}
+for (const fixtureCase of profileVectors.cases ?? []) {
+  if (!validateProfileRequest(fixtureCase.request)) {
+    failed = true;
+    reportValidationErrors(
+      `profile case ${fixtureCase.name} request`,
+      validateProfileRequest,
+    );
+  }
+  if (!validateProfileEngineResult(fixtureCase.engine_result)) {
+    failed = true;
+    reportValidationErrors(
+      `profile case ${fixtureCase.name} engine_result`,
+      validateProfileEngineResult,
+    );
+  }
+  for (const issue of profileSemanticIssues(
+    fixtureCase.request,
+    fixtureCase.engine_result,
+  )) {
+    failed = true;
+    console.error(`profile case ${fixtureCase.name}: ${issue}`);
+  }
+}
+
+const scalarProfileReport = readJSON(scalarProfileReportFixturePath);
+if (!validateScalarProfileReport(scalarProfileReport)) {
+  failed = true;
+  reportValidationErrors(
+    path.relative(repositoryRoot, scalarProfileReportFixturePath),
+    validateScalarProfileReport,
+  );
+}
+for (const experiment of scalarProfileReport.experiments ?? []) {
+  const baseline = experiment.baseline?.engine_result;
+  const profile = experiment.stage_profile?.engine_result;
+  if (
+    experiment.scenario_name !== baseline?.scenario_name ||
+    experiment.scenario_name !== profile?.scenario_name ||
+    experiment.workload?.name !== baseline?.workload_name ||
+    experiment.workload?.name !== profile?.workload_name
+  ) {
+    failed = true;
+    console.error(
+      `scalar profile report ${experiment.scenario_name}: scenario/workload echoes differ`,
+    );
+  }
+  if (
+    JSON.stringify(baseline?.engine_build) !==
+    JSON.stringify(profile?.engine_build)
+  ) {
+    failed = true;
+    console.error(
+      `scalar profile report ${experiment.scenario_name}: paired engine builds differ`,
+    );
+  }
+  if (JSON.stringify(baseline?.result) !== JSON.stringify(profile?.result)) {
+    failed = true;
+    console.error(
+      `scalar profile report ${experiment.scenario_name}: paired logical results differ`,
+    );
+  }
+
+  const shares = Object.values(experiment.analysis?.stage_share_bps ?? {});
+  if (shares.reduce((total, value) => total + value, 0) !== 10_000) {
+    failed = true;
+    console.error(
+      `scalar profile report ${experiment.scenario_name}: stage shares must sum to 10,000`,
+    );
+  }
+  const summary = experiment.stage_profile?.summary;
+  if (summary !== undefined) {
+    const stageMedianSum = [
+      summary.generation.median_ns,
+      summary.normalize.median_ns,
+      summary.score.median_ns,
+      summary.filter.median_ns,
+      summary.aggregate.median_ns,
+    ].reduce((total, value) => total + u64Hex(value), 0n);
+    const pipelineMedianSum = [
+      summary.normalize.median_ns,
+      summary.score.median_ns,
+      summary.filter.median_ns,
+      summary.aggregate.median_ns,
+    ].reduce((total, value) => total + u64Hex(value), 0n);
+    if (
+      stageMedianSum !== u64Hex(experiment.analysis.stage_median_sum_ns) ||
+      pipelineMedianSum !==
+      u64Hex(experiment.analysis.stage_pipeline_median_sum_ns)
+    ) {
+      failed = true;
+      console.error(
+        `scalar profile report ${experiment.scenario_name}: derived median sums differ`,
+      );
+    }
+  }
+}
+
+const invalidProfileCases = [
+  [
+    "wrong-width profile duration",
+    {
+      ...profileVectors,
+      cases: profileVectors.cases.map((fixtureCase, index) =>
+        index === 0
+          ? {
+            ...fixtureCase,
+            engine_result: {
+              ...fixtureCase.engine_result,
+              samples: fixtureCase.engine_result.samples.map(
+                (sample, sampleIndex) =>
+                  sampleIndex === 0
+                    ? { ...sample, generation_ns: "0x1" }
+                    : sample,
+              ),
+            },
+          }
+          : fixtureCase,
+      ),
+    },
+  ],
+  [
+    "unknown profile request field",
+    {
+      ...profileVectors,
+      cases: profileVectors.cases.map((fixtureCase, index) =>
+        index === 0
+          ? {
+            ...fixtureCase,
+            request: { ...fixtureCase.request, unexpected: true },
+          }
+          : fixtureCase,
+      ),
+    },
+  ],
+];
+for (const [label, invalid] of invalidProfileCases) {
+  if (validateProfileVectors(invalid)) {
+    failed = true;
+    console.error(`profile schema regression case was accepted: ${label}`);
+  }
+}
+const invalidProfileSemantics = structuredClone(profileVectors.cases[0]);
+invalidProfileSemantics.engine_result.samples[0].stage_sum_ns =
+  "0x0000000000000001";
+if (
+  profileSemanticIssues(
+    invalidProfileSemantics.request,
+    invalidProfileSemantics.engine_result,
+  ).length === 0
+) {
+  failed = true;
+  console.error("profile semantic regression accepted an incorrect stage sum");
+}
+
 const rejectionCount =
   invalidCases.length +
   invalidVectorCases.length +
   invalidScalarVectorCases.length +
   invalidExecutionVectorCases.length +
   invalidExecutionProtocolCases.length +
-  invalidBenchmarkCases.length;
+  invalidBenchmarkCases.length +
+  invalidProfileCases.length + 1;
 
 if (failed) {
   process.exitCode = 1;
 } else {
   console.log(
-    `JSON Schema validation passed (${workloadPaths.length} workload(s), 5 conformance fixtures, ${rejectionCount} rejection cases)`,
+    `JSON Schema validation passed (${workloadPaths.length} workload(s), 7 conformance fixtures, ${rejectionCount} rejection cases)`,
   );
 }

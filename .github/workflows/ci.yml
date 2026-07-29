@@ -40,7 +40,7 @@ jobs:
 
       - name: Install Rust
         run: >-
-          rustup toolchain install 1.88.0
+          rustup toolchain install 1.97.1
           --profile minimal
           --component clippy
           --component rustfmt
@@ -74,7 +74,7 @@ jobs:
 
       - name: Install Rust
         run: >-
-          rustup toolchain install 1.88.0
+          rustup toolchain install 1.97.1
           --profile minimal
 
       - name: Install Go
@@ -85,8 +85,8 @@ jobs:
       - name: Exercise release protocol
         run: make protocol-conformance
 
-  benchmark:
-    name: Day 5 benchmark boundary
+  evidence:
+    name: Day 6 paired evidence
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -95,7 +95,7 @@ jobs:
 
       - name: Install Rust
         run: >-
-          rustup toolchain install 1.88.0
+          rustup toolchain install 1.97.1
           --profile minimal
           --component clippy
           --component rustfmt
@@ -112,5 +112,5 @@ jobs:
           cache: npm
           cache-dependency-path: tools/schema-check/package-lock.json
 
-      - name: Exercise disposable Day 5 benchmark suite
-        run: make benchmark-smoke
+      - name: Exercise disposable paired scalar profile
+        run: make profile-smoke

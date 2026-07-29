@@ -144,6 +144,7 @@ const scalarProfileReportFixturePath = path.join(
   "scalar-profile-report-v1.json",
 );
 const benchmarkSuitesDirectory = path.join(repositoryRoot, "benchmarks", "suites");
+const curatedResultsDirectory = path.join(repositoryRoot, "results", "day06");
 const workloadsDirectory = path.join(repositoryRoot, "workloads");
 
 function readJSON(filePath) {
@@ -980,76 +981,130 @@ for (const fixtureCase of profileVectors.cases ?? []) {
   }
 }
 
-const scalarProfileReport = readJSON(scalarProfileReportFixturePath);
-if (!validateScalarProfileReport(scalarProfileReport)) {
-  failed = true;
-  reportValidationErrors(
-    path.relative(repositoryRoot, scalarProfileReportFixturePath),
-    validateScalarProfileReport,
-  );
-}
-for (const experiment of scalarProfileReport.experiments ?? []) {
-  const baseline = experiment.baseline?.engine_result;
-  const profile = experiment.stage_profile?.engine_result;
+function scalarProfileReportSemanticIssues(report) {
+  const issues = [];
+  const scenarioNames = new Set();
   if (
-    experiment.scenario_name !== baseline?.scenario_name ||
-    experiment.scenario_name !== profile?.scenario_name ||
-    experiment.workload?.name !== baseline?.workload_name ||
-    experiment.workload?.name !== profile?.workload_name
+    JSON.stringify(report.controller) !==
+    JSON.stringify(report.environment?.source)
   ) {
-    failed = true;
-    console.error(
-      `scalar profile report ${experiment.scenario_name}: scenario/workload echoes differ`,
-    );
-  }
-  if (
-    JSON.stringify(baseline?.engine_build) !==
-    JSON.stringify(profile?.engine_build)
-  ) {
-    failed = true;
-    console.error(
-      `scalar profile report ${experiment.scenario_name}: paired engine builds differ`,
-    );
-  }
-  if (JSON.stringify(baseline?.result) !== JSON.stringify(profile?.result)) {
-    failed = true;
-    console.error(
-      `scalar profile report ${experiment.scenario_name}: paired logical results differ`,
-    );
+    issues.push("controller and environment source identities differ");
   }
 
-  const shares = Object.values(experiment.analysis?.stage_share_bps ?? {});
-  if (shares.reduce((total, value) => total + value, 0) !== 10_000) {
-    failed = true;
-    console.error(
-      `scalar profile report ${experiment.scenario_name}: stage shares must sum to 10,000`,
-    );
-  }
-  const summary = experiment.stage_profile?.summary;
-  if (summary !== undefined) {
-    const stageMedianSum = [
-      summary.generation.median_ns,
-      summary.normalize.median_ns,
-      summary.score.median_ns,
-      summary.filter.median_ns,
-      summary.aggregate.median_ns,
-    ].reduce((total, value) => total + u64Hex(value), 0n);
-    const pipelineMedianSum = [
-      summary.normalize.median_ns,
-      summary.score.median_ns,
-      summary.filter.median_ns,
-      summary.aggregate.median_ns,
-    ].reduce((total, value) => total + u64Hex(value), 0n);
-    if (
-      stageMedianSum !== u64Hex(experiment.analysis.stage_median_sum_ns) ||
-      pipelineMedianSum !==
-      u64Hex(experiment.analysis.stage_pipeline_median_sum_ns)
-    ) {
-      failed = true;
-      console.error(
-        `scalar profile report ${experiment.scenario_name}: derived median sums differ`,
-      );
+  for (const experiment of report.experiments ?? []) {
+    const label = experiment.scenario_name;
+    if (scenarioNames.has(label)) {
+      issues.push(`${label}: duplicate scenario name`);
     }
+    scenarioNames.add(label);
+
+    const baseline = experiment.baseline?.engine_result;
+    const profile = experiment.stage_profile?.engine_result;
+    if (
+      label !== baseline?.scenario_name ||
+      label !== profile?.scenario_name ||
+      experiment.workload?.name !== baseline?.workload_name ||
+      experiment.workload?.name !== profile?.workload_name
+    ) {
+      issues.push(`${label}: scenario/workload echoes differ`);
+    }
+    if (
+      JSON.stringify(baseline?.engine_build) !==
+      JSON.stringify(profile?.engine_build)
+    ) {
+      issues.push(`${label}: paired engine builds differ`);
+    }
+    if (
+      baseline?.engine_build?.source_commit !== report.controller?.full_commit ||
+      baseline?.engine_build?.source_state !== report.controller?.source_state
+    ) {
+      issues.push(`${label}: engine and controller source identities differ`);
+    }
+    if (JSON.stringify(baseline?.result) !== JSON.stringify(profile?.result)) {
+      issues.push(`${label}: paired logical results differ`);
+    }
+
+    const syntheticRequest = {
+      experiment_id: profile?.experiment_id,
+      scenario_name: label,
+      sampling: profile?.sampling,
+      workload: { name: experiment.workload?.name },
+    };
+    for (const issue of profileSemanticIssues(syntheticRequest, profile)) {
+      issues.push(`${label}: ${issue}`);
+    }
+
+    let baselineRetainedTotal = 0n;
+    for (const [index, sample] of (baseline?.samples ?? []).entries()) {
+      if (sample.ordinal !== index) {
+        issues.push(`${label}: fused sample ${index} has a non-contiguous ordinal`);
+      }
+      const enclosed =
+        u64Hex(sample.generation_ns) + u64Hex(sample.pipeline_ns);
+      if (u64Hex(sample.engine_total_ns) < enclosed) {
+        issues.push(`${label}: fused sample ${index} violates timing conservation`);
+      }
+      baselineRetainedTotal += u64Hex(sample.engine_total_ns);
+    }
+    if (
+      baseline?.timing?.experiment_total_ns !== undefined &&
+      u64Hex(baseline.timing.experiment_total_ns) < baselineRetainedTotal
+    ) {
+      issues.push(`${label}: fused experiment total is smaller than retained samples`);
+    }
+
+    const shares = Object.values(experiment.analysis?.stage_share_bps ?? {});
+    if (shares.reduce((total, value) => total + value, 0) !== 10_000) {
+      issues.push(`${label}: stage shares must sum to 10,000`);
+    }
+    const summary = experiment.stage_profile?.summary;
+    if (summary !== undefined) {
+      const stageMedianSum = [
+        summary.generation.median_ns,
+        summary.normalize.median_ns,
+        summary.score.median_ns,
+        summary.filter.median_ns,
+        summary.aggregate.median_ns,
+      ].reduce((total, value) => total + u64Hex(value), 0n);
+      const pipelineMedianSum = [
+        summary.normalize.median_ns,
+        summary.score.median_ns,
+        summary.filter.median_ns,
+        summary.aggregate.median_ns,
+      ].reduce((total, value) => total + u64Hex(value), 0n);
+      if (
+        stageMedianSum !== u64Hex(experiment.analysis.stage_median_sum_ns) ||
+        pipelineMedianSum !==
+        u64Hex(experiment.analysis.stage_pipeline_median_sum_ns)
+      ) {
+        issues.push(`${label}: derived median sums differ`);
+      }
+    }
+  }
+  return issues;
+}
+
+const curatedReportPaths = fs.existsSync(curatedResultsDirectory)
+  ? fs
+    .readdirSync(curatedResultsDirectory, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+    .map((entry) => path.join(curatedResultsDirectory, entry.name))
+    .sort()
+  : [];
+const scalarProfileReportPaths = [
+  scalarProfileReportFixturePath,
+  ...curatedReportPaths,
+];
+for (const reportPath of scalarProfileReportPaths) {
+  const report = readJSON(reportPath);
+  const reportLabel = path.relative(repositoryRoot, reportPath);
+  if (!validateScalarProfileReport(report)) {
+    failed = true;
+    reportValidationErrors(reportLabel, validateScalarProfileReport);
+  }
+  for (const issue of scalarProfileReportSemanticIssues(report)) {
+    failed = true;
+    console.error(`${reportLabel}: ${issue}`);
   }
 }
 
@@ -1123,6 +1178,6 @@ if (failed) {
   process.exitCode = 1;
 } else {
   console.log(
-    `JSON Schema validation passed (${workloadPaths.length} workload(s), 7 conformance fixtures, ${rejectionCount} rejection cases)`,
+    `JSON Schema validation passed (${workloadPaths.length} workload(s), 7 conformance fixtures, ${curatedReportPaths.length} curated report(s), ${rejectionCount} rejection cases)`,
   );
 }

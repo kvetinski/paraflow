@@ -1,0 +1,2686 @@
+{
+  "schema_version": "paraflow.scalar-profile-report/v1",
+  "started_at": "2026-07-26T01:29:27.907140629Z",
+  "completed_at": "2026-07-26T01:29:30.131021825Z",
+  "suite": {
+    "path": "benchmarks/suites/day06-scalar-profile-v1.json",
+    "sha256": "016f56cebcbbb5298ca5a32cf4058d6454a6863e4af7261a122a0718de734d3c",
+    "schema_version": "paraflow.benchmark-suite/v1",
+    "name": "day06-scalar-profile-v1"
+  },
+  "controller": {
+    "version": "0.1.0-alpha.3",
+    "full_commit": "df96257800abfb26500c4f3d28bba9b6ace31ebd",
+    "source_state": "clean"
+  },
+  "environment": {
+    "schema_version": "paraflow.environment/v3",
+    "milestone": "day-06",
+    "captured_at": "2026-07-26T01:29:28.105670972Z",
+    "os": "linux",
+    "kernel_version": "6.12.13",
+    "architecture": "amd64",
+    "cpu_model": "AMD EPYC 9V74 80-Core Processor",
+    "physical_cores": 9,
+    "logical_cpus": 9,
+    "gomaxprocs": 9,
+    "go_version": "go1.24.0",
+    "source": {
+      "version": "0.1.0-alpha.3",
+      "full_commit": "df96257800abfb26500c4f3d28bba9b6ace31ebd",
+      "source_state": "clean"
+    },
+    "ready": true,
+    "tools": [
+      {
+        "name": "git",
+        "required_now": true,
+        "introduced": "day-01",
+        "purpose": "source history and reproducibility identity",
+        "found": true,
+        "usable": true,
+        "path": "/usr/bin/git",
+        "version": "git version 2.43.0"
+      },
+      {
+        "name": "go",
+        "required_now": true,
+        "minimum_version": "1.24.0",
+        "introduced": "day-01",
+        "purpose": "experiment control plane",
+        "found": true,
+        "usable": true,
+        "path": "/workspace/scratch/bb063b194b24/.toolchains/go1.24.0/bin/go",
+        "version": "go version go1.24.0 linux/amd64"
+      },
+      {
+        "name": "rustc",
+        "required_now": true,
+        "minimum_version": "1.97.1",
+        "introduced": "day-01",
+        "purpose": "execution engine compiler",
+        "found": true,
+        "usable": true,
+        "path": "/workspace/scratch/bb063b194b24/.toolchains/cargo/bin/rustc",
+        "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)"
+      },
+      {
+        "name": "cargo",
+        "required_now": true,
+        "minimum_version": "1.97.1",
+        "introduced": "day-01",
+        "purpose": "Rust build and test orchestration",
+        "found": true,
+        "usable": true,
+        "path": "/workspace/scratch/bb063b194b24/.toolchains/cargo/bin/cargo",
+        "version": "cargo 1.97.1 (c980f4866 2026-06-30)"
+      },
+      {
+        "name": "cc",
+        "required_now": true,
+        "introduced": "day-01",
+        "purpose": "C toolchain required by Go race-detector tests",
+        "found": true,
+        "usable": true,
+        "path": "/usr/bin/cc",
+        "version": "cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+      },
+      {
+        "name": "node",
+        "required_now": true,
+        "minimum_version": "20.0.0",
+        "introduced": "day-01",
+        "purpose": "Draft 2020-12 contract validation",
+        "found": true,
+        "usable": true,
+        "path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "version": "v24.14.0"
+      },
+      {
+        "name": "npm",
+        "required_now": true,
+        "introduced": "day-01",
+        "purpose": "reproducible schema-validator installation",
+        "found": true,
+        "usable": true,
+        "path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/npm",
+        "version": "11.9.0"
+      },
+      {
+        "name": "rustfmt",
+        "required_now": true,
+        "introduced": "day-01",
+        "purpose": "Rust formatting gate",
+        "found": true,
+        "usable": true,
+        "path": "/workspace/scratch/bb063b194b24/.toolchains/cargo/bin/rustfmt",
+        "version": "rustfmt 1.9.0-stable (8bab26f4f6 2026-07-14)"
+      },
+      {
+        "name": "clippy",
+        "required_now": true,
+        "introduced": "day-01",
+        "purpose": "Rust lint gate",
+        "found": true,
+        "usable": true,
+        "path": "/workspace/scratch/bb063b194b24/.toolchains/cargo/bin/cargo",
+        "version": "clippy 0.1.97 (8bab26f4f6 2026-07-14)"
+      },
+      {
+        "name": "bash",
+        "required_now": true,
+        "minimum_version": "4.0.0",
+        "introduced": "day-01",
+        "purpose": "repository scripts and workload discovery",
+        "found": true,
+        "usable": true,
+        "path": "/usr/bin/bash",
+        "version": "GNU bash, version 5.2.21(1)-release (x86_64-pc-linux-gnu)"
+      },
+      {
+        "name": "make",
+        "required_now": true,
+        "introduced": "day-01",
+        "purpose": "repository quality-gate orchestration",
+        "found": true,
+        "usable": true,
+        "path": "/usr/bin/make",
+        "version": "GNU Make 4.3"
+      },
+      {
+        "name": "c++",
+        "required_now": false,
+        "introduced": "week-02",
+        "purpose": "native scalar, SIMD, and CUDA host kernels",
+        "found": true,
+        "usable": true,
+        "path": "/usr/bin/c++",
+        "version": "c++ (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+      },
+      {
+        "name": "ispc",
+        "required_now": false,
+        "introduced": "week-02",
+        "purpose": "SPMD-to-SIMD kernels",
+        "found": false,
+        "usable": false,
+        "problem": "exec: \"ispc\": executable file not found in $PATH"
+      },
+      {
+        "name": "nvcc",
+        "required_now": false,
+        "introduced": "week-09",
+        "purpose": "CUDA backend",
+        "found": false,
+        "usable": false,
+        "problem": "exec: \"nvcc\": executable file not found in $PATH"
+      }
+    ]
+  },
+  "engine_artifact": {
+    "path": "target/release/paraflow-engine",
+    "sha256": "52c96acdaeaa6e996adfe9362c18d99918c34205c8bb6a26a64da7c4906f3b76"
+  },
+  "experiments": [
+    {
+      "scenario_name": "scalar-uniform-1k",
+      "workload": {
+        "path": "workloads/bench-uniform-1k-v1.json",
+        "sha256": "9f4478c757be0205734e9699952bd345f758ef877fe12506fb35a5df1d2ac695",
+        "schema_version": "paraflow.workload/v1",
+        "name": "bench-uniform-1k-v1",
+        "record_count": 1024,
+        "category_count": 16,
+        "distribution": "uniform"
+      },
+      "baseline": {
+        "orchestration_total_ns": "0x000000000020e6f8",
+        "engine_result": {
+          "schema_version": "paraflow.benchmark-engine-result/v1",
+          "experiment_id": "day06:baseline:0000000000000001",
+          "scenario_name": "scalar-uniform-1k",
+          "workload_name": "bench-uniform-1k-v1",
+          "execution": {
+            "backend": "scalar"
+          },
+          "sampling": {
+            "warmup_iterations": 5,
+            "sample_iterations": 25
+          },
+          "timing": {
+            "clock": "std::time::Instant",
+            "unit": "nanoseconds",
+            "process_start_in_samples": false,
+            "experiment_total_ns": "0x000000000006f059"
+          },
+          "correctness": {
+            "status": "passed",
+            "oracle": "rust-scalar-v1",
+            "comparison": "exact"
+          },
+          "engine_build": {
+            "version": "0.1.0-alpha.3",
+            "profile": "release",
+            "target": "x86_64-unknown-linux-gnu",
+            "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+            "source_commit": "df96257800abfb26500c4f3d28bba9b6ace31ebd",
+            "source_state": "clean"
+          },
+          "samples": [
+            {
+              "ordinal": 0,
+              "generation_ns": "0x000000000000429f",
+              "pipeline_ns": "0x0000000000000a18",
+              "engine_total_ns": "0x0000000000004d4d"
+            },
+            {
+              "ordinal": 1,
+              "generation_ns": "0x0000000000002cf3",
+              "pipeline_ns": "0x00000000000009d1",
+              "engine_total_ns": "0x000000000000371e"
+            },
+            {
+              "ordinal": 2,
+              "generation_ns": "0x0000000000002cc1",
+              "pipeline_ns": "0x000000000000098b",
+              "engine_total_ns": "0x00000000000036b0"
+            },
+            {
+              "ordinal": 3,
+              "generation_ns": "0x0000000000002cb7",
+              "pipeline_ns": "0x0000000000000964",
+              "engine_total_ns": "0x000000000000367f"
+            },
+            {
+              "ordinal": 4,
+              "generation_ns": "0x0000000000002cd5",
+              "pipeline_ns": "0x0000000000000900",
+              "engine_total_ns": "0x000000000000362f"
+            },
+            {
+              "ordinal": 5,
+              "generation_ns": "0x0000000000002cb7",
+              "pipeline_ns": "0x0000000000000913",
+              "engine_total_ns": "0x0000000000003624"
+            },
+            {
+              "ordinal": 6,
+              "generation_ns": "0x0000000000002cb7",
+              "pipeline_ns": "0x00000000000008f5",
+              "engine_total_ns": "0x0000000000003610"
+            },
+            {
+              "ordinal": 7,
+              "generation_ns": "0x0000000000002ccb",
+              "pipeline_ns": "0x00000000000008e2",
+              "engine_total_ns": "0x0000000000003607"
+            },
+            {
+              "ordinal": 8,
+              "generation_ns": "0x0000000000002d07",
+              "pipeline_ns": "0x00000000000008e1",
+              "engine_total_ns": "0x0000000000003642"
+            },
+            {
+              "ordinal": 9,
+              "generation_ns": "0x0000000000002cd5",
+              "pipeline_ns": "0x00000000000008d7",
+              "engine_total_ns": "0x0000000000003606"
+            },
+            {
+              "ordinal": 10,
+              "generation_ns": "0x0000000000002ccb",
+              "pipeline_ns": "0x00000000000008f6",
+              "engine_total_ns": "0x000000000000361b"
+            },
+            {
+              "ordinal": 11,
+              "generation_ns": "0x0000000000002ccb",
+              "pipeline_ns": "0x00000000000008d7",
+              "engine_total_ns": "0x0000000000003606"
+            },
+            {
+              "ordinal": 12,
+              "generation_ns": "0x0000000000002cb7",
+              "pipeline_ns": "0x00000000000008e1",
+              "engine_total_ns": "0x00000000000035f2"
+            },
+            {
+              "ordinal": 13,
+              "generation_ns": "0x0000000000002cb7",
+              "pipeline_ns": "0x00000000000008e2",
+              "engine_total_ns": "0x00000000000035fd"
+            },
+            {
+              "ordinal": 14,
+              "generation_ns": "0x0000000000002cad",
+              "pipeline_ns": "0x00000000000008e1",
+              "engine_total_ns": "0x00000000000035f2"
+            },
+            {
+              "ordinal": 15,
+              "generation_ns": "0x0000000000002cb7",
+              "pipeline_ns": "0x00000000000008e2",
+              "engine_total_ns": "0x00000000000035fd"
+            },
+            {
+              "ordinal": 16,
+              "generation_ns": "0x0000000000002cb7",
+              "pipeline_ns": "0x00000000000008e1",
+              "engine_total_ns": "0x00000000000035e8"
+            },
+            {
+              "ordinal": 17,
+              "generation_ns": "0x0000000000002cb7",
+              "pipeline_ns": "0x00000000000008e1",
+              "engine_total_ns": "0x00000000000035f2"
+            },
+            {
+              "ordinal": 18,
+              "generation_ns": "0x0000000000002ccb",
+              "pipeline_ns": "0x00000000000008e2",
+              "engine_total_ns": "0x0000000000003607"
+            },
+            {
+              "ordinal": 19,
+              "generation_ns": "0x0000000000002cb7",
+              "pipeline_ns": "0x00000000000008e1",
+              "engine_total_ns": "0x00000000000035f2"
+            },
+            {
+              "ordinal": 20,
+              "generation_ns": "0x0000000000002cb7",
+              "pipeline_ns": "0x00000000000008e2",
+              "engine_total_ns": "0x00000000000035f3"
+            },
+            {
+              "ordinal": 21,
+              "generation_ns": "0x0000000000002cad",
+              "pipeline_ns": "0x00000000000008e1",
+              "engine_total_ns": "0x00000000000035e8"
+            },
+            {
+              "ordinal": 22,
+              "generation_ns": "0x0000000000002cc1",
+              "pipeline_ns": "0x00000000000008d7",
+              "engine_total_ns": "0x00000000000035fd"
+            },
+            {
+              "ordinal": 23,
+              "generation_ns": "0x0000000000002cad",
+              "pipeline_ns": "0x00000000000008e1",
+              "engine_total_ns": "0x00000000000035f3"
+            },
+            {
+              "ordinal": 24,
+              "generation_ns": "0x0000000000002cb7",
+              "pipeline_ns": "0x00000000000008e1",
+              "engine_total_ns": "0x00000000000035f2"
+            }
+          ],
+          "result": {
+            "schema_version": "paraflow.result/v1",
+            "accepted_count": "0x00000000000001e5",
+            "score_sum": {
+              "encoding": "ieee754-binary64",
+              "bits": "0x409c3f2df9500000"
+            },
+            "category_histogram": [
+              "0x0000000000000021",
+              "0x0000000000000014",
+              "0x000000000000001a",
+              "0x0000000000000012",
+              "0x0000000000000020",
+              "0x0000000000000025",
+              "0x0000000000000023",
+              "0x000000000000001d",
+              "0x0000000000000022",
+              "0x0000000000000022",
+              "0x0000000000000023",
+              "0x000000000000001d",
+              "0x000000000000001f",
+              "0x0000000000000027",
+              "0x0000000000000019",
+              "0x000000000000001c"
+            ],
+            "accepted_id_sum": "0x000000000003d34e",
+            "accepted_id_xor": "0xaa989c3649fe2f10"
+          }
+        },
+        "summary": {
+          "generation": {
+            "count": 25,
+            "minimum_ns": "0x0000000000002cad",
+            "median_ns": "0x0000000000002cb7",
+            "median_absolute_deviation_ns": "0x000000000000000a",
+            "maximum_ns": "0x000000000000429f"
+          },
+          "pipeline": {
+            "count": 25,
+            "minimum_ns": "0x00000000000008d7",
+            "median_ns": "0x00000000000008e2",
+            "median_absolute_deviation_ns": "0x0000000000000001",
+            "maximum_ns": "0x0000000000000a18"
+          },
+          "engine_total": {
+            "count": 25,
+            "minimum_ns": "0x00000000000035e8",
+            "median_ns": "0x0000000000003606",
+            "median_absolute_deviation_ns": "0x0000000000000014",
+            "maximum_ns": "0x0000000000004d4d"
+          }
+        }
+      },
+      "stage_profile": {
+        "orchestration_total_ns": "0x00000000001d64e1",
+        "engine_result": {
+          "schema_version": "paraflow.profile-engine-result/v1",
+          "experiment_id": "day06:profile:0000000000000001",
+          "scenario_name": "scalar-uniform-1k",
+          "workload_name": "bench-uniform-1k-v1",
+          "execution": {
+            "backend": "scalar"
+          },
+          "sampling": {
+            "warmup_iterations": 5,
+            "sample_iterations": 25
+          },
+          "timing": {
+            "clock": "std::time::Instant",
+            "unit": "nanoseconds",
+            "process_start_in_samples": false,
+            "topology": "materialized-stage-passes-v1",
+            "observer": "boundary-timers-v1",
+            "experiment_total_ns": "0x0000000000087c2b"
+          },
+          "correctness": {
+            "status": "passed",
+            "oracle": "rust-scalar-v1",
+            "comparison": "exact"
+          },
+          "engine_build": {
+            "version": "0.1.0-alpha.3",
+            "profile": "release",
+            "target": "x86_64-unknown-linux-gnu",
+            "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+            "source_commit": "df96257800abfb26500c4f3d28bba9b6ace31ebd",
+            "source_state": "clean"
+          },
+          "samples": [
+            {
+              "ordinal": 0,
+              "generation_ns": "0x0000000000002cc1",
+              "normalize_ns": "0x00000000000005b6",
+              "score_ns": "0x00000000000004e4",
+              "filter_ns": "0x00000000000010aa",
+              "aggregate_ns": "0x0000000000000643",
+              "stage_sum_ns": "0x0000000000004e48",
+              "profile_total_ns": "0x0000000000004f60"
+            },
+            {
+              "ordinal": 1,
+              "generation_ns": "0x0000000000002ce9",
+              "normalize_ns": "0x00000000000005b6",
+              "score_ns": "0x00000000000004c6",
+              "filter_ns": "0x00000000000004b2",
+              "aggregate_ns": "0x0000000000000642",
+              "stage_sum_ns": "0x0000000000004259",
+              "profile_total_ns": "0x000000000000434a"
+            },
+            {
+              "ordinal": 2,
+              "generation_ns": "0x0000000000002ccb",
+              "normalize_ns": "0x00000000000005ca",
+              "score_ns": "0x00000000000004bc",
+              "filter_ns": "0x000000000000048a",
+              "aggregate_ns": "0x0000000000000638",
+              "stage_sum_ns": "0x0000000000004213",
+              "profile_total_ns": "0x00000000000042f9"
+            },
+            {
+              "ordinal": 3,
+              "generation_ns": "0x0000000000002ccb",
+              "normalize_ns": "0x00000000000005cb",
+              "score_ns": "0x00000000000004bb",
+              "filter_ns": "0x0000000000000458",
+              "aggregate_ns": "0x0000000000000642",
+              "stage_sum_ns": "0x00000000000041eb",
+              "profile_total_ns": "0x00000000000042b4"
+            },
+            {
+              "ordinal": 4,
+              "generation_ns": "0x0000000000002cc1",
+              "normalize_ns": "0x00000000000005b6",
+              "score_ns": "0x00000000000004c6",
+              "filter_ns": "0x000000000000044d",
+              "aggregate_ns": "0x0000000000000642",
+              "stage_sum_ns": "0x00000000000041cc",
+              "profile_total_ns": "0x000000000000429f"
+            },
+            {
+              "ordinal": 5,
+              "generation_ns": "0x0000000000002cc1",
+              "normalize_ns": "0x0000000000000610",
+              "score_ns": "0x00000000000004cf",
+              "filter_ns": "0x0000000000000462",
+              "aggregate_ns": "0x0000000000000638",
+              "stage_sum_ns": "0x000000000000423a",
+              "profile_total_ns": "0x0000000000004318"
+            },
+            {
+              "ordinal": 6,
+              "generation_ns": "0x0000000000002cdf",
+              "normalize_ns": "0x00000000000005ca",
+              "score_ns": "0x00000000000004f8",
+              "filter_ns": "0x0000000000000458",
+              "aggregate_ns": "0x0000000000000638",
+              "stage_sum_ns": "0x0000000000004231",
+              "profile_total_ns": "0x000000000000430d"
+            },
+            {
+              "ordinal": 7,
+              "generation_ns": "0x0000000000002cb7",
+              "normalize_ns": "0x00000000000005b6",
+              "score_ns": "0x00000000000004c5",
+              "filter_ns": "0x0000000000000462",
+              "aggregate_ns": "0x0000000000000642",
+              "stage_sum_ns": "0x00000000000041d6",
+              "profile_total_ns": "0x00000000000042aa"
+            },
+            {
+              "ordinal": 8,
+              "generation_ns": "0x0000000000002cc1",
+              "normalize_ns": "0x00000000000005ac",
+              "score_ns": "0x00000000000004d0",
+              "filter_ns": "0x000000000000046b",
+              "aggregate_ns": "0x0000000000000642",
+              "stage_sum_ns": "0x00000000000041ea",
+              "profile_total_ns": "0x00000000000042db"
+            },
+            {
+              "ordinal": 9,
+              "generation_ns": "0x0000000000002cd5",
+              "normalize_ns": "0x00000000000005ac",
+              "score_ns": "0x00000000000004bc",
+              "filter_ns": "0x0000000000000462",
+              "aggregate_ns": "0x0000000000000638",
+              "stage_sum_ns": "0x00000000000041d7",
+              "profile_total_ns": "0x00000000000042a9"
+            },
+            {
+              "ordinal": 10,
+              "generation_ns": "0x0000000000002cc1",
+              "normalize_ns": "0x00000000000005b6",
+              "score_ns": "0x00000000000004b2",
+              "filter_ns": "0x0000000000000461",
+              "aggregate_ns": "0x0000000000000643",
+              "stage_sum_ns": "0x00000000000041cd",
+              "profile_total_ns": "0x00000000000042b3"
+            },
+            {
+              "ordinal": 11,
+              "generation_ns": "0x0000000000002cc1",
+              "normalize_ns": "0x00000000000005ac",
+              "score_ns": "0x00000000000004c6",
+              "filter_ns": "0x0000000000000458",
+              "aggregate_ns": "0x0000000000000642",
+              "stage_sum_ns": "0x00000000000041cd",
+              "profile_total_ns": "0x0000000000004295"
+            },
+            {
+              "ordinal": 12,
+              "generation_ns": "0x0000000000002cc1",
+              "normalize_ns": "0x00000000000005b6",
+              "score_ns": "0x00000000000004b2",
+              "filter_ns": "0x0000000000000475",
+              "aggregate_ns": "0x0000000000000643",
+              "stage_sum_ns": "0x00000000000041e1",
+              "profile_total_ns": "0x00000000000042c8"
+            },
+            {
+              "ordinal": 13,
+              "generation_ns": "0x0000000000002cb7",
+              "normalize_ns": "0x00000000000005ac",
+              "score_ns": "0x0000000000000502",
+              "filter_ns": "0x0000000000000462",
+              "aggregate_ns": "0x0000000000000638",
+              "stage_sum_ns": "0x00000000000041ff",
+              "profile_total_ns": "0x00000000000042db"
+            },
+            {
+              "ordinal": 14,
+              "generation_ns": "0x0000000000002cc1",
+              "normalize_ns": "0x00000000000005ad",
+              "score_ns": "0x00000000000004c5",
+              "filter_ns": "0x0000000000000457",
+              "aggregate_ns": "0x0000000000000639",
+              "stage_sum_ns": "0x00000000000041c3",
+              "profile_total_ns": "0x00000000000042aa"
+            },
+            {
+              "ordinal": 15,
+              "generation_ns": "0x0000000000002cb7",
+              "normalize_ns": "0x00000000000005ac",
+              "score_ns": "0x00000000000004f8",
+              "filter_ns": "0x000000000000044e",
+              "aggregate_ns": "0x0000000000000642",
+              "stage_sum_ns": "0x00000000000041eb",
+              "profile_total_ns": "0x00000000000042d1"
+            },
+            {
+              "ordinal": 16,
+              "generation_ns": "0x0000000000002ccb",
+              "normalize_ns": "0x00000000000005ad",
+              "score_ns": "0x00000000000004cf",
+              "filter_ns": "0x0000000000000458",
+              "aggregate_ns": "0x0000000000000638",
+              "stage_sum_ns": "0x00000000000041d7",
+              "profile_total_ns": "0x00000000000042b4"
+            },
+            {
+              "ordinal": 17,
+              "generation_ns": "0x0000000000002cb7",
+              "normalize_ns": "0x00000000000005ac",
+              "score_ns": "0x00000000000004c6",
+              "filter_ns": "0x0000000000000476",
+              "aggregate_ns": "0x0000000000000642",
+              "stage_sum_ns": "0x00000000000041e1",
+              "profile_total_ns": "0x00000000000042bd"
+            },
+            {
+              "ordinal": 18,
+              "generation_ns": "0x0000000000002cdf",
+              "normalize_ns": "0x00000000000005ac",
+              "score_ns": "0x00000000000004b2",
+              "filter_ns": "0x0000000000000462",
+              "aggregate_ns": "0x0000000000000638",
+              "stage_sum_ns": "0x00000000000041d7",
+              "profile_total_ns": "0x00000000000042b4"
+            },
+            {
+              "ordinal": 19,
+              "generation_ns": "0x0000000000002cc1",
+              "normalize_ns": "0x00000000000005ac",
+              "score_ns": "0x0000000000000502",
+              "filter_ns": "0x0000000000000462",
+              "aggregate_ns": "0x0000000000000642",
+              "stage_sum_ns": "0x0000000000004213",
+              "profile_total_ns": "0x00000000000042e5"
+            },
+            {
+              "ordinal": 20,
+              "generation_ns": "0x0000000000002cc1",
+              "normalize_ns": "0x00000000000005b6",
+              "score_ns": "0x00000000000004c6",
+              "filter_ns": "0x0000000000000476",
+              "aggregate_ns": "0x000000000000064c",
+              "stage_sum_ns": "0x00000000000041ff",
+              "profile_total_ns": "0x00000000000042c8"
+            },
+            {
+              "ordinal": 21,
+              "generation_ns": "0x0000000000002cc1",
+              "normalize_ns": "0x00000000000005ac",
+              "score_ns": "0x00000000000004d0",
+              "filter_ns": "0x000000000000046b",
+              "aggregate_ns": "0x0000000000000643",
+              "stage_sum_ns": "0x00000000000041eb",
+              "profile_total_ns": "0x00000000000042bd"
+            },
+            {
+              "ordinal": 22,
+              "generation_ns": "0x0000000000002cb7",
+              "normalize_ns": "0x00000000000005ac",
+              "score_ns": "0x00000000000004bc",
+              "filter_ns": "0x0000000000000462",
+              "aggregate_ns": "0x0000000000000642",
+              "stage_sum_ns": "0x00000000000041c3",
+              "profile_total_ns": "0x0000000000004295"
+            },
+            {
+              "ordinal": 23,
+              "generation_ns": "0x0000000000003e2a",
+              "normalize_ns": "0x00000000000005c0",
+              "score_ns": "0x00000000000004bc",
+              "filter_ns": "0x000000000000046c",
+              "aggregate_ns": "0x0000000000000638",
+              "stage_sum_ns": "0x000000000000534a",
+              "profile_total_ns": "0x0000000000005430"
+            },
+            {
+              "ordinal": 24,
+              "generation_ns": "0x0000000000002cd5",
+              "normalize_ns": "0x00000000000005ca",
+              "score_ns": "0x00000000000004c6",
+              "filter_ns": "0x000000000000044d",
+              "aggregate_ns": "0x0000000000000639",
+              "stage_sum_ns": "0x00000000000041eb",
+              "profile_total_ns": "0x00000000000042c7"
+            }
+          ],
+          "result": {
+            "schema_version": "paraflow.result/v1",
+            "accepted_count": "0x00000000000001e5",
+            "score_sum": {
+              "encoding": "ieee754-binary64",
+              "bits": "0x409c3f2df9500000"
+            },
+            "category_histogram": [
+              "0x0000000000000021",
+              "0x0000000000000014",
+              "0x000000000000001a",
+              "0x0000000000000012",
+              "0x0000000000000020",
+              "0x0000000000000025",
+              "0x0000000000000023",
+              "0x000000000000001d",
+              "0x0000000000000022",
+              "0x0000000000000022",
+              "0x0000000000000023",
+              "0x000000000000001d",
+              "0x000000000000001f",
+              "0x0000000000000027",
+              "0x0000000000000019",
+              "0x000000000000001c"
+            ],
+            "accepted_id_sum": "0x000000000003d34e",
+            "accepted_id_xor": "0xaa989c3649fe2f10"
+          }
+        },
+        "summary": {
+          "generation": {
+            "count": 25,
+            "minimum_ns": "0x0000000000002cb7",
+            "median_ns": "0x0000000000002cc1",
+            "median_absolute_deviation_ns": "0x000000000000000a",
+            "maximum_ns": "0x0000000000003e2a"
+          },
+          "normalize": {
+            "count": 25,
+            "minimum_ns": "0x00000000000005ac",
+            "median_ns": "0x00000000000005b6",
+            "median_absolute_deviation_ns": "0x000000000000000a",
+            "maximum_ns": "0x0000000000000610"
+          },
+          "score": {
+            "count": 25,
+            "minimum_ns": "0x00000000000004b2",
+            "median_ns": "0x00000000000004c6",
+            "median_absolute_deviation_ns": "0x000000000000000a",
+            "maximum_ns": "0x0000000000000502"
+          },
+          "filter": {
+            "count": 25,
+            "minimum_ns": "0x000000000000044d",
+            "median_ns": "0x0000000000000462",
+            "median_absolute_deviation_ns": "0x000000000000000a",
+            "maximum_ns": "0x00000000000010aa"
+          },
+          "aggregate": {
+            "count": 25,
+            "minimum_ns": "0x0000000000000638",
+            "median_ns": "0x0000000000000642",
+            "median_absolute_deviation_ns": "0x0000000000000001",
+            "maximum_ns": "0x000000000000064c"
+          },
+          "stage_sum": {
+            "count": 25,
+            "minimum_ns": "0x00000000000041c3",
+            "median_ns": "0x00000000000041eb",
+            "median_absolute_deviation_ns": "0x0000000000000015",
+            "maximum_ns": "0x000000000000534a"
+          },
+          "pipeline_stages": {
+            "count": 25,
+            "minimum_ns": "0x00000000000014f8",
+            "median_ns": "0x0000000000001520",
+            "median_absolute_deviation_ns": "0x0000000000000014",
+            "maximum_ns": "0x0000000000002187"
+          },
+          "profile_total": {
+            "count": 25,
+            "minimum_ns": "0x0000000000004295",
+            "median_ns": "0x00000000000042c7",
+            "median_absolute_deviation_ns": "0x000000000000001d",
+            "maximum_ns": "0x0000000000005430"
+          }
+        }
+      },
+      "analysis": {
+        "accepted_count": 485,
+        "selectivity_bps": 4736,
+        "stage_median_sum_ns": "0x00000000000041e1",
+        "stage_pipeline_median_sum_ns": "0x0000000000001520",
+        "stage_share_bps": {
+          "generation": 6793,
+          "normalize": 867,
+          "score": 725,
+          "filter": 665,
+          "aggregate": 950
+        },
+        "dominant_stage": "generation",
+        "dominant_pipeline_stage": "aggregate",
+        "fused_pipeline_median_ns_per_record_milli": 2220,
+        "stage_pass_pipeline_median_ns_per_record_milli": 5281,
+        "stage_pass_to_fused_pipeline_ratio_milli": 2378,
+        "fused_pipeline_median_absolute_deviation_bps": 4,
+        "profile_total_median_absolute_deviation_bps": 16
+      }
+    },
+    {
+      "scenario_name": "scalar-uniform-64k",
+      "workload": {
+        "path": "workloads/bench-uniform-64k-v1.json",
+        "sha256": "a06b23b566e7e72dff938279a0c205000ba875f35e14488b68ad2e2008ad10d5",
+        "schema_version": "paraflow.workload/v1",
+        "name": "bench-uniform-64k-v1",
+        "record_count": 65536,
+        "category_count": 16,
+        "distribution": "uniform"
+      },
+      "baseline": {
+        "orchestration_total_ns": "0x0000000002f4885a",
+        "engine_result": {
+          "schema_version": "paraflow.benchmark-engine-result/v1",
+          "experiment_id": "day06:baseline:0000000000000002",
+          "scenario_name": "scalar-uniform-64k",
+          "workload_name": "bench-uniform-64k-v1",
+          "execution": {
+            "backend": "scalar"
+          },
+          "sampling": {
+            "warmup_iterations": 5,
+            "sample_iterations": 25
+          },
+          "timing": {
+            "clock": "std::time::Instant",
+            "unit": "nanoseconds",
+            "process_start_in_samples": false,
+            "experiment_total_ns": "0x0000000002adbcfa"
+          },
+          "correctness": {
+            "status": "passed",
+            "oracle": "rust-scalar-v1",
+            "comparison": "exact"
+          },
+          "engine_build": {
+            "version": "0.1.0-alpha.3",
+            "profile": "release",
+            "target": "x86_64-unknown-linux-gnu",
+            "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+            "source_commit": "df96257800abfb26500c4f3d28bba9b6ace31ebd",
+            "source_state": "clean"
+          },
+          "samples": [
+            {
+              "ordinal": 0,
+              "generation_ns": "0x00000000000be800",
+              "pipeline_ns": "0x00000000000b3b85",
+              "engine_total_ns": "0x0000000000172551"
+            },
+            {
+              "ordinal": 1,
+              "generation_ns": "0x00000000000b6614",
+              "pipeline_ns": "0x00000000000b1936",
+              "engine_total_ns": "0x000000000016806c"
+            },
+            {
+              "ordinal": 2,
+              "generation_ns": "0x00000000000b2fa0",
+              "pipeline_ns": "0x00000000000b534d",
+              "engine_total_ns": "0x0000000000168492"
+            },
+            {
+              "ordinal": 3,
+              "generation_ns": "0x00000000000b2c11",
+              "pipeline_ns": "0x00000000000af98f",
+              "engine_total_ns": "0x00000000001626d6"
+            },
+            {
+              "ordinal": 4,
+              "generation_ns": "0x00000000000b2b48",
+              "pipeline_ns": "0x00000000000ab812",
+              "engine_total_ns": "0x000000000015e3e7"
+            },
+            {
+              "ordinal": 5,
+              "generation_ns": "0x00000000000b5ca7",
+              "pipeline_ns": "0x00000000000ba5a6",
+              "engine_total_ns": "0x000000000017042e"
+            },
+            {
+              "ordinal": 6,
+              "generation_ns": "0x00000000000b6a9e",
+              "pipeline_ns": "0x00000000000b03c5",
+              "engine_total_ns": "0x0000000000166f9a"
+            },
+            {
+              "ordinal": 7,
+              "generation_ns": "0x00000000000b2b16",
+              "pipeline_ns": "0x00000000000b24e8",
+              "engine_total_ns": "0x0000000000165080"
+            },
+            {
+              "ordinal": 8,
+              "generation_ns": "0x00000000000bf9f5",
+              "pipeline_ns": "0x00000000000b2f1e",
+              "engine_total_ns": "0x0000000000172aad"
+            },
+            {
+              "ordinal": 9,
+              "generation_ns": "0x00000000000b58b3",
+              "pipeline_ns": "0x00000000000b5004",
+              "engine_total_ns": "0x000000000016a9c6"
+            },
+            {
+              "ordinal": 10,
+              "generation_ns": "0x00000000000b3723",
+              "pipeline_ns": "0x00000000000b48aa",
+              "engine_total_ns": "0x0000000000168059"
+            },
+            {
+              "ordinal": 11,
+              "generation_ns": "0x00000000000bdad1",
+              "pipeline_ns": "0x00000000000b3d51",
+              "engine_total_ns": "0x00000000001719c6"
+            },
+            {
+              "ordinal": 12,
+              "generation_ns": "0x00000000000b2b34",
+              "pipeline_ns": "0x00000000000b0484",
+              "engine_total_ns": "0x0000000000163058"
+            },
+            {
+              "ordinal": 13,
+              "generation_ns": "0x00000000000b2b52",
+              "pipeline_ns": "0x00000000000b40b9",
+              "engine_total_ns": "0x0000000000166d7d"
+            },
+            {
+              "ordinal": 14,
+              "generation_ns": "0x00000000000b381d",
+              "pipeline_ns": "0x00000000000aee91",
+              "engine_total_ns": "0x000000000016279e"
+            },
+            {
+              "ordinal": 15,
+              "generation_ns": "0x00000000000b38b3",
+              "pipeline_ns": "0x00000000000aac10",
+              "engine_total_ns": "0x000000000015e54f"
+            },
+            {
+              "ordinal": 16,
+              "generation_ns": "0x00000000000b909b",
+              "pipeline_ns": "0x00000000000aa4f1",
+              "engine_total_ns": "0x00000000001636f5"
+            },
+            {
+              "ordinal": 17,
+              "generation_ns": "0x00000000000b554d",
+              "pipeline_ns": "0x00000000000b42a3",
+              "engine_total_ns": "0x0000000000169944"
+            },
+            {
+              "ordinal": 18,
+              "generation_ns": "0x00000000000b2bf3",
+              "pipeline_ns": "0x00000000000b32c1",
+              "engine_total_ns": "0x0000000000165f36"
+            },
+            {
+              "ordinal": 19,
+              "generation_ns": "0x00000000000b88fa",
+              "pipeline_ns": "0x00000000000b357e",
+              "engine_total_ns": "0x000000000016bfaf"
+            },
+            {
+              "ordinal": 20,
+              "generation_ns": "0x00000000000b5755",
+              "pipeline_ns": "0x00000000000b2560",
+              "engine_total_ns": "0x0000000000167db9"
+            },
+            {
+              "ordinal": 21,
+              "generation_ns": "0x00000000000b2d15",
+              "pipeline_ns": "0x00000000000b6524",
+              "engine_total_ns": "0x00000000001693bf"
+            },
+            {
+              "ordinal": 22,
+              "generation_ns": "0x00000000000b2b52",
+              "pipeline_ns": "0x00000000000b005e",
+              "engine_total_ns": "0x0000000000162cd2"
+            },
+            {
+              "ordinal": 23,
+              "generation_ns": "0x00000000000b2c4c",
+              "pipeline_ns": "0x00000000000ab1d0",
+              "engine_total_ns": "0x000000000015dea9"
+            },
+            {
+              "ordinal": 24,
+              "generation_ns": "0x00000000000b2a76",
+              "pipeline_ns": "0x00000000000b1967",
+              "engine_total_ns": "0x000000000016453c"
+            }
+          ],
+          "result": {
+            "schema_version": "paraflow.result/v1",
+            "accepted_count": "0x00000000000079c1",
+            "score_sum": {
+              "encoding": "ieee754-binary64",
+              "bits": "0x40fcdcda02196000"
+            },
+            "category_histogram": [
+              "0x00000000000007d6",
+              "0x0000000000000749",
+              "0x00000000000007e3",
+              "0x000000000000078a",
+              "0x00000000000007d9",
+              "0x00000000000007b2",
+              "0x00000000000007c0",
+              "0x00000000000007c5",
+              "0x000000000000076a",
+              "0x0000000000000767",
+              "0x00000000000007b1",
+              "0x000000000000071e",
+              "0x00000000000007c1",
+              "0x000000000000079d",
+              "0x0000000000000776",
+              "0x00000000000007b1"
+            ],
+            "accepted_id_sum": "0x000000003cdd4721",
+            "accepted_id_xor": "0x5457782f3905a0bb"
+          }
+        },
+        "summary": {
+          "generation": {
+            "count": 25,
+            "minimum_ns": "0x00000000000b2a76",
+            "median_ns": "0x00000000000b381d",
+            "median_absolute_deviation_ns": "0x0000000000000d07",
+            "maximum_ns": "0x00000000000bf9f5"
+          },
+          "pipeline": {
+            "count": 25,
+            "minimum_ns": "0x00000000000aa4f1",
+            "median_ns": "0x00000000000b2560",
+            "median_absolute_deviation_ns": "0x000000000000219b",
+            "maximum_ns": "0x00000000000ba5a6"
+          },
+          "engine_total": {
+            "count": 25,
+            "minimum_ns": "0x000000000015dea9",
+            "median_ns": "0x0000000000166f9a",
+            "median_absolute_deviation_ns": "0x0000000000003a2c",
+            "maximum_ns": "0x0000000000172aad"
+          }
+        }
+      },
+      "stage_profile": {
+        "orchestration_total_ns": "0x0000000004726916",
+        "engine_result": {
+          "schema_version": "paraflow.profile-engine-result/v1",
+          "experiment_id": "day06:profile:0000000000000002",
+          "scenario_name": "scalar-uniform-64k",
+          "workload_name": "bench-uniform-64k-v1",
+          "execution": {
+            "backend": "scalar"
+          },
+          "sampling": {
+            "warmup_iterations": 5,
+            "sample_iterations": 25
+          },
+          "timing": {
+            "clock": "std::time::Instant",
+            "unit": "nanoseconds",
+            "process_start_in_samples": false,
+            "topology": "materialized-stage-passes-v1",
+            "observer": "boundary-timers-v1",
+            "experiment_total_ns": "0x0000000004009c35"
+          },
+          "correctness": {
+            "status": "passed",
+            "oracle": "rust-scalar-v1",
+            "comparison": "exact"
+          },
+          "engine_build": {
+            "version": "0.1.0-alpha.3",
+            "profile": "release",
+            "target": "x86_64-unknown-linux-gnu",
+            "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+            "source_commit": "df96257800abfb26500c4f3d28bba9b6ace31ebd",
+            "source_state": "clean"
+          },
+          "samples": [
+            {
+              "ordinal": 0,
+              "generation_ns": "0x00000000000b7f14",
+              "normalize_ns": "0x000000000004de1c",
+              "score_ns": "0x000000000006e6f5",
+              "filter_ns": "0x000000000006bad4",
+              "aggregate_ns": "0x0000000000018d8b",
+              "stage_sum_ns": "0x00000000001f8c84",
+              "profile_total_ns": "0x000000000020cdda"
+            },
+            {
+              "ordinal": 1,
+              "generation_ns": "0x00000000000d1b4b",
+              "normalize_ns": "0x000000000004e2eb",
+              "score_ns": "0x000000000007c76f",
+              "filter_ns": "0x00000000000776ce",
+              "aggregate_ns": "0x0000000000018d27",
+              "stage_sum_ns": "0x000000000022c99a",
+              "profile_total_ns": "0x00000000002414a3"
+            },
+            {
+              "ordinal": 2,
+              "generation_ns": "0x00000000000b2740",
+              "normalize_ns": "0x0000000000050698",
+              "score_ns": "0x00000000000707dc",
+              "filter_ns": "0x000000000006c7c7",
+              "aggregate_ns": "0x0000000000018c36",
+              "stage_sum_ns": "0x00000000001f89b1",
+              "profile_total_ns": "0x000000000020da7d"
+            },
+            {
+              "ordinal": 3,
+              "generation_ns": "0x00000000000c7742",
+              "normalize_ns": "0x000000000004e300",
+              "score_ns": "0x0000000000075930",
+              "filter_ns": "0x000000000006d89a",
+              "aggregate_ns": "0x0000000000018ccd",
+              "stage_sum_ns": "0x00000000002118d9",
+              "profile_total_ns": "0x0000000000225858"
+            },
+            {
+              "ordinal": 4,
+              "generation_ns": "0x00000000000b5f78",
+              "normalize_ns": "0x000000000004e5d1",
+              "score_ns": "0x0000000000070669",
+              "filter_ns": "0x000000000006b293",
+              "aggregate_ns": "0x0000000000018c73",
+              "stage_sum_ns": "0x00000000001f8ab8",
+              "profile_total_ns": "0x000000000020c463"
+            },
+            {
+              "ordinal": 5,
+              "generation_ns": "0x00000000000b2773",
+              "normalize_ns": "0x000000000004fa96",
+              "score_ns": "0x000000000006ee50",
+              "filter_ns": "0x000000000006c027",
+              "aggregate_ns": "0x0000000000018c91",
+              "stage_sum_ns": "0x00000000001f5d11",
+              "profile_total_ns": "0x0000000000209d12"
+            },
+            {
+              "ordinal": 6,
+              "generation_ns": "0x00000000000b5bb7",
+              "normalize_ns": "0x000000000004cfe8",
+              "score_ns": "0x000000000006667c",
+              "filter_ns": "0x000000000006a9c6",
+              "aggregate_ns": "0x0000000000018c05",
+              "stage_sum_ns": "0x00000000001ec7e6",
+              "profile_total_ns": "0x0000000000200462"
+            },
+            {
+              "ordinal": 7,
+              "generation_ns": "0x00000000000b275e",
+              "normalize_ns": "0x00000000000543e6",
+              "score_ns": "0x000000000006f51e",
+              "filter_ns": "0x000000000006b17b",
+              "aggregate_ns": "0x0000000000018ce1",
+              "stage_sum_ns": "0x00000000001f9ebe",
+              "profile_total_ns": "0x0000000000211798"
+            },
+            {
+              "ordinal": 8,
+              "generation_ns": "0x00000000000c75ee",
+              "normalize_ns": "0x000000000006306c",
+              "score_ns": "0x000000000006bac1",
+              "filter_ns": "0x000000000007f819",
+              "aggregate_ns": "0x0000000000018fee",
+              "stage_sum_ns": "0x000000000022e922",
+              "profile_total_ns": "0x0000000000242d17"
+            },
+            {
+              "ordinal": 9,
+              "generation_ns": "0x00000000000bbe74",
+              "normalize_ns": "0x000000000004ca50",
+              "score_ns": "0x0000000000069835",
+              "filter_ns": "0x000000000006f01d",
+              "aggregate_ns": "0x0000000000018c40",
+              "stage_sum_ns": "0x00000000001f9d56",
+              "profile_total_ns": "0x000000000020d946"
+            },
+            {
+              "ordinal": 10,
+              "generation_ns": "0x00000000000b2e92",
+              "normalize_ns": "0x000000000004dfac",
+              "score_ns": "0x0000000000068f4a",
+              "filter_ns": "0x00000000000793fd",
+              "aggregate_ns": "0x0000000000018cb8",
+              "stage_sum_ns": "0x00000000001fbe3d",
+              "profile_total_ns": "0x0000000000210409"
+            },
+            {
+              "ordinal": 11,
+              "generation_ns": "0x00000000000d93dc",
+              "normalize_ns": "0x000000000004e924",
+              "score_ns": "0x000000000007c520",
+              "filter_ns": "0x000000000006d6c3",
+              "aggregate_ns": "0x0000000000018cc2",
+              "stage_sum_ns": "0x000000000022a5a5",
+              "profile_total_ns": "0x000000000023ef28"
+            },
+            {
+              "ordinal": 12,
+              "generation_ns": "0x00000000000b2827",
+              "normalize_ns": "0x000000000004c182",
+              "score_ns": "0x000000000006f3b6",
+              "filter_ns": "0x0000000000074230",
+              "aggregate_ns": "0x0000000000018c9b",
+              "stage_sum_ns": "0x00000000001fac2a",
+              "profile_total_ns": "0x000000000020f2e6"
+            },
+            {
+              "ordinal": 13,
+              "generation_ns": "0x00000000000b28a9",
+              "normalize_ns": "0x000000000004f6cb",
+              "score_ns": "0x000000000006a1b7",
+              "filter_ns": "0x000000000006a3b5",
+              "aggregate_ns": "0x0000000000018c9b",
+              "stage_sum_ns": "0x00000000001ef17b",
+              "profile_total_ns": "0x0000000000203480"
+            },
+            {
+              "ordinal": 14,
+              "generation_ns": "0x00000000000b28fa",
+              "normalize_ns": "0x000000000004d4f4",
+              "score_ns": "0x000000000006e5c8",
+              "filter_ns": "0x000000000006a3de",
+              "aggregate_ns": "0x0000000000018c55",
+              "stage_sum_ns": "0x00000000001f13e9",
+              "profile_total_ns": "0x0000000000204c2b"
+            },
+            {
+              "ordinal": 15,
+              "generation_ns": "0x00000000000b5e60",
+              "normalize_ns": "0x000000000004c486",
+              "score_ns": "0x0000000000069293",
+              "filter_ns": "0x000000000006978b",
+              "aggregate_ns": "0x0000000000018ca5",
+              "stage_sum_ns": "0x00000000001ed9a9",
+              "profile_total_ns": "0x00000000002015b6"
+            },
+            {
+              "ordinal": 16,
+              "generation_ns": "0x00000000000b2b02",
+              "normalize_ns": "0x000000000004cc09",
+              "score_ns": "0x000000000006ef7c",
+              "filter_ns": "0x000000000006b7aa",
+              "aggregate_ns": "0x0000000000018c22",
+              "stage_sum_ns": "0x00000000001f2a53",
+              "profile_total_ns": "0x0000000000206856"
+            },
+            {
+              "ordinal": 17,
+              "generation_ns": "0x00000000000b6195",
+              "normalize_ns": "0x000000000004c100",
+              "score_ns": "0x0000000000068c47",
+              "filter_ns": "0x0000000000074acb",
+              "aggregate_ns": "0x0000000000018cb8",
+              "stage_sum_ns": "0x00000000001f865f",
+              "profile_total_ns": "0x000000000020c77a"
+            },
+            {
+              "ordinal": 18,
+              "generation_ns": "0x00000000000b28bd",
+              "normalize_ns": "0x0000000000052197",
+              "score_ns": "0x00000000000850ab",
+              "filter_ns": "0x000000000006cdf6",
+              "aggregate_ns": "0x000000000001d139",
+              "stage_sum_ns": "0x0000000000213a2e",
+              "profile_total_ns": "0x0000000000227f59"
+            },
+            {
+              "ordinal": 19,
+              "generation_ns": "0x00000000000b5bb7",
+              "normalize_ns": "0x000000000004d3e5",
+              "score_ns": "0x000000000009dd09",
+              "filter_ns": "0x000000000006d759",
+              "aggregate_ns": "0x0000000000018cff",
+              "stage_sum_ns": "0x00000000002270fd",
+              "profile_total_ns": "0x000000000023b954"
+            },
+            {
+              "ordinal": 20,
+              "generation_ns": "0x00000000000ba632",
+              "normalize_ns": "0x000000000004df29",
+              "score_ns": "0x00000000000a6c10",
+              "filter_ns": "0x000000000006e276",
+              "aggregate_ns": "0x0000000000018c9a",
+              "stage_sum_ns": "0x000000000023607b",
+              "profile_total_ns": "0x000000000024ac13"
+            },
+            {
+              "ordinal": 21,
+              "generation_ns": "0x00000000000b28e5",
+              "normalize_ns": "0x000000000004dd5d",
+              "score_ns": "0x000000000006a9d0",
+              "filter_ns": "0x00000000000742b2",
+              "aggregate_ns": "0x0000000000018d59",
+              "stage_sum_ns": "0x00000000001f801d",
+              "profile_total_ns": "0x000000000020be48"
+            },
+            {
+              "ordinal": 22,
+              "generation_ns": "0x00000000000bbd8e",
+              "normalize_ns": "0x0000000000051115",
+              "score_ns": "0x00000000000692a7",
+              "filter_ns": "0x000000000006cfff",
+              "aggregate_ns": "0x0000000000018c4a",
+              "stage_sum_ns": "0x00000000001fbd93",
+              "profile_total_ns": "0x000000000020ff25"
+            },
+            {
+              "ordinal": 23,
+              "generation_ns": "0x00000000000b289f",
+              "normalize_ns": "0x000000000004cafa",
+              "score_ns": "0x000000000007eacb",
+              "filter_ns": "0x0000000000078db0",
+              "aggregate_ns": "0x0000000000018d27",
+              "stage_sum_ns": "0x000000000020f93b",
+              "profile_total_ns": "0x0000000000223b51"
+            },
+            {
+              "ordinal": 24,
+              "generation_ns": "0x00000000000c8a50",
+              "normalize_ns": "0x000000000004d092",
+              "score_ns": "0x0000000000065885",
+              "filter_ns": "0x000000000006b6b9",
+              "aggregate_ns": "0x0000000000018c9b",
+              "stage_sum_ns": "0x00000000001ff6bb",
+              "profile_total_ns": "0x0000000000213b1e"
+            }
+          ],
+          "result": {
+            "schema_version": "paraflow.result/v1",
+            "accepted_count": "0x00000000000079c1",
+            "score_sum": {
+              "encoding": "ieee754-binary64",
+              "bits": "0x40fcdcda02196000"
+            },
+            "category_histogram": [
+              "0x00000000000007d6",
+              "0x0000000000000749",
+              "0x00000000000007e3",
+              "0x000000000000078a",
+              "0x00000000000007d9",
+              "0x00000000000007b2",
+              "0x00000000000007c0",
+              "0x00000000000007c5",
+              "0x000000000000076a",
+              "0x0000000000000767",
+              "0x00000000000007b1",
+              "0x000000000000071e",
+              "0x00000000000007c1",
+              "0x000000000000079d",
+              "0x0000000000000776",
+              "0x00000000000007b1"
+            ],
+            "accepted_id_sum": "0x000000003cdd4721",
+            "accepted_id_xor": "0x5457782f3905a0bb"
+          }
+        },
+        "summary": {
+          "generation": {
+            "count": 25,
+            "minimum_ns": "0x00000000000b2740",
+            "median_ns": "0x00000000000b5bb7",
+            "median_absolute_deviation_ns": "0x0000000000003318",
+            "maximum_ns": "0x00000000000d93dc"
+          },
+          "normalize": {
+            "count": 25,
+            "minimum_ns": "0x000000000004c100",
+            "median_ns": "0x000000000004df29",
+            "median_absolute_deviation_ns": "0x0000000000001320",
+            "maximum_ns": "0x000000000006306c"
+          },
+          "score": {
+            "count": 25,
+            "minimum_ns": "0x0000000000065885",
+            "median_ns": "0x000000000006ee50",
+            "median_absolute_deviation_ns": "0x0000000000005ba9",
+            "maximum_ns": "0x00000000000a6c10"
+          },
+          "filter": {
+            "count": 25,
+            "minimum_ns": "0x000000000006978b",
+            "median_ns": "0x000000000006cfff",
+            "median_absolute_deviation_ns": "0x0000000000001e84",
+            "maximum_ns": "0x000000000007f819"
+          },
+          "aggregate": {
+            "count": 25,
+            "minimum_ns": "0x0000000000018c05",
+            "median_ns": "0x0000000000018ca5",
+            "median_absolute_deviation_ns": "0x0000000000000050",
+            "maximum_ns": "0x000000000001d139"
+          },
+          "stage_sum": {
+            "count": 25,
+            "minimum_ns": "0x00000000001ec7e6",
+            "median_ns": "0x00000000001f9ebe",
+            "median_absolute_deviation_ns": "0x000000000000746b",
+            "maximum_ns": "0x000000000023607b"
+          },
+          "pipeline_stages": {
+            "count": 25,
+            "minimum_ns": "0x0000000000136c2f",
+            "median_ns": "0x0000000000145738",
+            "median_absolute_deviation_ns": "0x0000000000006c49",
+            "maximum_ns": "0x000000000017ba49"
+          },
+          "profile_total": {
+            "count": 25,
+            "minimum_ns": "0x0000000000200462",
+            "median_ns": "0x000000000020f2e6",
+            "median_absolute_deviation_ns": "0x0000000000008a90",
+            "maximum_ns": "0x000000000024ac13"
+          }
+        }
+      },
+      "analysis": {
+        "accepted_count": 31169,
+        "selectivity_bps": 4756,
+        "stage_median_sum_ns": "0x00000000001f85d4",
+        "stage_pipeline_median_sum_ns": "0x0000000000142a1d",
+        "stage_share_bps": {
+          "generation": 3603,
+          "normalize": 1545,
+          "score": 2199,
+          "filter": 2161,
+          "aggregate": 492
+        },
+        "dominant_stage": "generation",
+        "dominant_pipeline_stage": "score",
+        "fused_pipeline_median_ns_per_record_milli": 11145,
+        "stage_pass_pipeline_median_ns_per_record_milli": 20164,
+        "stage_pass_to_fused_pipeline_ratio_milli": 1809,
+        "fused_pipeline_median_absolute_deviation_bps": 117,
+        "profile_total_median_absolute_deviation_bps": 164
+      }
+    },
+    {
+      "scenario_name": "scalar-hotspot-64k",
+      "workload": {
+        "path": "workloads/bench-hotspot-64k-v1.json",
+        "sha256": "33ee5bc59d25f1a3dde339189b0441cab1bceb0ab9e32adc51a5783d86f4a800",
+        "schema_version": "paraflow.workload/v1",
+        "name": "bench-hotspot-64k-v1",
+        "record_count": 65536,
+        "category_count": 16,
+        "distribution": "hotspot"
+      },
+      "baseline": {
+        "orchestration_total_ns": "0x000000000350f2e7",
+        "engine_result": {
+          "schema_version": "paraflow.benchmark-engine-result/v1",
+          "experiment_id": "day06:baseline:0000000000000003",
+          "scenario_name": "scalar-hotspot-64k",
+          "workload_name": "bench-hotspot-64k-v1",
+          "execution": {
+            "backend": "scalar"
+          },
+          "sampling": {
+            "warmup_iterations": 5,
+            "sample_iterations": 25
+          },
+          "timing": {
+            "clock": "std::time::Instant",
+            "unit": "nanoseconds",
+            "process_start_in_samples": false,
+            "experiment_total_ns": "0x00000000030d9101"
+          },
+          "correctness": {
+            "status": "passed",
+            "oracle": "rust-scalar-v1",
+            "comparison": "exact"
+          },
+          "engine_build": {
+            "version": "0.1.0-alpha.3",
+            "profile": "release",
+            "target": "x86_64-unknown-linux-gnu",
+            "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+            "source_commit": "df96257800abfb26500c4f3d28bba9b6ace31ebd",
+            "source_state": "clean"
+          },
+          "samples": [
+            {
+              "ordinal": 0,
+              "generation_ns": "0x00000000000ee8f4",
+              "pipeline_ns": "0x0000000000105bdb",
+              "engine_total_ns": "0x00000000001f48cd"
+            },
+            {
+              "ordinal": 1,
+              "generation_ns": "0x00000000000de8d5",
+              "pipeline_ns": "0x00000000000e8cdd",
+              "engine_total_ns": "0x00000000001c776a"
+            },
+            {
+              "ordinal": 2,
+              "generation_ns": "0x00000000000e4f68",
+              "pipeline_ns": "0x00000000000aeb84",
+              "engine_total_ns": "0x0000000000193c18"
+            },
+            {
+              "ordinal": 3,
+              "generation_ns": "0x00000000000de2ec",
+              "pipeline_ns": "0x00000000000ad401",
+              "engine_total_ns": "0x000000000018b7c9"
+            },
+            {
+              "ordinal": 4,
+              "generation_ns": "0x00000000000eaab6",
+              "pipeline_ns": "0x00000000000b69e0",
+              "engine_total_ns": "0x00000000001a1b00"
+            },
+            {
+              "ordinal": 5,
+              "generation_ns": "0x00000000000e2351",
+              "pipeline_ns": "0x00000000000b145b",
+              "engine_total_ns": "0x0000000000193a4b"
+            },
+            {
+              "ordinal": 6,
+              "generation_ns": "0x00000000000dd5db",
+              "pipeline_ns": "0x00000000000d0cef",
+              "engine_total_ns": "0x00000000001ae5cd"
+            },
+            {
+              "ordinal": 7,
+              "generation_ns": "0x00000000000e6a48",
+              "pipeline_ns": "0x00000000000b7c25",
+              "engine_total_ns": "0x000000000019e7fd"
+            },
+            {
+              "ordinal": 8,
+              "generation_ns": "0x00000000000df455",
+              "pipeline_ns": "0x00000000000b9e9c",
+              "engine_total_ns": "0x0000000000199450"
+            },
+            {
+              "ordinal": 9,
+              "generation_ns": "0x00000000000de564",
+              "pipeline_ns": "0x00000000000bd022",
+              "engine_total_ns": "0x000000000019b6ef"
+            },
+            {
+              "ordinal": 10,
+              "generation_ns": "0x00000000000deabf",
+              "pipeline_ns": "0x00000000000acbac",
+              "engine_total_ns": "0x000000000018b70b"
+            },
+            {
+              "ordinal": 11,
+              "generation_ns": "0x00000000000e831f",
+              "pipeline_ns": "0x00000000000abfc8",
+              "engine_total_ns": "0x0000000000194445"
+            },
+            {
+              "ordinal": 12,
+              "generation_ns": "0x00000000000e188e",
+              "pipeline_ns": "0x00000000000aba76",
+              "engine_total_ns": "0x000000000018d44f"
+            },
+            {
+              "ordinal": 13,
+              "generation_ns": "0x00000000000de148",
+              "pipeline_ns": "0x00000000000b83b1",
+              "engine_total_ns": "0x00000000001965fe"
+            },
+            {
+              "ordinal": 14,
+              "generation_ns": "0x00000000000e43a1",
+              "pipeline_ns": "0x00000000000b2ba2",
+              "engine_total_ns": "0x0000000000197124"
+            },
+            {
+              "ordinal": 15,
+              "generation_ns": "0x00000000000ddcb4",
+              "pipeline_ns": "0x00000000000ae588",
+              "engine_total_ns": "0x000000000018c318"
+            },
+            {
+              "ordinal": 16,
+              "generation_ns": "0x00000000000e3fea",
+              "pipeline_ns": "0x00000000000b8a30",
+              "engine_total_ns": "0x000000000019cbab"
+            },
+            {
+              "ordinal": 17,
+              "generation_ns": "0x00000000000def4a",
+              "pipeline_ns": "0x00000000000b13b1",
+              "engine_total_ns": "0x0000000000190387"
+            },
+            {
+              "ordinal": 18,
+              "generation_ns": "0x00000000000ddd5f",
+              "pipeline_ns": "0x00000000000b5e37",
+              "engine_total_ns": "0x0000000000193d09"
+            },
+            {
+              "ordinal": 19,
+              "generation_ns": "0x00000000000e29cf",
+              "pipeline_ns": "0x00000000000b2ced",
+              "engine_total_ns": "0x00000000001957e8"
+            },
+            {
+              "ordinal": 20,
+              "generation_ns": "0x00000000000ddad3",
+              "pipeline_ns": "0x00000000000afdf1",
+              "engine_total_ns": "0x000000000018d946"
+            },
+            {
+              "ordinal": 21,
+              "generation_ns": "0x00000000000e45e6",
+              "pipeline_ns": "0x00000000000b188b",
+              "engine_total_ns": "0x0000000000196051"
+            },
+            {
+              "ordinal": 22,
+              "generation_ns": "0x00000000000de08a",
+              "pipeline_ns": "0x00000000000ae98f",
+              "engine_total_ns": "0x000000000018cb95"
+            },
+            {
+              "ordinal": 23,
+              "generation_ns": "0x00000000000e455a",
+              "pipeline_ns": "0x00000000000b4d47",
+              "engine_total_ns": "0x0000000000199413"
+            },
+            {
+              "ordinal": 24,
+              "generation_ns": "0x00000000000e14a5",
+              "pipeline_ns": "0x00000000000af1f8",
+              "engine_total_ns": "0x00000000001907e8"
+            }
+          ],
+          "result": {
+            "schema_version": "paraflow.result/v1",
+            "accepted_count": "0x00000000000079c1",
+            "score_sum": {
+              "encoding": "ieee754-binary64",
+              "bits": "0x40fcdcda02196000"
+            },
+            "category_histogram": [
+              "0x00000000000001a3",
+              "0x000000000000017d",
+              "0x00000000000001a2",
+              "0x0000000000006166",
+              "0x00000000000001a3",
+              "0x000000000000019e",
+              "0x00000000000001a6",
+              "0x0000000000000185",
+              "0x00000000000001bd",
+              "0x00000000000001a0",
+              "0x00000000000001bf",
+              "0x000000000000017f",
+              "0x0000000000000192",
+              "0x00000000000001b4",
+              "0x000000000000019a",
+              "0x00000000000001b2"
+            ],
+            "accepted_id_sum": "0x000000003cdd4721",
+            "accepted_id_xor": "0x5457782f3905a0bb"
+          }
+        },
+        "summary": {
+          "generation": {
+            "count": 25,
+            "minimum_ns": "0x00000000000dd5db",
+            "median_ns": "0x00000000000e14a5",
+            "median_absolute_deviation_ns": "0x0000000000003141",
+            "maximum_ns": "0x00000000000ee8f4"
+          },
+          "pipeline": {
+            "count": 25,
+            "minimum_ns": "0x00000000000aba76",
+            "median_ns": "0x00000000000b2ba2",
+            "median_absolute_deviation_ns": "0x000000000000461a",
+            "maximum_ns": "0x0000000000105bdb"
+          },
+          "engine_total": {
+            "count": 25,
+            "minimum_ns": "0x000000000018b70b",
+            "median_ns": "0x00000000001957e8",
+            "median_absolute_deviation_ns": "0x0000000000005f07",
+            "maximum_ns": "0x00000000001f48cd"
+          }
+        }
+      },
+      "stage_profile": {
+        "orchestration_total_ns": "0x000000000510a2a5",
+        "engine_result": {
+          "schema_version": "paraflow.profile-engine-result/v1",
+          "experiment_id": "day06:profile:0000000000000003",
+          "scenario_name": "scalar-hotspot-64k",
+          "workload_name": "bench-hotspot-64k-v1",
+          "execution": {
+            "backend": "scalar"
+          },
+          "sampling": {
+            "warmup_iterations": 5,
+            "sample_iterations": 25
+          },
+          "timing": {
+            "clock": "std::time::Instant",
+            "unit": "nanoseconds",
+            "process_start_in_samples": false,
+            "topology": "materialized-stage-passes-v1",
+            "observer": "boundary-timers-v1",
+            "experiment_total_ns": "0x0000000004b694ab"
+          },
+          "correctness": {
+            "status": "passed",
+            "oracle": "rust-scalar-v1",
+            "comparison": "exact"
+          },
+          "engine_build": {
+            "version": "0.1.0-alpha.3",
+            "profile": "release",
+            "target": "x86_64-unknown-linux-gnu",
+            "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+            "source_commit": "df96257800abfb26500c4f3d28bba9b6ace31ebd",
+            "source_state": "clean"
+          },
+          "samples": [
+            {
+              "ordinal": 0,
+              "generation_ns": "0x00000000000e86af",
+              "normalize_ns": "0x000000000004f3dc",
+              "score_ns": "0x0000000000065cf1",
+              "filter_ns": "0x000000000006aab6",
+              "aggregate_ns": "0x0000000000018d13",
+              "stage_sum_ns": "0x0000000000220f45",
+              "profile_total_ns": "0x0000000000230f00"
+            },
+            {
+              "ordinal": 1,
+              "generation_ns": "0x00000000000dd78a",
+              "normalize_ns": "0x000000000005467b",
+              "score_ns": "0x0000000000064835",
+              "filter_ns": "0x000000000006a886",
+              "aggregate_ns": "0x0000000000018c36",
+              "stage_sum_ns": "0x0000000000219af6",
+              "profile_total_ns": "0x00000000002293d8"
+            },
+            {
+              "ordinal": 2,
+              "generation_ns": "0x00000000000e469b",
+              "normalize_ns": "0x000000000004d0a6",
+              "score_ns": "0x0000000000062cbf",
+              "filter_ns": "0x000000000006bbd8",
+              "aggregate_ns": "0x0000000000018db3",
+              "stage_sum_ns": "0x0000000000218d8b",
+              "profile_total_ns": "0x0000000000228877"
+            },
+            {
+              "ordinal": 3,
+              "generation_ns": "0x00000000000e4ae8",
+              "normalize_ns": "0x000000000004d761",
+              "score_ns": "0x0000000000060943",
+              "filter_ns": "0x000000000006cba7",
+              "aggregate_ns": "0x0000000000018d63",
+              "stage_sum_ns": "0x0000000000218496",
+              "profile_total_ns": "0x0000000000227ce2"
+            },
+            {
+              "ordinal": 4,
+              "generation_ns": "0x00000000000de545",
+              "normalize_ns": "0x000000000004c833",
+              "score_ns": "0x0000000000060daf",
+              "filter_ns": "0x0000000000069b7f",
+              "aggregate_ns": "0x0000000000018d81",
+              "stage_sum_ns": "0x000000000020e427",
+              "profile_total_ns": "0x000000000021dd77"
+            },
+            {
+              "ordinal": 5,
+              "generation_ns": "0x00000000000e57bd",
+              "normalize_ns": "0x000000000004d06a",
+              "score_ns": "0x00000000001f3c2a",
+              "filter_ns": "0x000000000006e0bd",
+              "aggregate_ns": "0x0000000000018c86",
+              "stage_sum_ns": "0x00000000003ad194",
+              "profile_total_ns": "0x00000000003be3f8"
+            },
+            {
+              "ordinal": 6,
+              "generation_ns": "0x00000000000e4a6f",
+              "normalize_ns": "0x000000000004f486",
+              "score_ns": "0x000000000006a0e5",
+              "filter_ns": "0x000000000006b8a4",
+              "aggregate_ns": "0x0000000000018dbd",
+              "stage_sum_ns": "0x000000000022263b",
+              "profile_total_ns": "0x0000000000232736"
+            },
+            {
+              "ordinal": 7,
+              "generation_ns": "0x00000000000fa4bc",
+              "normalize_ns": "0x000000000004ea32",
+              "score_ns": "0x00000000000649ed",
+              "filter_ns": "0x0000000000076dcf",
+              "aggregate_ns": "0x0000000000018d1d",
+              "stage_sum_ns": "0x000000000023d3c7",
+              "profile_total_ns": "0x000000000024d68f"
+            },
+            {
+              "ordinal": 8,
+              "generation_ns": "0x00000000000e321a",
+              "normalize_ns": "0x000000000004e72f",
+              "score_ns": "0x000000000006e868",
+              "filter_ns": "0x000000000006adc4",
+              "aggregate_ns": "0x0000000000018ddb",
+              "stage_sum_ns": "0x0000000000223d50",
+              "profile_total_ns": "0x00000000002340c2"
+            },
+            {
+              "ordinal": 9,
+              "generation_ns": "0x00000000000e7958",
+              "normalize_ns": "0x0000000000067ab6",
+              "score_ns": "0x0000000000060a20",
+              "filter_ns": "0x000000000006b2bb",
+              "aggregate_ns": "0x0000000000018d77",
+              "stage_sum_ns": "0x0000000000233e60",
+              "profile_total_ns": "0x0000000000247847"
+            },
+            {
+              "ordinal": 10,
+              "generation_ns": "0x00000000000de4cd",
+              "normalize_ns": "0x000000000004d851",
+              "score_ns": "0x0000000000060d9a",
+              "filter_ns": "0x000000000006a1c1",
+              "aggregate_ns": "0x0000000000018cd7",
+              "stage_sum_ns": "0x000000000020f950",
+              "profile_total_ns": "0x000000000021f95c"
+            },
+            {
+              "ordinal": 11,
+              "generation_ns": "0x00000000000e4c46",
+              "normalize_ns": "0x000000000004e0cf",
+              "score_ns": "0x0000000000062b60",
+              "filter_ns": "0x000000000006ecfb",
+              "aggregate_ns": "0x0000000000018ccd",
+              "stage_sum_ns": "0x000000000021d23d",
+              "profile_total_ns": "0x000000000022d519"
+            },
+            {
+              "ordinal": 12,
+              "generation_ns": "0x00000000000de487",
+              "normalize_ns": "0x000000000004d725",
+              "score_ns": "0x0000000000062ca0",
+              "filter_ns": "0x000000000006a460",
+              "aggregate_ns": "0x0000000000018d9f",
+              "stage_sum_ns": "0x0000000000211a4b",
+              "profile_total_ns": "0x00000000002286aa"
+            },
+            {
+              "ordinal": 13,
+              "generation_ns": "0x00000000000ef7fa",
+              "normalize_ns": "0x000000000005265d",
+              "score_ns": "0x0000000000063148",
+              "filter_ns": "0x000000000006a994",
+              "aggregate_ns": "0x0000000000018c91",
+              "stage_sum_ns": "0x00000000002285c4",
+              "profile_total_ns": "0x00000000002385a7"
+            },
+            {
+              "ordinal": 14,
+              "generation_ns": "0x00000000000de51d",
+              "normalize_ns": "0x000000000004e6fd",
+              "score_ns": "0x0000000000066ad4",
+              "filter_ns": "0x0000000000069fcc",
+              "aggregate_ns": "0x0000000000018d9f",
+              "stage_sum_ns": "0x0000000000216459",
+              "profile_total_ns": "0x000000000022617f"
+            },
+            {
+              "ordinal": 15,
+              "generation_ns": "0x00000000000ea280",
+              "normalize_ns": "0x0000000000051b2c",
+              "score_ns": "0x0000000000060aca",
+              "filter_ns": "0x000000000006f781",
+              "aggregate_ns": "0x0000000000018ce0",
+              "stage_sum_ns": "0x0000000000224cd7",
+              "profile_total_ns": "0x000000000023642a"
+            },
+            {
+              "ordinal": 16,
+              "generation_ns": "0x00000000000df08a",
+              "normalize_ns": "0x000000000005583e",
+              "score_ns": "0x0000000000060011",
+              "filter_ns": "0x0000000000069fc3",
+              "aggregate_ns": "0x0000000000018e17",
+              "stage_sum_ns": "0x00000000002176b3",
+              "profile_total_ns": "0x00000000002274a1"
+            },
+            {
+              "ordinal": 17,
+              "generation_ns": "0x00000000000e1ac0",
+              "normalize_ns": "0x000000000004fed0",
+              "score_ns": "0x0000000000070334",
+              "filter_ns": "0x000000000006a379",
+              "aggregate_ns": "0x0000000000018d1d",
+              "stage_sum_ns": "0x0000000000224d5a",
+              "profile_total_ns": "0x0000000000234cb1"
+            },
+            {
+              "ordinal": 18,
+              "generation_ns": "0x00000000000e33e7",
+              "normalize_ns": "0x000000000004d761",
+              "score_ns": "0x0000000000069868",
+              "filter_ns": "0x000000000006ec83",
+              "aggregate_ns": "0x0000000000018d1d",
+              "stage_sum_ns": "0x0000000000221d50",
+              "profile_total_ns": "0x0000000000231967"
+            },
+            {
+              "ordinal": 19,
+              "generation_ns": "0x00000000000deb38",
+              "normalize_ns": "0x000000000004caf0",
+              "score_ns": "0x0000000000066456",
+              "filter_ns": "0x000000000006acab",
+              "aggregate_ns": "0x000000000001d69e",
+              "stage_sum_ns": "0x0000000000219dc7",
+              "profile_total_ns": "0x0000000000229d78"
+            },
+            {
+              "ordinal": 20,
+              "generation_ns": "0x00000000000e1efa",
+              "normalize_ns": "0x000000000005330a",
+              "score_ns": "0x0000000000064c14",
+              "filter_ns": "0x0000000000069d0f",
+              "aggregate_ns": "0x0000000000018d81",
+              "stage_sum_ns": "0x000000000021c8a8",
+              "profile_total_ns": "0x000000000022c9cc"
+            },
+            {
+              "ordinal": 21,
+              "generation_ns": "0x00000000000de559",
+              "normalize_ns": "0x000000000004cb5e",
+              "score_ns": "0x0000000000069f5e",
+              "filter_ns": "0x0000000000069ae9",
+              "aggregate_ns": "0x0000000000018d27",
+              "stage_sum_ns": "0x0000000000217825",
+              "profile_total_ns": "0x0000000000226a9d"
+            },
+            {
+              "ordinal": 22,
+              "generation_ns": "0x00000000000e2076",
+              "normalize_ns": "0x000000000004d197",
+              "score_ns": "0x00000000000630f8",
+              "filter_ns": "0x000000000006950a",
+              "aggregate_ns": "0x0000000000018cff",
+              "stage_sum_ns": "0x000000000021450e",
+              "profile_total_ns": "0x0000000000224099"
+            },
+            {
+              "ordinal": 23,
+              "generation_ns": "0x00000000000de49b",
+              "normalize_ns": "0x0000000000054404",
+              "score_ns": "0x000000000006fffe",
+              "filter_ns": "0x0000000000087cf4",
+              "aggregate_ns": "0x000000000001c948",
+              "stage_sum_ns": "0x0000000000246ed9",
+              "profile_total_ns": "0x00000000002585f9"
+            },
+            {
+              "ordinal": 24,
+              "generation_ns": "0x00000000000df3e7",
+              "normalize_ns": "0x000000000004e25f",
+              "score_ns": "0x00000000000642f6",
+              "filter_ns": "0x000000000006a51e",
+              "aggregate_ns": "0x0000000000018d13",
+              "stage_sum_ns": "0x0000000000214b6d",
+              "profile_total_ns": "0x000000000022c22b"
+            }
+          ],
+          "result": {
+            "schema_version": "paraflow.result/v1",
+            "accepted_count": "0x00000000000079c1",
+            "score_sum": {
+              "encoding": "ieee754-binary64",
+              "bits": "0x40fcdcda02196000"
+            },
+            "category_histogram": [
+              "0x00000000000001a3",
+              "0x000000000000017d",
+              "0x00000000000001a2",
+              "0x0000000000006166",
+              "0x00000000000001a3",
+              "0x000000000000019e",
+              "0x00000000000001a6",
+              "0x0000000000000185",
+              "0x00000000000001bd",
+              "0x00000000000001a0",
+              "0x00000000000001bf",
+              "0x000000000000017f",
+              "0x0000000000000192",
+              "0x00000000000001b4",
+              "0x000000000000019a",
+              "0x00000000000001b2"
+            ],
+            "accepted_id_sum": "0x000000003cdd4721",
+            "accepted_id_xor": "0x5457782f3905a0bb"
+          }
+        },
+        "summary": {
+          "generation": {
+            "count": 25,
+            "minimum_ns": "0x00000000000dd78a",
+            "median_ns": "0x00000000000e2076",
+            "median_absolute_deviation_ns": "0x0000000000003747",
+            "maximum_ns": "0x00000000000fa4bc"
+          },
+          "normalize": {
+            "count": 25,
+            "minimum_ns": "0x000000000004c833",
+            "median_ns": "0x000000000004e6fd",
+            "median_absolute_deviation_ns": "0x0000000000001657",
+            "maximum_ns": "0x0000000000067ab6"
+          },
+          "score": {
+            "count": 25,
+            "minimum_ns": "0x0000000000060011",
+            "median_ns": "0x0000000000064835",
+            "median_absolute_deviation_ns": "0x0000000000003a86",
+            "maximum_ns": "0x00000000001f3c2a"
+          },
+          "filter": {
+            "count": 25,
+            "minimum_ns": "0x000000000006950a",
+            "median_ns": "0x000000000006aab6",
+            "median_absolute_deviation_ns": "0x0000000000000da7",
+            "maximum_ns": "0x0000000000087cf4"
+          },
+          "aggregate": {
+            "count": 25,
+            "minimum_ns": "0x0000000000018c36",
+            "median_ns": "0x0000000000018d27",
+            "median_absolute_deviation_ns": "0x000000000000005a",
+            "maximum_ns": "0x000000000001d69e"
+          },
+          "stage_sum": {
+            "count": 25,
+            "minimum_ns": "0x000000000020e427",
+            "median_ns": "0x000000000021c8a8",
+            "median_absolute_deviation_ns": "0x00000000000074a8",
+            "maximum_ns": "0x00000000003ad194"
+          },
+          "pipeline_stages": {
+            "count": 25,
+            "minimum_ns": "0x000000000012fee2",
+            "median_ns": "0x00000000001392cc",
+            "median_absolute_deviation_ns": "0x0000000000004bdc",
+            "maximum_ns": "0x00000000002c79d7"
+          },
+          "profile_total": {
+            "count": 25,
+            "minimum_ns": "0x000000000021dd77",
+            "median_ns": "0x000000000022c9cc",
+            "median_absolute_deviation_ns": "0x0000000000005f2f",
+            "maximum_ns": "0x00000000003be3f8"
+          }
+        }
+      },
+      "analysis": {
+        "accepted_count": 31169,
+        "selectivity_bps": 4756,
+        "stage_median_sum_ns": "0x0000000000218785",
+        "stage_pipeline_median_sum_ns": "0x000000000013670f",
+        "stage_share_bps": {
+          "generation": 4213,
+          "normalize": 1462,
+          "score": 1874,
+          "filter": 1988,
+          "aggregate": 463
+        },
+        "dominant_stage": "generation",
+        "dominant_pipeline_stage": "filter",
+        "fused_pipeline_median_ns_per_record_milli": 11170,
+        "stage_pass_pipeline_median_ns_per_record_milli": 19402,
+        "stage_pass_to_fused_pipeline_ratio_milli": 1736,
+        "fused_pipeline_median_absolute_deviation_bps": 245,
+        "profile_total_median_absolute_deviation_bps": 106
+      }
+    },
+    {
+      "scenario_name": "scalar-uniform-1m",
+      "workload": {
+        "path": "workloads/bench-uniform-1m-v1.json",
+        "sha256": "e8fd49578f38aa13e2614aee6278358d831aa6cedd6bd4b734e84eeeb72fc8b6",
+        "schema_version": "paraflow.workload/v1",
+        "name": "bench-uniform-1m-v1",
+        "record_count": 1048576,
+        "category_count": 16,
+        "distribution": "uniform"
+      },
+      "baseline": {
+        "orchestration_total_ns": "0x0000000027d13151",
+        "engine_result": {
+          "schema_version": "paraflow.benchmark-engine-result/v1",
+          "experiment_id": "day06:baseline:0000000000000004",
+          "scenario_name": "scalar-uniform-1m",
+          "workload_name": "bench-uniform-1m-v1",
+          "execution": {
+            "backend": "scalar"
+          },
+          "sampling": {
+            "warmup_iterations": 5,
+            "sample_iterations": 20
+          },
+          "timing": {
+            "clock": "std::time::Instant",
+            "unit": "nanoseconds",
+            "process_start_in_samples": false,
+            "experiment_total_ns": "0x0000000025c46760"
+          },
+          "correctness": {
+            "status": "passed",
+            "oracle": "rust-scalar-v1",
+            "comparison": "exact"
+          },
+          "engine_build": {
+            "version": "0.1.0-alpha.3",
+            "profile": "release",
+            "target": "x86_64-unknown-linux-gnu",
+            "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+            "source_commit": "df96257800abfb26500c4f3d28bba9b6ace31ebd",
+            "source_state": "clean"
+          },
+          "samples": [
+            {
+              "ordinal": 0,
+              "generation_ns": "0x0000000000bbedd5",
+              "pipeline_ns": "0x0000000000ba3356",
+              "engine_total_ns": "0x000000000176278b"
+            },
+            {
+              "ordinal": 1,
+              "generation_ns": "0x0000000000b81476",
+              "pipeline_ns": "0x0000000000bd51fb",
+              "engine_total_ns": "0x0000000001756ca0"
+            },
+            {
+              "ordinal": 2,
+              "generation_ns": "0x0000000000c04050",
+              "pipeline_ns": "0x0000000000bd14f5",
+              "engine_total_ns": "0x00000000017d5cc7"
+            },
+            {
+              "ordinal": 3,
+              "generation_ns": "0x0000000000bcdfa2",
+              "pipeline_ns": "0x0000000000b81552",
+              "engine_total_ns": "0x000000000174fa00"
+            },
+            {
+              "ordinal": 4,
+              "generation_ns": "0x0000000000b6703a",
+              "pipeline_ns": "0x0000000000be10da",
+              "engine_total_ns": "0x00000000017487e2"
+            },
+            {
+              "ordinal": 5,
+              "generation_ns": "0x0000000000b9923c",
+              "pipeline_ns": "0x0000000000bb688b",
+              "engine_total_ns": "0x000000000175009c"
+            },
+            {
+              "ordinal": 6,
+              "generation_ns": "0x0000000000bf5f73",
+              "pipeline_ns": "0x0000000000bdbf71",
+              "engine_total_ns": "0x00000000017d2418"
+            },
+            {
+              "ordinal": 7,
+              "generation_ns": "0x0000000000c92bdc",
+              "pipeline_ns": "0x0000000000be3da5",
+              "engine_total_ns": "0x0000000001876fff"
+            },
+            {
+              "ordinal": 8,
+              "generation_ns": "0x0000000000b96dda",
+              "pipeline_ns": "0x0000000000c57c96",
+              "engine_total_ns": "0x00000000017ef46a"
+            },
+            {
+              "ordinal": 9,
+              "generation_ns": "0x0000000000b881d7",
+              "pipeline_ns": "0x0000000000bb7df2",
+              "engine_total_ns": "0x000000000174065b"
+            },
+            {
+              "ordinal": 10,
+              "generation_ns": "0x0000000000b70c97",
+              "pipeline_ns": "0x0000000000bb94df",
+              "engine_total_ns": "0x000000000172a7ae"
+            },
+            {
+              "ordinal": 11,
+              "generation_ns": "0x0000000000b4aa78",
+              "pipeline_ns": "0x0000000000b8c553",
+              "engine_total_ns": "0x00000000016d75db"
+            },
+            {
+              "ordinal": 12,
+              "generation_ns": "0x0000000000b58f5d",
+              "pipeline_ns": "0x0000000000bd1793",
+              "engine_total_ns": "0x000000000172af45"
+            },
+            {
+              "ordinal": 13,
+              "generation_ns": "0x0000000000b8cc7c",
+              "pipeline_ns": "0x0000000000be02e3",
+              "engine_total_ns": "0x000000000176d438"
+            },
+            {
+              "ordinal": 14,
+              "generation_ns": "0x0000000000b50205",
+              "pipeline_ns": "0x0000000000bb8cc5",
+              "engine_total_ns": "0x0000000001709463"
+            },
+            {
+              "ordinal": 15,
+              "generation_ns": "0x0000000000b65d69",
+              "pipeline_ns": "0x0000000000b930d4",
+              "engine_total_ns": "0x00000000016f94bc"
+            },
+            {
+              "ordinal": 16,
+              "generation_ns": "0x0000000000ba0cf6",
+              "pipeline_ns": "0x0000000000bcca32",
+              "engine_total_ns": "0x000000000176ded2"
+            },
+            {
+              "ordinal": 17,
+              "generation_ns": "0x0000000000b4a09c",
+              "pipeline_ns": "0x0000000000b9e7a4",
+              "engine_total_ns": "0x00000000016e8cc9"
+            },
+            {
+              "ordinal": 18,
+              "generation_ns": "0x0000000000c17a38",
+              "pipeline_ns": "0x0000000000d0d66c",
+              "engine_total_ns": "0x0000000001925917"
+            },
+            {
+              "ordinal": 19,
+              "generation_ns": "0x0000000000b8f340",
+              "pipeline_ns": "0x0000000000bfd909",
+              "engine_total_ns": "0x000000000178d2bf"
+            }
+          ],
+          "result": {
+            "schema_version": "paraflow.result/v1",
+            "accepted_count": "0x0000000000079f1b",
+            "score_sum": {
+              "encoding": "ieee754-binary64",
+              "bits": "0x413ccab73821c000"
+            },
+            "category_histogram": [
+              "0x000000000000793b",
+              "0x00000000000078f6",
+              "0x0000000000007aab",
+              "0x0000000000007a6e",
+              "0x0000000000007aa8",
+              "0x00000000000079d8",
+              "0x0000000000007978",
+              "0x0000000000007a37",
+              "0x0000000000007a4f",
+              "0x00000000000079bc",
+              "0x0000000000007b16",
+              "0x0000000000007903",
+              "0x0000000000007993",
+              "0x0000000000007a3b",
+              "0x000000000000796a",
+              "0x0000000000007a46"
+            ],
+            "accepted_id_sum": "0x0000003d06f48aff",
+            "accepted_id_xor": "0xf2cd390048df4d29"
+          }
+        },
+        "summary": {
+          "generation": {
+            "count": 20,
+            "minimum_ns": "0x0000000000b4a09c",
+            "median_ns": "0x0000000000b8dfde",
+            "median_absolute_deviation_ns": "0x000000000002c836",
+            "maximum_ns": "0x0000000000c92bdc"
+          },
+          "pipeline": {
+            "count": 20,
+            "minimum_ns": "0x0000000000b81552",
+            "median_ns": "0x0000000000bcef93",
+            "median_absolute_deviation_ns": "0x0000000000016a37",
+            "maximum_ns": "0x0000000000d0d66c"
+          },
+          "engine_total": {
+            "count": 20,
+            "minimum_ns": "0x00000000016d75db",
+            "median_ns": "0x000000000175369e",
+            "median_absolute_deviation_ns": "0x0000000000031588",
+            "maximum_ns": "0x0000000001925917"
+          }
+        }
+      },
+      "stage_profile": {
+        "orchestration_total_ns": "0x00000000409f905a",
+        "engine_result": {
+          "schema_version": "paraflow.profile-engine-result/v1",
+          "experiment_id": "day06:profile:0000000000000004",
+          "scenario_name": "scalar-uniform-1m",
+          "workload_name": "bench-uniform-1m-v1",
+          "execution": {
+            "backend": "scalar"
+          },
+          "sampling": {
+            "warmup_iterations": 5,
+            "sample_iterations": 20
+          },
+          "timing": {
+            "clock": "std::time::Instant",
+            "unit": "nanoseconds",
+            "process_start_in_samples": false,
+            "topology": "materialized-stage-passes-v1",
+            "observer": "boundary-timers-v1",
+            "experiment_total_ns": "0x000000003e9638bc"
+          },
+          "correctness": {
+            "status": "passed",
+            "oracle": "rust-scalar-v1",
+            "comparison": "exact"
+          },
+          "engine_build": {
+            "version": "0.1.0-alpha.3",
+            "profile": "release",
+            "target": "x86_64-unknown-linux-gnu",
+            "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+            "source_commit": "df96257800abfb26500c4f3d28bba9b6ace31ebd",
+            "source_state": "clean"
+          },
+          "samples": [
+            {
+              "ordinal": 0,
+              "generation_ns": "0x0000000000b8867f",
+              "normalize_ns": "0x00000000007e8582",
+              "score_ns": "0x00000000008235eb",
+              "filter_ns": "0x0000000000851d5d",
+              "aggregate_ns": "0x00000000001aa953",
+              "stage_sum_ns": "0x000000000259089c",
+              "profile_total_ns": "0x0000000002730f27"
+            },
+            {
+              "ordinal": 1,
+              "generation_ns": "0x0000000000b65d19",
+              "normalize_ns": "0x000000000087dbc6",
+              "score_ns": "0x000000000086d890",
+              "filter_ns": "0x00000000007cfe8a",
+              "aggregate_ns": "0x0000000000192cea",
+              "stage_sum_ns": "0x00000000025b3ce3",
+              "profile_total_ns": "0x000000000273d936"
+            },
+            {
+              "ordinal": 2,
+              "generation_ns": "0x0000000000c84bbd",
+              "normalize_ns": "0x0000000000806e2a",
+              "score_ns": "0x0000000000829bab",
+              "filter_ns": "0x0000000000807b1d",
+              "aggregate_ns": "0x000000000018d9a1",
+              "stage_sum_ns": "0x000000000264aa50",
+              "profile_total_ns": "0x00000000027fd96e"
+            },
+            {
+              "ordinal": 3,
+              "generation_ns": "0x0000000000b57789",
+              "normalize_ns": "0x00000000008882c7",
+              "score_ns": "0x000000000083e4d5",
+              "filter_ns": "0x00000000007bf937",
+              "aggregate_ns": "0x000000000018d900",
+              "stage_sum_ns": "0x000000000256b15c",
+              "profile_total_ns": "0x00000000027020d2"
+            },
+            {
+              "ordinal": 4,
+              "generation_ns": "0x0000000000bd7205",
+              "normalize_ns": "0x00000000007f3185",
+              "score_ns": "0x00000000008154d2",
+              "filter_ns": "0x00000000007e1730",
+              "aggregate_ns": "0x0000000000196db3",
+              "stage_sum_ns": "0x0000000002557d3f",
+              "profile_total_ns": "0x00000000026e082a"
+            },
+            {
+              "ordinal": 5,
+              "generation_ns": "0x0000000000bc4ca9",
+              "normalize_ns": "0x0000000000888bf9",
+              "score_ns": "0x000000000082fe69",
+              "filter_ns": "0x0000000000790c40",
+              "aggregate_ns": "0x0000000000191b3c",
+              "stage_sum_ns": "0x000000000259fe87",
+              "profile_total_ns": "0x000000000272fbad"
+            },
+            {
+              "ordinal": 6,
+              "generation_ns": "0x0000000000b85d4d",
+              "normalize_ns": "0x00000000007e6351",
+              "score_ns": "0x0000000000838249",
+              "filter_ns": "0x00000000007e3301",
+              "aggregate_ns": "0x0000000000190db3",
+              "stage_sum_ns": "0x000000000251839b",
+              "profile_total_ns": "0x00000000026950d4"
+            },
+            {
+              "ordinal": 7,
+              "generation_ns": "0x0000000000b74ec9",
+              "normalize_ns": "0x000000000086fb75",
+              "score_ns": "0x0000000000831704",
+              "filter_ns": "0x000000000076dd87",
+              "aggregate_ns": "0x0000000000191a0f",
+              "stage_sum_ns": "0x00000000025158d8",
+              "profile_total_ns": "0x00000000026a97e0"
+            },
+            {
+              "ordinal": 8,
+              "generation_ns": "0x0000000000b42bd6",
+              "normalize_ns": "0x0000000000900aae",
+              "score_ns": "0x0000000000858afb",
+              "filter_ns": "0x00000000008194c8",
+              "aggregate_ns": "0x0000000000197ed6",
+              "stage_sum_ns": "0x000000000264d51d",
+              "profile_total_ns": "0x00000000027f5adf"
+            },
+            {
+              "ordinal": 9,
+              "generation_ns": "0x0000000000bb6022",
+              "normalize_ns": "0x00000000008dd816",
+              "score_ns": "0x000000000084c07e",
+              "filter_ns": "0x00000000007bf7e2",
+              "aggregate_ns": "0x0000000000194b5a",
+              "stage_sum_ns": "0x0000000002633bf2",
+              "profile_total_ns": "0x00000000027d7744"
+            },
+            {
+              "ordinal": 10,
+              "generation_ns": "0x0000000000b4db2c",
+              "normalize_ns": "0x00000000007d5dcc",
+              "score_ns": "0x000000000086ebc5",
+              "filter_ns": "0x00000000007d2197",
+              "aggregate_ns": "0x000000000018d9bf",
+              "stage_sum_ns": "0x00000000024f2013",
+              "profile_total_ns": "0x0000000002679118"
+            },
+            {
+              "ordinal": 11,
+              "generation_ns": "0x0000000000b4b530",
+              "normalize_ns": "0x000000000096179e",
+              "score_ns": "0x0000000000821021",
+              "filter_ns": "0x00000000007b070f",
+              "aggregate_ns": "0x0000000000192fb1",
+              "stage_sum_ns": "0x00000000026113af",
+              "profile_total_ns": "0x00000000027ef727"
+            },
+            {
+              "ordinal": 12,
+              "generation_ns": "0x0000000000b498dd",
+              "normalize_ns": "0x00000000007bc968",
+              "score_ns": "0x0000000000817be7",
+              "filter_ns": "0x00000000007a7067",
+              "aggregate_ns": "0x00000000001932a1",
+              "stage_sum_ns": "0x0000000002458134",
+              "profile_total_ns": "0x00000000025d1205"
+            },
+            {
+              "ordinal": 13,
+              "generation_ns": "0x0000000000b4becf",
+              "normalize_ns": "0x000000000088bfc5",
+              "score_ns": "0x0000000000837055",
+              "filter_ns": "0x0000000000790a73",
+              "aggregate_ns": "0x00000000001d5884",
+              "stage_sum_ns": "0x00000000025751e0",
+              "profile_total_ns": "0x00000000026f8230"
+            },
+            {
+              "ordinal": 14,
+              "generation_ns": "0x0000000000b47544",
+              "normalize_ns": "0x00000000015b7c61",
+              "score_ns": "0x00000000008278e5",
+              "filter_ns": "0x00000000007fabda",
+              "aggregate_ns": "0x0000000000194ac4",
+              "stage_sum_ns": "0x00000000032b6128",
+              "profile_total_ns": "0x000000000345c835"
+            },
+            {
+              "ordinal": 15,
+              "generation_ns": "0x0000000000b93a87",
+              "normalize_ns": "0x000000000088b35e",
+              "score_ns": "0x0000000000845f15",
+              "filter_ns": "0x0000000000780520",
+              "aggregate_ns": "0x000000000019598d",
+              "stage_sum_ns": "0x000000000257aba7",
+              "profile_total_ns": "0x0000000002714ce1"
+            },
+            {
+              "ordinal": 16,
+              "generation_ns": "0x0000000000b58559",
+              "normalize_ns": "0x00000000007b0ee2",
+              "score_ns": "0x00000000007f46d7",
+              "filter_ns": "0x00000000007baf6e",
+              "aggregate_ns": "0x0000000000192d63",
+              "stage_sum_ns": "0x000000000244b7e3",
+              "profile_total_ns": "0x00000000025ddaab"
+            },
+            {
+              "ordinal": 17,
+              "generation_ns": "0x0000000000b5db4c",
+              "normalize_ns": "0x000000000086aa66",
+              "score_ns": "0x000000000081b4b4",
+              "filter_ns": "0x0000000000768f54",
+              "aggregate_ns": "0x00000000001991e3",
+              "stage_sum_ns": "0x00000000024e5b9d",
+              "profile_total_ns": "0x000000000266ab89"
+            },
+            {
+              "ordinal": 18,
+              "generation_ns": "0x0000000000b59b2e",
+              "normalize_ns": "0x00000000007c694b",
+              "score_ns": "0x0000000000803e8d",
+              "filter_ns": "0x00000000007e4b1a",
+              "aggregate_ns": "0x0000000000195f11",
+              "stage_sum_ns": "0x000000000249ed31",
+              "profile_total_ns": "0x0000000002616a38"
+            },
+            {
+              "ordinal": 19,
+              "generation_ns": "0x0000000000b66803",
+              "normalize_ns": "0x0000000000865f9a",
+              "score_ns": "0x000000000082d311",
+              "filter_ns": "0x000000000077e321",
+              "aggregate_ns": "0x000000000019686b",
+              "stage_sum_ns": "0x000000000250e63a",
+              "profile_total_ns": "0x000000000268e4d1"
+            }
+          ],
+          "result": {
+            "schema_version": "paraflow.result/v1",
+            "accepted_count": "0x0000000000079f1b",
+            "score_sum": {
+              "encoding": "ieee754-binary64",
+              "bits": "0x413ccab73821c000"
+            },
+            "category_histogram": [
+              "0x000000000000793b",
+              "0x00000000000078f6",
+              "0x0000000000007aab",
+              "0x0000000000007a6e",
+              "0x0000000000007aa8",
+              "0x00000000000079d8",
+              "0x0000000000007978",
+              "0x0000000000007a37",
+              "0x0000000000007a4f",
+              "0x00000000000079bc",
+              "0x0000000000007b16",
+              "0x0000000000007903",
+              "0x0000000000007993",
+              "0x0000000000007a3b",
+              "0x000000000000796a",
+              "0x0000000000007a46"
+            ],
+            "accepted_id_sum": "0x0000003d06f48aff",
+            "accepted_id_xor": "0xf2cd390048df4d29"
+          }
+        },
+        "summary": {
+          "generation": {
+            "count": 20,
+            "minimum_ns": "0x0000000000b42bd6",
+            "median_ns": "0x0000000000b61c32",
+            "median_absolute_deviation_ns": "0x000000000001752b",
+            "maximum_ns": "0x0000000000c84bbd"
+          },
+          "normalize": {
+            "count": 20,
+            "minimum_ns": "0x00000000007b0ee2",
+            "median_ns": "0x000000000086d2ed",
+            "median_absolute_deviation_ns": "0x0000000000075348",
+            "maximum_ns": "0x00000000015b7c61"
+          },
+          "score": {
+            "count": 20,
+            "minimum_ns": "0x00000000007f46d7",
+            "median_ns": "0x000000000082e8bd",
+            "median_absolute_deviation_ns": "0x0000000000011810",
+            "maximum_ns": "0x000000000086ebc5"
+          },
+          "filter": {
+            "count": 20,
+            "minimum_ns": "0x0000000000768f54",
+            "median_ns": "0x00000000007bf88c",
+            "median_absolute_deviation_ns": "0x0000000000029f6d",
+            "maximum_ns": "0x0000000000851d5d"
+          },
+          "aggregate": {
+            "count": 20,
+            "minimum_ns": "0x000000000018d900",
+            "median_ns": "0x0000000000193eb2",
+            "median_absolute_deviation_ns": "0x000000000000272e",
+            "maximum_ns": "0x00000000001d5884"
+          },
+          "stage_sum": {
+            "count": 20,
+            "minimum_ns": "0x000000000244b7e3",
+            "median_ns": "0x000000000257019e",
+            "median_absolute_deviation_ns": "0x000000000006fe77",
+            "maximum_ns": "0x00000000032b6128"
+          },
+          "pipeline_stages": {
+            "count": 20,
+            "minimum_ns": "0x00000000018f328a",
+            "median_ns": "0x00000000019d0838",
+            "median_absolute_deviation_ns": "0x000000000004c272",
+            "maximum_ns": "0x000000000276ebe4"
+          },
+          "profile_total": {
+            "count": 20,
+            "minimum_ns": "0x00000000025d1205",
+            "median_ns": "0x00000000026fd181",
+            "median_absolute_deviation_ns": "0x000000000007968c",
+            "maximum_ns": "0x000000000345c835"
+          }
+        }
+      },
+      "analysis": {
+        "accepted_count": 499483,
+        "selectivity_bps": 4763,
+        "stage_median_sum_ns": "0x0000000002550f1a",
+        "stage_pipeline_median_sum_ns": "0x00000000019ef2e8",
+        "stage_share_bps": {
+          "generation": 3050,
+          "normalize": 2258,
+          "score": 2193,
+          "filter": 2076,
+          "aggregate": 423
+        },
+        "dominant_stage": "generation",
+        "dominant_pipeline_stage": "normalize",
+        "fused_pipeline_median_ns_per_record_milli": 11808,
+        "stage_pass_pipeline_median_ns_per_record_milli": 25934,
+        "stage_pass_to_fused_pipeline_ratio_milli": 2196,
+        "fused_pipeline_median_absolute_deviation_bps": 74,
+        "profile_total_median_absolute_deviation_bps": 121
+      }
+    }
+  ]
+}

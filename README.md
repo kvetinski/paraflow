@@ -188,8 +188,8 @@ flowchart TD
 | -------------------- | ---------------------------------------------------------- | -------------------------------------- |
 | `paraflow-contracts` | Workload types, stage order, validation                    | Shared semantic authority              |
 | `paraflow-protocol`  | Lossless job/result transport types                        | Additional backend identifiers         |
-| `paraflow-engine`    | Generation, oracle, fused benchmark, stage profiler         | Task DAG, scheduling, backend dispatch |
-| `labctl`             | Diagnostics, orchestration, analysis, evidence persistence  | Result indexing and comparison         |
+| `paraflow-engine`    | Generation, oracle, fused benchmark, stage profiler        | Task DAG, scheduling, backend dispatch |
+| `labctl`             | Diagnostics, orchestration, analysis, evidence persistence | Result indexing and comparison         |
 | `abi`                | Documents boundary rules                                   | Narrow Rust-to-native C ABI            |
 | `kernels-cpp`        | Documents scope only                                       | Scalar, SIMD, ISPC, and CUDA kernels   |
 
@@ -199,7 +199,7 @@ flowchart TD
 | Workload    | What the computation means                                | `paraflow.workload/v1` frozen                        |
 | Execution   | Reusable Go-to-Rust correctness transactions              | Day 4 protocol v1 frozen                             |
 | Measurement | Fused warm-ups, samples, boundaries, and capture identity | Day 5 benchmark v1 frozen                            |
-| Profiling   | Explicit observer/topology and paired scalar analysis      | Day 6 profile/report v1                              |
+| Profiling   | Explicit observer/topology and paired scalar analysis     | Day 6 profile/report v1                              |
 | Native ABI  | Rust-to-C++ buffer calls                                  | constraints documented; implementation begins Week 2 |
 
 The Day 4 `serve` worker remains available for reusable correctness execution.
@@ -227,7 +227,6 @@ and diagnostic policies do not inflate or destabilize that protocol.
 │   └── paraflow-protocol/       # lossless execution and measurement types
 ├── kernels-cpp/                 # C++/ISPC starts Week 2; CUDA later
 ├── labctl-go/                   # control plane and evidence persistence
-├── questions/                   # schema-checked CS149 understanding evidence
 ├── results/raw/                 # ignored local immutable captures
 ├── tools/schema-check/          # pinned Draft 2020-12 validation
 └── workloads/                   # semantic workload fixtures
@@ -328,14 +327,17 @@ Or invoke the controller directly:
 The report retains both topologies. The printed stage-pass/fused ratio describes
 observer context and is never labeled a speedup.
 
+The checked-in clean-run evidence and its interpretation are available in the
+[Day 6 scalar baseline report](docs/reports/day06-scalar-baseline.md).
+
 ## Benchmark suites
 
 | Suite                           | Purpose                                                        |
 | ------------------------------- | -------------------------------------------------------------- |
 | `day05-smoke-v1.json`           | disposable fused integration evidence                          |
-| `day05-scalar-baseline-v1.json` | 1K, 64K uniform/hotspot, and 1M fused evidence                  |
+| `day05-scalar-baseline-v1.json` | 1K, 64K uniform/hotspot, and 1M fused evidence                 |
 | `day06-profile-smoke-v1.json`   | disposable paired fused/profile integration evidence           |
-| `day06-scalar-profile-v1.json`  | 1K, 64K uniform/hotspot, and 1M paired stage-analysis evidence  |
+| `day06-scalar-profile-v1.json`  | 1K, 64K uniform/hotspot, and 1M paired stage-analysis evidence |
 
 The two 64K workloads are identical except for the declared distribution, so
 the skew experiment changes one controlled variable. The full suite runs

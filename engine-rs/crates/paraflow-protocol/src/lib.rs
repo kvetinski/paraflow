@@ -7,6 +7,7 @@
 
 pub mod benchmark;
 mod hex;
+pub mod profile;
 
 use std::{error::Error, fmt};
 

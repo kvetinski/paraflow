@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvetinski/paraflow/blob/main/contracts/profile-engine-result-v1.schema.json",
+  "title": "ParaFlow scalar profile engine result v1",
+  "description": "Raw stage-pass samples and build identity returned by one Rust scalar profile process.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "experiment_id",
+    "scenario_name",
+    "workload_name",
+    "execution",
+    "sampling",
+    "timing",
+    "correctness",
+    "engine_build",
+    "samples",
+    "result"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "paraflow.profile-engine-result/v1"
+    },
+    "experiment_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]{0,63}$"
+    },
+    "scenario_name": {
+      "$ref": "#/$defs/name"
+    },
+    "workload_name": {
+      "$ref": "#/$defs/name"
+    },
+    "execution": {
+      "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/benchmark-suite-v1.schema.json#/$defs/execution"
+    },
+    "sampling": {
+      "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/benchmark-suite-v1.schema.json#/$defs/sampling"
+    },
+    "timing": {
+      "$ref": "#/$defs/timing"
+    },
+    "correctness": {
+      "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/benchmark-engine-result-v1.schema.json#/$defs/correctness"
+    },
+    "engine_build": {
+      "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/benchmark-engine-result-v1.schema.json#/$defs/engineBuild"
+    },
+    "samples": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10000,
+      "items": {
+        "$ref": "#/$defs/sample"
+      }
+    },
+    "result": {
+      "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/execution-protocol-v1.schema.json#/$defs/result"
+    }
+  },
+  "$defs": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "\\S"
+    },
+    "u64Hex": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{16}$"
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clock",
+        "unit",
+        "process_start_in_samples",
+        "topology",
+        "observer",
+        "experiment_total_ns"
+      ],
+      "properties": {
+        "clock": {
+          "const": "std::time::Instant"
+        },
+        "unit": {
+          "const": "nanoseconds"
+        },
+        "process_start_in_samples": {
+          "const": false
+        },
+        "topology": {
+          "const": "materialized-stage-passes-v1"
+        },
+        "observer": {
+          "const": "boundary-timers-v1"
+        },
+        "experiment_total_ns": {
+          "$ref": "#/$defs/u64Hex"
+        }
+      }
+    },
+    "sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ordinal",
+        "generation_ns",
+        "normalize_ns",
+        "score_ns",
+        "filter_ns",
+        "aggregate_ns",
+        "stage_sum_ns",
+        "profile_total_ns"
+      ],
+      "properties": {
+        "ordinal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9999
+        },
+        "generation_ns": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "normalize_ns": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "score_ns": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "filter_ns": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "aggregate_ns": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "stage_sum_ns": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "profile_total_ns": {
+          "$ref": "#/$defs/u64Hex"
+        }
+      }
+    }
+  }
+}

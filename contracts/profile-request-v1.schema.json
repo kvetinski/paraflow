@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvetinski/paraflow/blob/main/contracts/profile-request-v1.schema.json",
+  "title": "ParaFlow scalar profile request v1",
+  "description": "One self-contained diagnostic scalar stage-profile experiment sent from labctl to a Rust profile process.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "experiment_id",
+    "scenario_name",
+    "execution",
+    "sampling",
+    "workload"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "paraflow.profile-request/v1"
+    },
+    "experiment_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]{0,63}$"
+    },
+    "scenario_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "\\S"
+    },
+    "execution": {
+      "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/benchmark-suite-v1.schema.json#/$defs/execution"
+    },
+    "sampling": {
+      "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/benchmark-suite-v1.schema.json#/$defs/sampling"
+    },
+    "workload": {
+      "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/workload-v1.schema.json"
+    }
+  }
+}

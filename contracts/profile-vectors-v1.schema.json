@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvetinski/paraflow/blob/main/contracts/profile-vectors-v1.schema.json",
+  "title": "ParaFlow scalar profile protocol vectors v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "cases"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "paraflow.profile-vectors/v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "request",
+          "engine_result"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "request": {
+            "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/profile-request-v1.schema.json"
+          },
+          "engine_result": {
+            "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/profile-engine-result-v1.schema.json"
+          }
+        }
+      }
+    }
+  }
+}

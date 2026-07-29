@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/kvetinski/paraflow/blob/main/contracts/environment-v3.schema.json",
   "title": "ParaFlow environment report v3",
-  "description": "Host, source, and toolchain metadata captured for Day 5 benchmark evidence.",
+  "description": "Host, source, and toolchain metadata captured for Day 5 benchmark and Day 6 profile evidence.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -26,7 +26,10 @@
       "const": "paraflow.environment/v3"
     },
     "milestone": {
-      "const": "day-05"
+      "enum": [
+        "day-05",
+        "day-06"
+      ]
     },
     "captured_at": {
       "type": "string",

@@ -1,0 +1,333 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvetinski/paraflow/blob/main/contracts/scalar-profile-report-v1.schema.json",
+  "title": "ParaFlow scalar profile report v1",
+  "description": "A self-contained Day 6 report pairing the unchanged fused scalar baseline with diagnostic materialized stage-pass evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "started_at",
+    "completed_at",
+    "suite",
+    "controller",
+    "environment",
+    "engine_artifact",
+    "experiments"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "paraflow.scalar-profile-report/v1"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "suite": {
+      "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/benchmark-capture-v1.schema.json#/$defs/suiteIdentity"
+    },
+    "controller": {
+      "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/environment-v3.schema.json#/$defs/source"
+    },
+    "environment": {
+      "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/environment-v3.schema.json"
+    },
+    "engine_artifact": {
+      "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/benchmark-capture-v1.schema.json#/$defs/artifact"
+    },
+    "experiments": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/experiment"
+      }
+    }
+  },
+  "$defs": {
+    "u64Hex": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{16}$"
+    },
+    "portableInteger": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "statistics": {
+      "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/benchmark-capture-v1.schema.json#/$defs/statistics"
+    },
+    "profileSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generation",
+        "normalize",
+        "score",
+        "filter",
+        "aggregate",
+        "stage_sum",
+        "pipeline_stages",
+        "profile_total"
+      ],
+      "properties": {
+        "generation": {
+          "$ref": "#/$defs/statistics"
+        },
+        "normalize": {
+          "$ref": "#/$defs/statistics"
+        },
+        "score": {
+          "$ref": "#/$defs/statistics"
+        },
+        "filter": {
+          "$ref": "#/$defs/statistics"
+        },
+        "aggregate": {
+          "$ref": "#/$defs/statistics"
+        },
+        "stage_sum": {
+          "$ref": "#/$defs/statistics"
+        },
+        "pipeline_stages": {
+          "$ref": "#/$defs/statistics"
+        },
+        "profile_total": {
+          "$ref": "#/$defs/statistics"
+        }
+      }
+    },
+    "workloadIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "schema_version",
+        "name",
+        "record_count",
+        "category_count",
+        "distribution"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "schema_version": {
+          "const": "paraflow.workload/v1"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "\\S"
+        },
+        "record_count": {
+          "$ref": "#/$defs/portableInteger"
+        },
+        "category_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "distribution": {
+          "enum": [
+            "uniform",
+            "hotspot"
+          ]
+        }
+      }
+    },
+    "baselineEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "orchestration_total_ns",
+        "engine_result",
+        "summary"
+      ],
+      "properties": {
+        "orchestration_total_ns": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "engine_result": {
+          "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/benchmark-engine-result-v1.schema.json"
+        },
+        "summary": {
+          "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/benchmark-capture-v1.schema.json#/$defs/summary"
+        }
+      }
+    },
+    "stageProfileEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "orchestration_total_ns",
+        "engine_result",
+        "summary"
+      ],
+      "properties": {
+        "orchestration_total_ns": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "engine_result": {
+          "$ref": "https://github.com/kvetinski/paraflow/blob/main/contracts/profile-engine-result-v1.schema.json"
+        },
+        "summary": {
+          "$ref": "#/$defs/profileSummary"
+        }
+      }
+    },
+    "stageShares": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generation",
+        "normalize",
+        "score",
+        "filter",
+        "aggregate"
+      ],
+      "properties": {
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "normalize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "filter": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "aggregate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        }
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accepted_count",
+        "selectivity_bps",
+        "stage_median_sum_ns",
+        "stage_pipeline_median_sum_ns",
+        "stage_share_bps",
+        "dominant_stage",
+        "dominant_pipeline_stage",
+        "fused_pipeline_median_ns_per_record_milli",
+        "stage_pass_pipeline_median_ns_per_record_milli",
+        "stage_pass_to_fused_pipeline_ratio_milli",
+        "fused_pipeline_median_absolute_deviation_bps",
+        "profile_total_median_absolute_deviation_bps"
+      ],
+      "properties": {
+        "accepted_count": {
+          "$ref": "#/$defs/portableInteger"
+        },
+        "selectivity_bps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "stage_median_sum_ns": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "stage_pipeline_median_sum_ns": {
+          "$ref": "#/$defs/u64Hex"
+        },
+        "stage_share_bps": {
+          "$ref": "#/$defs/stageShares"
+        },
+        "dominant_stage": {
+          "enum": [
+            "generation",
+            "normalize",
+            "score",
+            "filter",
+            "aggregate"
+          ]
+        },
+        "dominant_pipeline_stage": {
+          "enum": [
+            "normalize",
+            "score",
+            "filter",
+            "aggregate"
+          ]
+        },
+        "fused_pipeline_median_ns_per_record_milli": {
+          "$ref": "#/$defs/portableInteger"
+        },
+        "stage_pass_pipeline_median_ns_per_record_milli": {
+          "$ref": "#/$defs/portableInteger"
+        },
+        "stage_pass_to_fused_pipeline_ratio_milli": {
+          "$ref": "#/$defs/portableInteger"
+        },
+        "fused_pipeline_median_absolute_deviation_bps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "profile_total_median_absolute_deviation_bps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "experiment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scenario_name",
+        "workload",
+        "baseline",
+        "stage_profile",
+        "analysis"
+      ],
+      "properties": {
+        "scenario_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "\\S"
+        },
+        "workload": {
+          "$ref": "#/$defs/workloadIdentity"
+        },
+        "baseline": {
+          "$ref": "#/$defs/baselineEvidence"
+        },
+        "stage_profile": {
+          "$ref": "#/$defs/stageProfileEvidence"
+        },
+        "analysis": {
+          "$ref": "#/$defs/analysis"
+        }
+      }
+    }
+  }
+}

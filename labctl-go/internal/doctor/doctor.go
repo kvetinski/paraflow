@@ -18,7 +18,7 @@ import (
 
 const (
 	reportSchema        = "paraflow.environment/v3"
-	currentMilestone    = "day-05"
+	currentMilestone    = "day-06"
 	defaultProbeTimeout = 2 * time.Second
 )
 
@@ -96,7 +96,7 @@ var tools = []Tool{
 		Command:     "rustc",
 		VersionArgs: []string{"--version"},
 		Required:    true,
-		Minimum:     "1.88.0",
+		Minimum:     "1.97.1",
 		Introduced:  "day-01",
 		Purpose:     "execution engine compiler",
 	},
@@ -105,7 +105,7 @@ var tools = []Tool{
 		Command:     "cargo",
 		VersionArgs: []string{"--version"},
 		Required:    true,
-		Minimum:     "1.88.0",
+		Minimum:     "1.97.1",
 		Introduced:  "day-01",
 		Purpose:     "Rust build and test orchestration",
 	},

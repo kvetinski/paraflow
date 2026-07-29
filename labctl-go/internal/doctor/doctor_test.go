@@ -32,9 +32,9 @@ func compatibleVersion(tool Tool) string {
 	case "go":
 		return "go version go1.24.0 linux/amd64"
 	case "rustc":
-		return "rustc 1.88.0 (test)"
+		return "rustc 1.97.1 (test)"
 	case "cargo":
-		return "cargo 1.88.0 (test)"
+		return "cargo 1.97.1 (test)"
 	case "node":
 		return "v20.0.0"
 	case "rustfmt":
@@ -59,7 +59,7 @@ func TestCheckIsReadyWhenRequiredToolsAreUsable(t *testing.T) {
 	if report.SchemaVersion != "paraflow.environment/v3" {
 		t.Fatalf("unexpected report schema: %q", report.SchemaVersion)
 	}
-	if report.Milestone != "day-05" {
+	if report.Milestone != "day-06" {
 		t.Fatalf("unexpected milestone: %q", report.Milestone)
 	}
 	if report.CapturedAt.IsZero() {
@@ -187,9 +187,9 @@ func TestCommandProbeAcceptsMinimumRequiredVersion(t *testing.T) {
 
 	tool := helperTool(
 		"rustc",
-		"1.88.0",
+		"1.97.1",
 		"version",
-		"rustc 1.88.0 (test)",
+		"rustc 1.97.1 (test)",
 	)
 	result := commandProbe(context.Background(), tool, 5*time.Second)
 
@@ -225,7 +225,7 @@ func TestReportStringLabelsRequirementsAndSource(t *testing.T) {
 		"cc      required",
 		"nvcc    planned",
 		"Source: test (commit 0123456789abcdef0123456789abcdef01234567, source clean)",
-		"Ready for current milestone (day-05): true",
+		"Ready for current milestone (day-06): true",
 	} {
 		if !strings.Contains(output, expected) {
 			t.Fatalf("expected output to contain %q:\n%s", expected, output)

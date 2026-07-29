@@ -137,6 +137,22 @@ func TestProjectWorkloadPreservesInvalidValuesForRustValidation(t *testing.T) {
 	}
 }
 
+func TestProjectWorkloadCapturesDistributionForPerformanceAnalysis(t *testing.T) {
+	t.Parallel()
+
+	projection, err := ProjectWorkload(json.RawMessage(
+		`{"schema_version":"paraflow.workload/v1","name":"profile",` +
+			`"dataset":{"record_count":64,"category_count":4,` +
+			`"distribution":{"kind":"hotspot"}}}`,
+	))
+	if err != nil {
+		t.Fatalf("ProjectWorkload() error = %v", err)
+	}
+	if projection.Distribution != "hotspot" {
+		t.Fatalf("Distribution = %q, want hotspot", projection.Distribution)
+	}
+}
+
 func TestDecodeCompletedResponseValidatesAndDecodesLosslessly(t *testing.T) {
 	t.Parallel()
 

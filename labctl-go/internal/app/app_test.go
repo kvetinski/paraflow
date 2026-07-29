@@ -20,9 +20,9 @@ func availableProbe(_ context.Context, tool doctor.Tool) doctor.ToolResult {
 	case "go":
 		version = "go version go1.24.0 linux/amd64"
 	case "rustc":
-		version = "rustc 1.88.0 (test)"
+		version = "rustc 1.97.1 (test)"
 	case "cargo":
-		version = "cargo 1.88.0 (test)"
+		version = "cargo 1.97.1 (test)"
 	case "node":
 		version = "v20.0.0"
 	case "rustfmt":
@@ -107,7 +107,7 @@ func TestDoctorJSON(t *testing.T) {
 	if report.SchemaVersion != "paraflow.environment/v3" {
 		t.Fatalf("unexpected report schema: %q", report.SchemaVersion)
 	}
-	if report.Milestone != "day-05" {
+	if report.Milestone != "day-06" {
 		t.Fatalf("unexpected report milestone: %q", report.Milestone)
 	}
 	if report.Source != testDependencies().Build {
@@ -272,6 +272,86 @@ func TestBenchmarkCommandRejectsIncompleteOrDuplicateFlags(t *testing.T) {
 		{"benchmark", "--engine", "engine"},
 		{"benchmark", "--engine", "engine", "--engine", "again", "--suite", "s", "--output", "o"},
 		{"benchmark", "--unknown", "x", "--engine", "e", "--suite", "s", "--output", "o"},
+	} {
+		exitCode, _, _ := runForTest(t, testDependencies(), args...)
+		if exitCode != 2 {
+			t.Fatalf("Run(%v) exit code = %d, want 2", args, exitCode)
+		}
+	}
+}
+
+func TestProfileCommandBuildsPairedReportAndPrintsInterpretation(t *testing.T) {
+	t.Parallel()
+
+	dependencies := testDependencies()
+	dependencies.RunProfile = func(
+		_ context.Context,
+		options benchmark.ProfileOptions,
+	) (benchmark.ScalarProfileReport, error) {
+		if options.EnginePath != "engine" || options.SuitePath != "suite.json" ||
+			options.OutputPath != "results/profile.json" ||
+			options.RepositoryRoot != "repo" {
+			t.Fatalf("unexpected profile options: %#v", options)
+		}
+		if options.Build != dependencies.Build || options.Probe == nil {
+			t.Fatalf("profile dependencies were not injected: %#v", options)
+		}
+		return benchmark.ScalarProfileReport{
+			Suite: benchmark.SuiteIdentity{Name: "day06 profile"},
+			Experiments: []benchmark.ProfileExperiment{{
+				ScenarioName: "uniform-64k",
+				Workload: benchmark.ProfileWorkloadIdentity{
+					RecordCount: 65_536,
+				},
+				Baseline: benchmark.BaselineEvidence{
+					Summary: benchmark.Summary{
+						Pipeline: benchmark.Statistics{MedianNS: 2_000},
+					},
+				},
+				Analysis: benchmark.ScenarioProfileAnalysis{
+					DominantStage:                      "generation",
+					DominantPipelineStage:              "normalize",
+					StagePassToFusedPipelineRatioMilli: 1_250,
+				},
+			}},
+		}, nil
+	}
+
+	exitCode, stdout, stderr := runForTest(
+		t,
+		dependencies,
+		"profile",
+		"--suite", "suite.json",
+		"--engine", "engine",
+		"--repository-root", "repo",
+		"--output", "results/profile.json",
+	)
+	if exitCode != 0 || stderr != "" {
+		t.Fatalf("exit = %d, stderr = %q", exitCode, stderr)
+	}
+	for _, expected := range []string{
+		"report: results/profile.json",
+		"suite: \"day06 profile\"",
+		"records=65536",
+		"fused_pipeline_median_ns=2000",
+		"dominant_pipeline_stage=normalize",
+		"stage_pass_to_fused_ratio_milli=1250",
+		"not a speedup claim",
+	} {
+		if !strings.Contains(stdout, expected) {
+			t.Fatalf("stdout missing %q:\n%s", expected, stdout)
+		}
+	}
+}
+
+func TestProfileCommandRejectsIncompleteOrDuplicateFlags(t *testing.T) {
+	t.Parallel()
+
+	for _, args := range [][]string{
+		{"profile"},
+		{"profile", "--engine", "engine"},
+		{"profile", "--engine", "engine", "--engine", "again", "--suite", "s", "--output", "o"},
+		{"profile", "--unknown", "x", "--engine", "e", "--suite", "s", "--output", "o"},
 	} {
 		exitCode, _, _ := runForTest(t, testDependencies(), args...)
 		if exitCode != 2 {

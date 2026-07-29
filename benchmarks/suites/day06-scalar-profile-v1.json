@@ -1,0 +1,52 @@
+{
+  "$schema": "../../contracts/benchmark-suite-v1.schema.json",
+  "schema_version": "paraflow.benchmark-suite/v1",
+  "name": "day06-scalar-profile-v1",
+  "description": "Paired fused and diagnostic stage-pass evidence across size and distribution. The profile topology is explanatory evidence, not an optimized backend.",
+  "scenarios": [
+    {
+      "name": "scalar-uniform-1k",
+      "workload": "workloads/bench-uniform-1k-v1.json",
+      "execution": {
+        "backend": "scalar"
+      },
+      "sampling": {
+        "warmup_iterations": 5,
+        "sample_iterations": 25
+      }
+    },
+    {
+      "name": "scalar-uniform-64k",
+      "workload": "workloads/bench-uniform-64k-v1.json",
+      "execution": {
+        "backend": "scalar"
+      },
+      "sampling": {
+        "warmup_iterations": 5,
+        "sample_iterations": 25
+      }
+    },
+    {
+      "name": "scalar-hotspot-64k",
+      "workload": "workloads/bench-hotspot-64k-v1.json",
+      "execution": {
+        "backend": "scalar"
+      },
+      "sampling": {
+        "warmup_iterations": 5,
+        "sample_iterations": 25
+      }
+    },
+    {
+      "name": "scalar-uniform-1m",
+      "workload": "workloads/bench-uniform-1m-v1.json",
+      "execution": {
+        "backend": "scalar"
+      },
+      "sampling": {
+        "warmup_iterations": 5,
+        "sample_iterations": 20
+      }
+    }
+  ]
+}

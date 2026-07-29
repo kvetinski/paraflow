@@ -42,6 +42,7 @@ type WorkloadProjection struct {
 	Name          string
 	RecordCount   uint64
 	CategoryCount uint64
+	Distribution  string
 }
 
 // ResultV1 is the losslessly decoded logical result of a workload execution.
@@ -158,6 +159,9 @@ func ProjectWorkload(raw json.RawMessage) (WorkloadProjection, error) {
 		Dataset       *struct {
 			RecordCount   *uint64 `json:"record_count"`
 			CategoryCount *uint64 `json:"category_count"`
+			Distribution  *struct {
+				Kind *string `json:"kind"`
+			} `json:"distribution"`
 		} `json:"dataset"`
 	}
 	if err := jsoncheck.Decode(raw, &value, false); err != nil {
@@ -181,11 +185,17 @@ func ProjectWorkload(raw json.RawMessage) (WorkloadProjection, error) {
 		)
 	}
 
+	distribution := ""
+	if value.Dataset.Distribution != nil && value.Dataset.Distribution.Kind != nil {
+		distribution = *value.Dataset.Distribution.Kind
+	}
+
 	return WorkloadProjection{
 		SchemaVersion: *value.SchemaVersion,
 		Name:          *value.Name,
 		RecordCount:   *value.Dataset.RecordCount,
 		CategoryCount: *value.Dataset.CategoryCount,
+		Distribution:  distribution,
 	}, nil
 }
 

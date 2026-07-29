@@ -36,59 +36,14 @@ func RunEngine(
 	workload protocol.WorkloadProjection,
 ) (EngineResult, Nanoseconds, error) {
 	started := time.Now()
-	if err := ctx.Err(); err != nil {
+	responseBytes, diagnostics, err := runOneShotEngine(
+		ctx,
+		enginePath,
+		"benchmark",
+		request,
+	)
+	if err != nil {
 		return EngineResult{}, 0, err
-	}
-	if strings.TrimSpace(enginePath) == "" {
-		return EngineResult{}, 0, errors.New("engine path must not be empty")
-	}
-
-	payload, err := json.Marshal(request)
-	if err != nil {
-		return EngineResult{}, 0, fmt.Errorf("encode benchmark request: %w", err)
-	}
-	if len(payload) > protocol.MaxFrameBytes {
-		return EngineResult{}, 0, fmt.Errorf(
-			"benchmark request is %d bytes; maximum is %d",
-			len(payload),
-			protocol.MaxFrameBytes,
-		)
-	}
-
-	stdout := newCappedBuffer(protocol.MaxFrameBytes + 3)
-	stderr := newTailBuffer(stderrTailBytes)
-	command := exec.CommandContext(ctx, enginePath, "benchmark")
-	command.Stdin = bytes.NewReader(payload)
-	command.Stdout = stdout
-	command.Stderr = stderr
-
-	if err := command.Run(); err != nil {
-		if contextError := ctx.Err(); contextError != nil {
-			return EngineResult{}, 0, contextError
-		}
-		return EngineResult{}, 0, processError("run benchmark process", err, stderr.String())
-	}
-	if stdout.Overflowed() {
-		return EngineResult{}, 0, fmt.Errorf(
-			"benchmark response exceeds %d payload bytes",
-			protocol.MaxFrameBytes,
-		)
-	}
-
-	responseBytes, err := benchmarkResponsePayload(stdout.Bytes())
-	if err != nil {
-		return EngineResult{}, 0, processError(
-			"read benchmark response",
-			err,
-			stderr.String(),
-		)
-	}
-	if len(bytes.TrimSpace(responseBytes)) == 0 {
-		return EngineResult{}, 0, processError(
-			"read benchmark response",
-			errors.New("engine emitted an empty response"),
-			stderr.String(),
-		)
 	}
 
 	var result EngineResult
@@ -96,14 +51,14 @@ func RunEngine(
 		return EngineResult{}, 0, processError(
 			"decode benchmark response",
 			err,
-			stderr.String(),
+			diagnostics,
 		)
 	}
 	if err := validateEngineResult(result, request, workload); err != nil {
 		return EngineResult{}, 0, processError(
 			"validate benchmark response",
 			err,
-			stderr.String(),
+			diagnostics,
 		)
 	}
 
@@ -116,10 +71,83 @@ func RunEngine(
 	return result, orchestration, nil
 }
 
+func runOneShotEngine(
+	ctx context.Context,
+	enginePath string,
+	subcommand string,
+	request any,
+) ([]byte, string, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, "", err
+	}
+	if strings.TrimSpace(enginePath) == "" {
+		return nil, "", errors.New("engine path must not be empty")
+	}
+	if strings.TrimSpace(subcommand) == "" {
+		return nil, "", errors.New("engine subcommand must not be empty")
+	}
+
+	payload, err := json.Marshal(request)
+	if err != nil {
+		return nil, "", fmt.Errorf("encode %s request: %w", subcommand, err)
+	}
+	if len(payload) > protocol.MaxFrameBytes {
+		return nil, "", fmt.Errorf(
+			"%s request is %d bytes; maximum is %d",
+			subcommand,
+			len(payload),
+			protocol.MaxFrameBytes,
+		)
+	}
+
+	stdout := newCappedBuffer(protocol.MaxFrameBytes + 3)
+	stderr := newTailBuffer(stderrTailBytes)
+	command := exec.CommandContext(ctx, enginePath, subcommand)
+	command.Stdin = bytes.NewReader(payload)
+	command.Stdout = stdout
+	command.Stderr = stderr
+
+	if err := command.Run(); err != nil {
+		if contextError := ctx.Err(); contextError != nil {
+			return nil, "", contextError
+		}
+		return nil, "", processError("run "+subcommand+" process", err, stderr.String())
+	}
+	if stdout.Overflowed() {
+		return nil, "", fmt.Errorf(
+			"%s response exceeds %d payload bytes",
+			subcommand,
+			protocol.MaxFrameBytes,
+		)
+	}
+
+	responseBytes, err := oneShotResponsePayload(stdout.Bytes(), subcommand)
+	if err != nil {
+		return nil, "", processError(
+			"read "+subcommand+" response",
+			err,
+			stderr.String(),
+		)
+	}
+	if len(bytes.TrimSpace(responseBytes)) == 0 {
+		return nil, "", processError(
+			"read "+subcommand+" response",
+			errors.New("engine emitted an empty response"),
+			stderr.String(),
+		)
+	}
+	return responseBytes, stderr.String(), nil
+}
+
 func benchmarkResponsePayload(raw []byte) ([]byte, error) {
+	return oneShotResponsePayload(raw, "benchmark")
+}
+
+func oneShotResponsePayload(raw []byte, boundary string) ([]byte, error) {
 	if len(raw) > protocol.MaxFrameBytes+2 {
 		return nil, fmt.Errorf(
-			"benchmark response exceeds %d payload bytes",
+			"%s response exceeds %d payload bytes",
+			boundary,
 			protocol.MaxFrameBytes,
 		)
 	}
@@ -131,11 +159,15 @@ func benchmarkResponsePayload(raw []byte) ([]byte, error) {
 		}
 	}
 	if len(payload) != 0 && (payload[len(payload)-1] == '\r' || payload[len(payload)-1] == '\n') {
-		return nil, errors.New("benchmark response may use only one optional LF or CRLF terminator")
+		return nil, fmt.Errorf(
+			"%s response may use only one optional LF or CRLF terminator",
+			boundary,
+		)
 	}
 	if len(payload) > protocol.MaxFrameBytes {
 		return nil, fmt.Errorf(
-			"benchmark response exceeds %d payload bytes",
+			"%s response exceeds %d payload bytes",
+			boundary,
 			protocol.MaxFrameBytes,
 		)
 	}

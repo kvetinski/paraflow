@@ -227,9 +227,9 @@ func availableBenchmarkProbe(_ context.Context, tool doctor.Tool) doctor.ToolRes
 	case "go":
 		version = "go version go1.24.0 linux/amd64"
 	case "rustc":
-		version = "rustc 1.88.0 (test)"
+		version = "rustc 1.97.1 (test)"
 	case "cargo":
-		version = "cargo 1.88.0 (test)"
+		version = "cargo 1.97.1 (test)"
 	case "node":
 		version = "v20.0.0"
 	case "bash":

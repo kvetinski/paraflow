@@ -23,13 +23,15 @@ const help = `ParaFlow experiment controller
 Usage:
   labctl run --engine <path> <workload.json>
   labctl benchmark --engine <path> --suite <suite.json> --output <capture.json> [--repository-root <path>]
+  labctl profile --engine <path> --suite <suite.json> --output <report.json> [--repository-root <path>]
   labctl doctor [--json]
   labctl version
   labctl help
 
 The run command verifies one workload through the versioned Rust worker.
-The benchmark command runs warm-ups and repeated samples inside one Rust
-process per scenario, then persists raw evidence and descriptive statistics.`
+The benchmark command captures the fused scalar baseline. The profile command
+pairs that unchanged baseline with diagnostic materialized stage passes and
+persists raw evidence plus integer-only analysis.`
 
 // BuildInfo identifies the controller binary.
 type BuildInfo = buildinfo.Info
@@ -47,6 +49,12 @@ type StartWorker func(context.Context, string) (WorkerSession, error)
 // RunBenchmark executes and persists one benchmark capture.
 type RunBenchmark func(context.Context, benchmark.Options) (benchmark.Capture, error)
 
+// RunProfile executes and persists one paired scalar profile report.
+type RunProfile func(
+	context.Context,
+	benchmark.ProfileOptions,
+) (benchmark.ScalarProfileReport, error)
+
 // Dependencies contains side effects injected into command dispatch.
 type Dependencies struct {
 	Build        BuildInfo
@@ -54,6 +62,7 @@ type Dependencies struct {
 	ReadFile     func(string) ([]byte, error)
 	StartWorker  StartWorker
 	RunBenchmark RunBenchmark
+	RunProfile   RunProfile
 }
 
 // Run dispatches a labctl command and returns a process-compatible exit code.
@@ -99,6 +108,14 @@ func Run(
 			stderr,
 			dependencies,
 		)
+	case "profile":
+		return runProfile(
+			ctx,
+			args[1:],
+			stdout,
+			stderr,
+			dependencies,
+		)
 	case "run":
 		return runWorkload(
 			ctx,
@@ -111,6 +128,105 @@ func Run(
 	default:
 		return usageError(stderr, fmt.Sprintf("unknown command %q", args[0]))
 	}
+}
+
+func runProfile(
+	ctx context.Context,
+	args []string,
+	stdout io.Writer,
+	stderr io.Writer,
+	dependencies Dependencies,
+) int {
+	options, err := parseProfileOptions(args)
+	if err != nil {
+		return usageError(stderr, err.Error())
+	}
+	options.Build = dependencies.Build
+	options.Probe = dependencies.Probe
+	options.ReadFile = dependencies.ReadFile
+
+	execute := dependencies.RunProfile
+	if execute == nil {
+		execute = benchmark.ExecuteProfile
+	}
+	report, err := execute(ctx, options)
+	if err != nil {
+		return commandError(stderr, fmt.Sprintf("profile suite: %v", err))
+	}
+
+	var builder strings.Builder
+	_, _ = fmt.Fprintf(
+		&builder,
+		"report: %s\nsuite: %q\nscenarios: %d\n",
+		options.OutputPath,
+		report.Suite.Name,
+		len(report.Experiments),
+	)
+	for _, experiment := range report.Experiments {
+		_, _ = fmt.Fprintf(
+			&builder,
+			"- %s: records=%d fused_pipeline_median_ns=%d dominant_stage=%s dominant_pipeline_stage=%s stage_pass_to_fused_ratio_milli=%d\n",
+			experiment.ScenarioName,
+			experiment.Workload.RecordCount,
+			experiment.Baseline.Summary.Pipeline.MedianNS.Uint64(),
+			experiment.Analysis.DominantStage,
+			experiment.Analysis.DominantPipelineStage,
+			experiment.Analysis.StagePassToFusedPipelineRatioMilli,
+		)
+	}
+	builder.WriteString(
+		"raw fused and stage-pass samples retained; observer ratio is not a speedup claim",
+	)
+	return write(stdout, builder.String())
+}
+
+func parseProfileOptions(args []string) (benchmark.ProfileOptions, error) {
+	if len(args) == 0 || len(args)%2 != 0 {
+		return benchmark.ProfileOptions{}, errors.New(
+			"profile requires --engine <path> --suite <suite.json> --output <report.json> [--repository-root <path>]",
+		)
+	}
+
+	options := benchmark.ProfileOptions{RepositoryRoot: "."}
+	seen := make(map[string]struct{})
+	for index := 0; index < len(args); index += 2 {
+		flag := args[index]
+		value := args[index+1]
+		if _, duplicate := seen[flag]; duplicate {
+			return benchmark.ProfileOptions{}, fmt.Errorf(
+				"profile flag %s was provided more than once",
+				flag,
+			)
+		}
+		seen[flag] = struct{}{}
+		if value == "" {
+			return benchmark.ProfileOptions{}, fmt.Errorf(
+				"profile flag %s requires a non-empty value",
+				flag,
+			)
+		}
+		switch flag {
+		case "--engine":
+			options.EnginePath = value
+		case "--suite":
+			options.SuitePath = value
+		case "--output":
+			options.OutputPath = value
+		case "--repository-root":
+			options.RepositoryRoot = value
+		default:
+			return benchmark.ProfileOptions{}, fmt.Errorf(
+				"unknown profile flag %q",
+				flag,
+			)
+		}
+	}
+	if options.EnginePath == "" || options.SuitePath == "" || options.OutputPath == "" {
+		return benchmark.ProfileOptions{}, errors.New(
+			"profile requires --engine <path> --suite <suite.json> --output <report.json>",
+		)
+	}
+	return options, nil
 }
 
 func runBenchmark(

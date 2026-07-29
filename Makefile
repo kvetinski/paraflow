@@ -5,7 +5,7 @@ GO_DIR := labctl-go
 GO_FILES := $(shell find $(GO_DIR) -type f -name '*.go' | sort)
 ENGINE_RELEASE_BIN := target/release/paraflow-engine
 LABCTL_BIN := bin/labctl
-VERSION := 0.1.0-alpha.2
+VERSION := 0.1.0-alpha.3
 GIT_COMMIT := $(shell git rev-parse HEAD 2>/dev/null || printf 'unknown')
 GIT_STATE := $(shell if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then printf 'unknown'; elif [[ -z "$$(git status --porcelain)" ]]; then printf 'clean'; else printf 'dirty'; fi)
 CARGO_BUILD_ENV := PARAFLOW_SOURCE_COMMIT="$(GIT_COMMIT)" PARAFLOW_SOURCE_STATE="$(GIT_STATE)"
@@ -171,8 +171,46 @@ benchmark-day05: benchmark-preflight ## Persist the full Day 5 scalar baseline u
 		--repository-root "$(CURDIR)"; \
 	printf 'persisted %s\n' "$$output"
 
+.PHONY: profile-conformance
+profile-conformance: rust-release-build go-build ## Verify Day 6 profiling contracts and the real Go-to-Rust stage boundary.
+	$(CARGO_BUILD_ENV) cargo test --locked --release -p paraflow-engine --test profile_v1
+	cd $(GO_DIR) && go test -count=1 ./internal/benchmark
+	cd $(GO_DIR) && \
+		PARAFLOW_ENGINE_PATH="$(abspath $(ENGINE_RELEASE_BIN))" \
+		PARAFLOW_REPOSITORY_ROOT="$(CURDIR)" \
+		go test -count=1 ./internal/benchmark \
+			-run '^TestRealEngineProfilesEveryScalarStageInsideOneProcess$$'
+
+.PHONY: profile-preflight
+profile-preflight: benchmark-preflight profile-conformance go-build-smoke ## Verify paired baseline/profile readiness without persisting evidence.
+	$(LABCTL_BIN) doctor
+
+.PHONY: profile-smoke
+profile-smoke: profile-preflight ## Run disposable paired Day 6 evidence with no timing threshold.
+	@output="$(CURDIR)/results/raw/.day06-profile-smoke-$${RANDOM}-$${RANDOM}.json"; \
+	rm -f "$$output"; \
+	trap 'rm -f "$$output"' EXIT; \
+	$(LABCTL_BIN) profile \
+		--engine "$(abspath $(ENGINE_RELEASE_BIN))" \
+		--suite benchmarks/suites/day06-profile-smoke-v1.json \
+		--output "$$output" \
+		--repository-root "$(CURDIR)"; \
+	test -s "$$output"
+
+.PHONY: profile-day06
+profile-day06: profile-preflight ## Persist the full Day 6 paired scalar profile under results/raw/.
+	@timestamp="$$(date -u +%Y%m%dT%H%M%SZ)"; \
+	short_commit="$$(printf '%s' '$(GIT_COMMIT)' | cut -c1-12)"; \
+	output="$(CURDIR)/results/raw/day06-scalar-profile-$${timestamp}-$${short_commit}.json"; \
+	$(LABCTL_BIN) profile \
+		--engine "$(abspath $(ENGINE_RELEASE_BIN))" \
+		--suite benchmarks/suites/day06-scalar-profile-v1.json \
+		--output "$$output" \
+		--repository-root "$(CURDIR)"; \
+	printf 'persisted %s\n' "$$output"
+
 .PHONY: check
-check: contract-check rust-check workload-check go-check scalar-conformance protocol-conformance benchmark-conformance ## Run every current quality gate.
+check: contract-check rust-check workload-check go-check scalar-conformance protocol-conformance benchmark-conformance profile-conformance ## Run every current quality gate.
 
 .PHONY: clean
 clean: ## Remove generated build outputs.

@@ -1,0 +1,19 @@
+{
+  "$schema": "../../contracts/benchmark-suite-v1.schema.json",
+  "schema_version": "paraflow.benchmark-suite/v1",
+  "name": "day06-profile-smoke-v1",
+  "description": "Fast paired fused-baseline and materialized-stage-profile integration check. Timings never become a CI threshold.",
+  "scenarios": [
+    {
+      "name": "scalar-uniform-1k-profile-smoke",
+      "workload": "workloads/bench-uniform-1k-v1.json",
+      "execution": {
+        "backend": "scalar"
+      },
+      "sampling": {
+        "warmup_iterations": 1,
+        "sample_iterations": 3
+      }
+    }
+  ]
+}

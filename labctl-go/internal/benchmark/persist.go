@@ -12,9 +12,19 @@ import (
 // publishes it with an atomic no-overwrite hard link. Existing evidence is
 // never silently replaced.
 func PersistCapture(path string, capture Capture) error {
-	payload, err := json.MarshalIndent(capture, "", "  ")
+	return persistJSONNoOverwrite(path, capture)
+}
+
+// PersistScalarProfileReport atomically publishes one complete Day 6 report
+// without replacing existing evidence.
+func PersistScalarProfileReport(path string, report ScalarProfileReport) error {
+	return persistJSONNoOverwrite(path, report)
+}
+
+func persistJSONNoOverwrite(path string, value any) error {
+	payload, err := json.MarshalIndent(value, "", "  ")
 	if err != nil {
-		return fmt.Errorf("encode capture: %w", err)
+		return fmt.Errorf("encode evidence: %w", err)
 	}
 	payload = append(payload, '\n')
 

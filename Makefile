@@ -226,7 +226,17 @@ evidence-check: go-build ## Replay deterministic checks for every curated eviden
 			--json \
 			--repository-root "$(CURDIR)" \
 			"$$evidence_path" >/dev/null; \
-	done
+	done; \
+	receipt="$$(mktemp)"; \
+	trap 'rm -f "$$receipt"' EXIT; \
+	$(LABCTL_BIN) verify \
+		--json \
+		--repository-root "$(CURDIR)" \
+		results/day06/day06-scalar-profile-df96257.json >"$$receipt"; \
+	cmp --silent results/day07/day07-evidence-verification.json "$$receipt" || { \
+		printf 'checked-in Day 7 verification receipt is stale\n' >&2; \
+		exit 1; \
+	}
 
 .PHONY: evidence-benchmark
 evidence-benchmark: ## Measure offline verification of the checked-in 190-sample report.

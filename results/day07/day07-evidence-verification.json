@@ -1,0 +1,12 @@
+{
+  "schema_version": "paraflow.evidence-verification/v1",
+  "status": "passed",
+  "evidence_path": "results/day06/day06-scalar-profile-df96257.json",
+  "evidence_sha256": "f9c4604aa99750326fd3e7337caeab0bb43fbf9a282529726fbeddc80fb1a1cb",
+  "evidence_schema": "paraflow.scalar-profile-report/v1",
+  "suite_name": "day06-scalar-profile-v1",
+  "experiment_count": 4,
+  "retained_sample_count": 190,
+  "repository_identities_verified": 5,
+  "engine_artifact_verified": false
+}

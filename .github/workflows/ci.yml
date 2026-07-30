@@ -86,7 +86,7 @@ jobs:
         run: make protocol-conformance
 
   evidence:
-    name: Day 6 paired evidence
+    name: Week 1 release evidence
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -111,6 +111,9 @@ jobs:
           node-version: "24"
           cache: npm
           cache-dependency-path: tools/schema-check/package-lock.json
+
+      - name: Verify curated evidence and release versions
+        run: make evidence-check version-check
 
       - name: Exercise disposable paired scalar profile
         run: make profile-smoke

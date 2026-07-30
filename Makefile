@@ -5,7 +5,8 @@ GO_DIR := labctl-go
 GO_FILES := $(shell find $(GO_DIR) -type f -name '*.go' | sort)
 ENGINE_RELEASE_BIN := target/release/paraflow-engine
 LABCTL_BIN := bin/labctl
-VERSION := 0.1.0-alpha.3
+VERSION_FILE := VERSION
+VERSION := $(strip $(shell sed -n '1p' $(VERSION_FILE)))
 GIT_COMMIT := $(shell git rev-parse HEAD 2>/dev/null || printf 'unknown')
 GIT_STATE := $(shell if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then printf 'unknown'; elif [[ -z "$$(git status --porcelain)" ]]; then printf 'clean'; else printf 'dirty'; fi)
 CARGO_BUILD_ENV := PARAFLOW_SOURCE_COMMIT="$(GIT_COMMIT)" PARAFLOW_SOURCE_STATE="$(GIT_STATE)"
@@ -86,6 +87,10 @@ go-build-smoke: go-build
 
 .PHONY: go-check
 go-check: go-fmt-check go-lint go-test go-build-smoke ## Run all Go quality gates.
+
+.PHONY: version-check
+version-check: rust-release-build go-build ## Verify one release version across the repository and both binaries.
+	./tools/check-version.sh
 
 .PHONY: contract-check
 contract-check: ## Check machine-readable contracts and fixtures.
@@ -209,8 +214,33 @@ profile-day06: profile-preflight ## Persist the full Day 6 paired scalar profile
 		--repository-root "$(CURDIR)"; \
 	printf 'persisted %s\n' "$$output"
 
+.PHONY: evidence-check
+evidence-check: go-build ## Replay deterministic checks for every curated evidence artifact.
+	@mapfile -t evidence_files < <(find results/day06 -type f -name '*.json' -print | sort); \
+	[[ "$${#evidence_files[@]}" -gt 0 ]] || { \
+		printf 'no curated evidence artifacts found\n' >&2; \
+		exit 1; \
+	}; \
+	for evidence_path in "$${evidence_files[@]}"; do \
+		$(LABCTL_BIN) verify \
+			--json \
+			--repository-root "$(CURDIR)" \
+			"$$evidence_path" >/dev/null; \
+	done
+
+.PHONY: evidence-benchmark
+evidence-benchmark: ## Measure offline verification of the checked-in 190-sample report.
+	cd $(GO_DIR) && go test \
+		-run '^$$' \
+		-bench '^BenchmarkVerifyCheckedInScalarProfile$$' \
+		-benchmem \
+		./internal/benchmark
+
 .PHONY: check
-check: contract-check rust-check workload-check go-check scalar-conformance protocol-conformance benchmark-conformance profile-conformance ## Run every current quality gate.
+check: contract-check rust-check workload-check go-check scalar-conformance protocol-conformance benchmark-conformance profile-conformance evidence-check version-check ## Run every current quality gate.
+
+.PHONY: release-check
+release-check: check profile-smoke ## Qualify the Week 1 scalar v0.1.0 release checkpoint.
 
 .PHONY: clean
 clean: ## Remove generated build outputs.

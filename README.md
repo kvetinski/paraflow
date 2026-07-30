@@ -30,33 +30,37 @@ This repository is not a collection of disconnected assignments. Every future
 backend must preserve the same workload semantics and pass the same correctness
 oracle before its performance is considered.
 
-## Current milestone: Day 6
+## Current milestone: Week 1 scalar release (`v0.1.0`)
 
-Day 6 explains the scalar baseline without optimizing it:
+Day 7 seals the scalar correctness and measurement foundation before any
+optimization:
 
-- the fused Day 5 benchmark remains unchanged as the comparison denominator;
-- a separate `materialized-stage-passes-v1` profile exposes generation,
-  normalize, score, filter, and aggregate boundaries;
-- one coarse `boundary-timers-v1` observer surrounds each complete pass—never
-  each record;
-- every warm-up and retained profile iteration matches the streaming scalar
-  oracle exactly;
-- Go pairs a fresh fused baseline and stage profile for every scenario;
-- scenario, workload, sampling, release build, source identity, engine hash,
-  and exact canonical results must agree;
-- all fused and profile samples remain in one self-contained immutable report;
-- median/MAD, selectivity, stage shares, dominant stages, per-record costs, and
-  observer/topology ratios use overflow-checked integer calculations;
-- shared schemas, conformance fixtures, real release-process tests, and 24
-  understanding questions make the milestone reviewable.
+- `labctl verify` strictly decodes Day 5 captures and Day 6 paired reports;
+- suite and workload paths are resolved inside an explicit repository root and
+  their SHA-256 identities are checked against current bytes;
+- raw engine results, timing conservation, source/build alignment, and
+  orchestration boundaries are validated again;
+- every median/MAD summary and every Day 6 analysis field is recomputed from
+  retained raw samples;
+- an explicitly supplied engine binary can be checked against the recorded
+  digest; otherwise the receipt states that only its recorded identity was
+  available;
+- one root `VERSION` is checked against Go, all Rust workspace crates, Cargo
+  metadata, and both release binaries;
+- CI runs deterministic evidence and version gates plus a disposable paired
+  smoke experiment without imposing a noisy timing threshold;
+- adversarial tests prove unknown schemas/fields, rewritten summaries,
+  repository drift, source drift, impossible timing, and binary mismatch fail
+  closed and never rewrite evidence;
+- a schema-checked Day 7 set adds 24 cumulative CS149 understanding questions.
 
-The materialized stage profile changes allocation, fusion, and memory access.
-Its values are diagnostic evidence, not an exact decomposition of the fused
-loop and not a speedup claim.
+No SIMD, multicore, task runtime, GPU, or speedup claim is introduced by this
+release. The materialized Day 6 stage profile remains diagnostic rather than an
+exact decomposition of the fused loop.
 
 The complete implementation map, design, tests, benchmark setup, limitations,
 and expected GitHub outcome are in
-[`docs/plans/day-06.md`](docs/plans/day-06.md).
+[`docs/plans/day-07.md`](docs/plans/day-07.md).
 
 ## Why the paired evidence is credible
 
@@ -227,9 +231,13 @@ and diagnostic policies do not inflate or destabilize that protocol.
 │   └── paraflow-protocol/       # lossless execution and measurement types
 ├── kernels-cpp/                 # C++/ISPC starts Week 2; CUDA later
 ├── labctl-go/                   # control plane and evidence persistence
-├── results/raw/                 # ignored local immutable captures
+├── results/
+│   ├── day06/                   # curated paired scalar evidence
+│   ├── day07/                   # deterministic verification receipt
+│   └── raw/                     # ignored local immutable captures
 ├── tools/schema-check/          # pinned Draft 2020-12 validation
-└── workloads/                   # semantic workload fixtures
+├── workloads/                   # semantic workload fixtures
+└── VERSION                      # single Week 1 release version
 ```
 
 ## Requirements
@@ -249,6 +257,13 @@ Run every deterministic quality gate:
 
 ```bash
 make check
+```
+
+Run the complete Week 1 release qualification, including a disposable paired
+profile:
+
+```bash
+make release-check
 ```
 
 Inspect machine and toolchain readiness:
@@ -330,6 +345,28 @@ observer context and is never labeled a speedup.
 The checked-in clean-run evidence and its interpretation are available in the
 [Day 6 scalar baseline report](docs/reports/day06-scalar-baseline.md).
 
+Replay every deterministic check over that historical evidence without
+collecting new timing data:
+
+```bash
+make evidence-check
+
+./bin/labctl verify \
+  --json \
+  --repository-root . \
+  results/day06/day06-scalar-profile-df96257.json
+```
+
+Add `--engine ./target/release/paraflow-engine` only when verifying evidence
+captured from those exact binary bytes. A normal rebuild from a later commit is
+correctly expected to have a different digest.
+
+Benchmark the verifier itself, independently from engine performance:
+
+```bash
+make evidence-benchmark
+```
+
 ## Benchmark suites
 
 | Suite                           | Purpose                                                        |
@@ -359,7 +396,11 @@ median and MAD; it does not turn timing into a CI threshold.
 - real release Go-to-Rust stage-profile integration;
 - exact-limit LF/CRLF framing, unsupported-terminator rejection, and oversized-payload rejection;
 - exact stage conservation, paired-result equality, source alignment, and
-  engine-mutation rejection before persistence.
+  engine-mutation rejection before persistence;
+- offline replay of curated suite/workload identities, raw-result invariants,
+  summaries, and integer-only analysis;
+- adversarial evidence mutation tests and exact cross-language release-version
+  alignment.
 
 `make benchmark-smoke` and `make profile-smoke` additionally prove that complete
 evidence can be produced in the current environment. They check structure and
@@ -367,8 +408,8 @@ correctness only, never a fixed latency.
 
 ## Evidence and limitations
 
-A Day 6 report records enough identity to reproduce both experiment topologies,
-but its analysis still has explicit limitations:
+The `v0.1.0` checkpoint makes a Day 6 report independently auditable, but its
+performance interpretation still has explicit limitations:
 
 - no CPU pinning or NUMA policy;
 - no forced frequency or turbo policy;
@@ -387,9 +428,10 @@ but its analysis still has explicit limitations:
 3. Go-to-Rust experiment protocol — **complete**;
 4. reproducible benchmark harness — **complete**;
 5. observer-aware scalar profiling and analysis — **complete**;
-6. SIMD/ISPC kernels;
-7. multicore task execution and scheduling;
-8. CUDA and heterogeneous execution.
+6. offline evidence verification and scalar release qualification — **complete**;
+7. SIMD/ISPC kernels;
+8. multicore task execution and scheduling;
+9. CUDA and heterogeneous execution.
 
 These are not hidden defects. They define the questions later layout and runtime
 experiments must answer. `make profile-day06` produces a fresh report on the
@@ -407,9 +449,10 @@ See [`docs/benchmark-methodology.md`](docs/benchmark-methodology.md) and
 - [ADR 0005 — Long-lived versioned worker protocol](docs/adr/0005-long-lived-versioned-worker-protocol.md)
 - [ADR 0006 — Engine-owned sampling and immutable captures](docs/adr/0006-engine-owned-sampling-and-immutable-captures.md)
 - [ADR 0007 — Observer-aware scalar profiling](docs/adr/0007-observer-aware-scalar-profiling.md)
+- [ADR 0008 — Offline verification and release qualification](docs/adr/0008-offline-verification-and-release-qualification.md)
 
 ## Next milestone
 
-Day 7 hardens reproducibility, documentation, failure behavior, and curated
-evidence before tagging the Week 1 scalar `v0.1` baseline. SIMD work begins only
-after that stable checkpoint.
+Week 2 introduces the narrow native ABI and a C++ scalar backend against the
+tagged `v0.1.0` Rust oracle. SIMD work begins only after the C++ scalar path
+matches every existing workload and result invariant.

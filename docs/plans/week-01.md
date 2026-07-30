@@ -92,10 +92,16 @@ No SIMD, multicore, GPU, or bottleneck claim is made yet.
 
 No optimization, SIMD, multicore, GPU, or speedup claim is made.
 
-## Day 7 — `v0.1`
+## Day 7 — Completed `v0.1.0` qualification
 
-Harden documentation, CI, reproducibility, and failure behavior. Tag the scalar
-baseline before SIMD work begins.
+- Strict offline verification for Day 5 captures and Day 6 paired reports.
+- Repository-confined suite/workload resolution and SHA-256 identity replay.
+- Raw-result, timing, source/build, summary, and profile-analysis recomputation.
+- Optional explicit engine-byte verification with an honest receipt bit.
+- One release version checked across Go, Rust, Cargo metadata, and binaries.
+- CI and local release gates with deterministic checks and threshold-free smoke.
+- Adversarial failure coverage, ADR/changelog, and 24 cumulative questions.
+- Annotated Week 1 scalar checkpoint before native or parallel work begins.
 
 ## Extension rules
 

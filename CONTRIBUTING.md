@@ -10,6 +10,15 @@ make check
 
 before committing.
 
+Before creating a release tag, run:
+
+```bash
+make release-check
+```
+
+This adds curated-evidence replay, compiled version alignment, and a disposable
+paired profile. The smoke profile has no fixed timing threshold.
+
 ## Commit style
 
 Use focused conventional commits:

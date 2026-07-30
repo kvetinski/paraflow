@@ -107,7 +107,7 @@ func TestDoctorJSON(t *testing.T) {
 	if report.SchemaVersion != "paraflow.environment/v3" {
 		t.Fatalf("unexpected report schema: %q", report.SchemaVersion)
 	}
-	if report.Milestone != "day-06" {
+	if report.Milestone != "day-07" {
 		t.Fatalf("unexpected report milestone: %q", report.Milestone)
 	}
 	if report.Source != testDependencies().Build {
@@ -357,6 +357,133 @@ func TestProfileCommandRejectsIncompleteOrDuplicateFlags(t *testing.T) {
 		if exitCode != 2 {
 			t.Fatalf("Run(%v) exit code = %d, want 2", args, exitCode)
 		}
+	}
+}
+
+func TestVerifyCommandPassesBoundariesAndEmitsMachineReceipt(t *testing.T) {
+	t.Parallel()
+
+	dependencies := testDependencies()
+	dependencies.ReadFile = func(string) ([]byte, error) {
+		return nil, errors.New("not called by injected verifier")
+	}
+	dependencies.VerifyEvidence = func(
+		options benchmark.VerifyOptions,
+	) (benchmark.EvidenceVerification, error) {
+		if options.EvidencePath != "results/day06/report.json" ||
+			options.RepositoryRoot != "repo" ||
+			options.EnginePath != "target/release/paraflow-engine" ||
+			options.ReadFile == nil {
+			t.Fatalf("unexpected verify options: %#v", options)
+		}
+		return benchmark.EvidenceVerification{
+			SchemaVersion:                benchmark.EvidenceVerificationSchema,
+			Status:                       "passed",
+			EvidencePath:                 options.EvidencePath,
+			EvidenceSHA256:               strings.Repeat("a", 64),
+			EvidenceSchema:               benchmark.ScalarProfileReportSchema,
+			SuiteName:                    "day06 profile",
+			ExperimentCount:              4,
+			RetainedSampleCount:          190,
+			RepositoryIdentitiesVerified: 5,
+			EngineArtifactVerified:       true,
+		}, nil
+	}
+
+	exitCode, stdout, stderr := runForTest(
+		t,
+		dependencies,
+		"verify",
+		"--json",
+		"--repository-root", "repo",
+		"results/day06/report.json",
+		"--engine", "target/release/paraflow-engine",
+	)
+	if exitCode != 0 || stderr != "" {
+		t.Fatalf("exit = %d, stderr = %q", exitCode, stderr)
+	}
+	var receipt benchmark.EvidenceVerification
+	if err := json.Unmarshal([]byte(stdout), &receipt); err != nil {
+		t.Fatalf("decode verification receipt: %v", err)
+	}
+	if receipt.Status != "passed" || !receipt.EngineArtifactVerified ||
+		receipt.RetainedSampleCount != 190 {
+		t.Fatalf("unexpected receipt: %#v", receipt)
+	}
+}
+
+func TestVerifyCommandPrintsIdentityOnlyStatusWithoutEngineBytes(t *testing.T) {
+	t.Parallel()
+
+	dependencies := testDependencies()
+	dependencies.VerifyEvidence = func(
+		options benchmark.VerifyOptions,
+	) (benchmark.EvidenceVerification, error) {
+		return benchmark.EvidenceVerification{
+			SchemaVersion:                benchmark.EvidenceVerificationSchema,
+			Status:                       "passed",
+			EvidencePath:                 options.EvidencePath,
+			EvidenceSHA256:               strings.Repeat("b", 64),
+			EvidenceSchema:               benchmark.CaptureSchema,
+			SuiteName:                    "baseline",
+			ExperimentCount:              1,
+			RetainedSampleCount:          5,
+			RepositoryIdentitiesVerified: 2,
+		}, nil
+	}
+
+	exitCode, stdout, stderr := runForTest(
+		t,
+		dependencies,
+		"verify",
+		"capture.json",
+	)
+	if exitCode != 0 || stderr != "" {
+		t.Fatalf("exit = %d, stderr = %q", exitCode, stderr)
+	}
+	for _, expected := range []string{
+		"status: passed",
+		"schema: paraflow.benchmark-capture/v1",
+		"retained_samples: 5",
+		"engine_artifact: identity recorded; bytes not supplied",
+	} {
+		if !strings.Contains(stdout, expected) {
+			t.Fatalf("stdout missing %q:\n%s", expected, stdout)
+		}
+	}
+}
+
+func TestVerifyCommandRejectsInvalidArgumentsAndVerificationFailure(t *testing.T) {
+	t.Parallel()
+
+	for _, args := range [][]string{
+		{"verify"},
+		{"verify", "--json", "--json", "report.json"},
+		{"verify", "--engine", "report.json"},
+		{"verify", "--repository-root", "--json", "report.json"},
+		{"verify", "--future", "report.json"},
+		{"verify", "one.json", "two.json"},
+	} {
+		exitCode, _, _ := runForTest(t, testDependencies(), args...)
+		if exitCode != 2 {
+			t.Fatalf("Run(%v) exit code = %d, want 2", args, exitCode)
+		}
+	}
+
+	dependencies := testDependencies()
+	dependencies.VerifyEvidence = func(
+		benchmark.VerifyOptions,
+	) (benchmark.EvidenceVerification, error) {
+		return benchmark.EvidenceVerification{}, errors.New("summary mismatch")
+	}
+	exitCode, _, stderr := runForTest(
+		t,
+		dependencies,
+		"verify",
+		"report.json",
+	)
+	if exitCode != 1 || !strings.Contains(stderr, "summary mismatch") {
+		t.Fatalf("exit = %d, stderr = %q", exitCode, stderr)
 	}
 }
 

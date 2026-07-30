@@ -24,6 +24,8 @@ const EXPECTED_PROFILE_ENGINE_RESULT_SCHEMA =
 const EXPECTED_PROFILE_VECTOR_SCHEMA = "paraflow.profile-vectors/v1";
 const EXPECTED_SCALAR_PROFILE_REPORT_SCHEMA =
   "paraflow.scalar-profile-report/v1";
+const EXPECTED_EVIDENCE_VERIFICATION_SCHEMA =
+  "paraflow.evidence-verification/v1";
 const toolDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(toolDirectory, "../..");
 const workloadSchemaPath = path.join(
@@ -119,6 +121,11 @@ const scalarProfileReportSchemaPath = path.join(
   "contracts",
   "scalar-profile-report-v1.schema.json",
 );
+const evidenceVerificationSchemaPath = path.join(
+  repositoryRoot,
+  "contracts",
+  "evidence-verification-v1.schema.json",
+);
 const benchmarkVectorFixturePath = path.join(
   repositoryRoot,
   "contracts",
@@ -143,8 +150,19 @@ const scalarProfileReportFixturePath = path.join(
   "conformance",
   "scalar-profile-report-v1.json",
 );
+const evidenceVerificationFixturePath = path.join(
+  repositoryRoot,
+  "contracts",
+  "conformance",
+  "evidence-verification-v1.json",
+);
 const benchmarkSuitesDirectory = path.join(repositoryRoot, "benchmarks", "suites");
 const curatedResultsDirectory = path.join(repositoryRoot, "results", "day06");
+const curatedVerificationsDirectory = path.join(
+  repositoryRoot,
+  "results",
+  "day07",
+);
 const workloadsDirectory = path.join(repositoryRoot, "workloads");
 
 function readJSON(filePath) {
@@ -243,6 +261,7 @@ const profileRequestSchema = readJSON(profileRequestSchemaPath);
 const profileEngineResultSchema = readJSON(profileEngineResultSchemaPath);
 const profileVectorSchema = readJSON(profileVectorSchemaPath);
 const scalarProfileReportSchema = readJSON(scalarProfileReportSchemaPath);
+const evidenceVerificationSchema = readJSON(evidenceVerificationSchemaPath);
 
 for (const [label, actual, expected] of [
   [
@@ -295,6 +314,11 @@ for (const [label, actual, expected] of [
     scalarProfileReportSchema.properties?.schema_version?.const,
     EXPECTED_SCALAR_PROFILE_REPORT_SCHEMA,
   ],
+  [
+    "evidence verification",
+    evidenceVerificationSchema.properties?.schema_version?.const,
+    EXPECTED_EVIDENCE_VERIFICATION_SCHEMA,
+  ],
 ]) {
   if (actual !== expected) {
     throw new Error(
@@ -324,6 +348,7 @@ for (const schema of [
   profileEngineResultSchema,
   profileVectorSchema,
   scalarProfileReportSchema,
+  evidenceVerificationSchema,
 ]) {
   ajv.addSchema(schema);
 }
@@ -348,7 +373,7 @@ const validateProfileRequest = validator(profileRequestSchema);
 const validateProfileEngineResult = validator(profileEngineResultSchema);
 const validateProfileVectors = validator(profileVectorSchema);
 const validateScalarProfileReport = validator(scalarProfileReportSchema);
-
+const validateEvidenceVerification = validator(evidenceVerificationSchema);
 const workloadPaths = fs
   .readdirSync(workloadsDirectory, { withFileTypes: true })
   .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
@@ -1108,6 +1133,32 @@ for (const reportPath of scalarProfileReportPaths) {
   }
 }
 
+const evidenceVerificationFixture = readJSON(evidenceVerificationFixturePath);
+if (!validateEvidenceVerification(evidenceVerificationFixture)) {
+  failed = true;
+  reportValidationErrors(
+    path.relative(repositoryRoot, evidenceVerificationFixturePath),
+    validateEvidenceVerification,
+  );
+}
+const curatedVerificationPaths = fs.existsSync(curatedVerificationsDirectory)
+  ? fs
+    .readdirSync(curatedVerificationsDirectory, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+    .map((entry) => path.join(curatedVerificationsDirectory, entry.name))
+    .sort()
+  : [];
+for (const verificationPath of curatedVerificationPaths) {
+  const verification = readJSON(verificationPath);
+  if (!validateEvidenceVerification(verification)) {
+    failed = true;
+    reportValidationErrors(
+      path.relative(repositoryRoot, verificationPath),
+      validateEvidenceVerification,
+    );
+  }
+}
+
 const invalidProfileCases = [
   [
     "wrong-width profile duration",
@@ -1165,6 +1216,27 @@ if (
   console.error("profile semantic regression accepted an incorrect stage sum");
 }
 
+const invalidEvidenceVerificationCases = [
+  [
+    "non-canonical verification digest",
+    { ...evidenceVerificationFixture, evidence_sha256: "0x01" },
+  ],
+  [
+    "failed verification receipt",
+    { ...evidenceVerificationFixture, status: "failed" },
+  ],
+  [
+    "unknown verification field",
+    { ...evidenceVerificationFixture, unexpected: true },
+  ],
+];
+for (const [label, invalid] of invalidEvidenceVerificationCases) {
+  if (validateEvidenceVerification(invalid)) {
+    failed = true;
+    console.error(`evidence verification schema regression accepted: ${label}`);
+  }
+}
+
 const rejectionCount =
   invalidCases.length +
   invalidVectorCases.length +
@@ -1172,12 +1244,14 @@ const rejectionCount =
   invalidExecutionVectorCases.length +
   invalidExecutionProtocolCases.length +
   invalidBenchmarkCases.length +
-  invalidProfileCases.length + 1;
+  invalidProfileCases.length +
+  1 +
+  invalidEvidenceVerificationCases.length;
 
 if (failed) {
   process.exitCode = 1;
 } else {
   console.log(
-    `JSON Schema validation passed (${workloadPaths.length} workload(s), 7 conformance fixtures, ${curatedReportPaths.length} curated report(s), ${rejectionCount} rejection cases)`,
+    `JSON Schema validation passed (${workloadPaths.length} workload(s), 8 conformance fixtures, ${curatedReportPaths.length} curated report(s), ${curatedVerificationPaths.length} verification receipt(s), ${rejectionCount} rejection cases)`,
   );
 }

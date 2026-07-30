@@ -24,6 +24,7 @@ Usage:
   labctl run --engine <path> <workload.json>
   labctl benchmark --engine <path> --suite <suite.json> --output <capture.json> [--repository-root <path>]
   labctl profile --engine <path> --suite <suite.json> --output <report.json> [--repository-root <path>]
+  labctl verify [--json] [--repository-root <path>] [--engine <path>] <evidence.json>
   labctl doctor [--json]
   labctl version
   labctl help
@@ -31,7 +32,8 @@ Usage:
 The run command verifies one workload through the versioned Rust worker.
 The benchmark command captures the fused scalar baseline. The profile command
 pairs that unchanged baseline with diagnostic materialized stage passes and
-persists raw evidence plus integer-only analysis.`
+persists raw evidence plus integer-only analysis. The verify command replays
+all deterministic evidence checks without rerunning a benchmark.`
 
 // BuildInfo identifies the controller binary.
 type BuildInfo = buildinfo.Info
@@ -55,14 +57,18 @@ type RunProfile func(
 	benchmark.ProfileOptions,
 ) (benchmark.ScalarProfileReport, error)
 
+// VerifyEvidence replays deterministic checks over one persisted artifact.
+type VerifyEvidence func(benchmark.VerifyOptions) (benchmark.EvidenceVerification, error)
+
 // Dependencies contains side effects injected into command dispatch.
 type Dependencies struct {
-	Build        BuildInfo
-	Probe        doctor.Probe
-	ReadFile     func(string) ([]byte, error)
-	StartWorker  StartWorker
-	RunBenchmark RunBenchmark
-	RunProfile   RunProfile
+	Build          BuildInfo
+	Probe          doctor.Probe
+	ReadFile       func(string) ([]byte, error)
+	StartWorker    StartWorker
+	RunBenchmark   RunBenchmark
+	RunProfile     RunProfile
+	VerifyEvidence VerifyEvidence
 }
 
 // Run dispatches a labctl command and returns a process-compatible exit code.
@@ -116,6 +122,8 @@ func Run(
 			stderr,
 			dependencies,
 		)
+	case "verify":
+		return runVerify(args[1:], stdout, stderr, dependencies)
 	case "run":
 		return runWorkload(
 			ctx,
@@ -128,6 +136,126 @@ func Run(
 	default:
 		return usageError(stderr, fmt.Sprintf("unknown command %q", args[0]))
 	}
+}
+
+func runVerify(
+	args []string,
+	stdout io.Writer,
+	stderr io.Writer,
+	dependencies Dependencies,
+) int {
+	options, jsonOutput, err := parseVerifyOptions(args)
+	if err != nil {
+		return usageError(stderr, err.Error())
+	}
+	options.ReadFile = dependencies.ReadFile
+	verify := dependencies.VerifyEvidence
+	if verify == nil {
+		verify = benchmark.VerifyEvidence
+	}
+	verification, err := verify(options)
+	if err != nil {
+		return commandError(stderr, fmt.Sprintf("verify evidence: %v", err))
+	}
+
+	if jsonOutput {
+		encoder := json.NewEncoder(stdout)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(verification); err != nil {
+			return commandError(stderr, fmt.Sprintf("write verification receipt: %v", err))
+		}
+		return 0
+	}
+
+	engineStatus := "identity recorded; bytes not supplied"
+	if verification.EngineArtifactVerified {
+		engineStatus = "SHA-256 verified"
+	}
+	return write(
+		stdout,
+		fmt.Sprintf(
+			"evidence: %s\n"+
+				"status: %s\n"+
+				"schema: %s\n"+
+				"suite: %q\n"+
+				"experiments: %d\n"+
+				"retained_samples: %d\n"+
+				"repository_identities: %d\n"+
+				"engine_artifact: %s\n"+
+				"evidence_sha256: %s",
+			verification.EvidencePath,
+			verification.Status,
+			verification.EvidenceSchema,
+			verification.SuiteName,
+			verification.ExperimentCount,
+			verification.RetainedSampleCount,
+			verification.RepositoryIdentitiesVerified,
+			engineStatus,
+			verification.EvidenceSHA256,
+		),
+	)
+}
+
+func parseVerifyOptions(
+	args []string,
+) (benchmark.VerifyOptions, bool, error) {
+	options := benchmark.VerifyOptions{RepositoryRoot: "."}
+	seen := make(map[string]struct{})
+	jsonOutput := false
+
+	for index := 0; index < len(args); index++ {
+		argument := args[index]
+		switch argument {
+		case "--json":
+			if _, duplicate := seen[argument]; duplicate {
+				return benchmark.VerifyOptions{}, false, errors.New(
+					"verify flag --json was provided more than once",
+				)
+			}
+			seen[argument] = struct{}{}
+			jsonOutput = true
+		case "--repository-root", "--engine":
+			if _, duplicate := seen[argument]; duplicate {
+				return benchmark.VerifyOptions{}, false, fmt.Errorf(
+					"verify flag %s was provided more than once",
+					argument,
+				)
+			}
+			seen[argument] = struct{}{}
+			index++
+			if index == len(args) || args[index] == "" ||
+				strings.HasPrefix(args[index], "--") {
+				return benchmark.VerifyOptions{}, false, fmt.Errorf(
+					"verify flag %s requires a non-empty value",
+					argument,
+				)
+			}
+			if argument == "--repository-root" {
+				options.RepositoryRoot = args[index]
+			} else {
+				options.EnginePath = args[index]
+			}
+		default:
+			if strings.HasPrefix(argument, "-") {
+				return benchmark.VerifyOptions{}, false, fmt.Errorf(
+					"unknown verify flag %q",
+					argument,
+				)
+			}
+			if options.EvidencePath != "" {
+				return benchmark.VerifyOptions{}, false, errors.New(
+					"verify accepts exactly one evidence path",
+				)
+			}
+			options.EvidencePath = argument
+		}
+	}
+	if options.EvidencePath == "" {
+		return benchmark.VerifyOptions{}, false, errors.New(
+			"verify requires <evidence.json>",
+		)
+	}
+	return options, jsonOutput, nil
 }
 
 func runProfile(

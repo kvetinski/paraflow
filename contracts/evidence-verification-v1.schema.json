@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvetinski/paraflow/blob/main/contracts/evidence-verification-v1.schema.json",
+  "title": "ParaFlow evidence verification receipt v1",
+  "description": "A deterministic receipt produced after replaying persisted benchmark evidence without collecting new timings.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "evidence_path",
+    "evidence_sha256",
+    "evidence_schema",
+    "suite_name",
+    "experiment_count",
+    "retained_sample_count",
+    "repository_identities_verified",
+    "engine_artifact_verified"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "paraflow.evidence-verification/v1"
+    },
+    "status": {
+      "const": "passed"
+    },
+    "evidence_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "evidence_schema": {
+      "enum": [
+        "paraflow.benchmark-capture/v1",
+        "paraflow.scalar-profile-report/v1"
+      ]
+    },
+    "suite_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "experiment_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "retained_sample_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "repository_identities_verified": {
+      "type": "integer",
+      "minimum": 2
+    },
+    "engine_artifact_verified": {
+      "type": "boolean"
+    }
+  }
+}
